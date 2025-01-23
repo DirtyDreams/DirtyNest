@@ -77,21 +77,21 @@ export default function GridPage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold mb-2">Grid View</h1>
-          <p className="text-gray-400">Organize and view content in a grid layout</p>
+          <p className="text-foreground-muted">Organize and view content in a grid layout</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((item) => (
-            <div 
-              key={item.id} 
-              className="p-6 bg-[#0F1F1B] rounded-lg border border-emerald-900/30 hover:bg-[#132420] transition-colors cursor-pointer"
+            <div
+              key={item.id}
+              className="p-6 bg-background-card rounded-lg border border-border-subtle hover:bg-background-hover transition-colors cursor-pointer"
             >
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-emerald-600/10 rounded-lg flex items-center justify-center text-emerald-400">
+                <div className="w-12 h-12 bg-primary-subtle rounded-lg flex items-center justify-center text-primary">
                   {item.icon}
                 </div>
                 <div>
-                  <h3 className="font-medium text-lg">{item.title}</h3>
-                  <p className="text-gray-400 text-sm mt-1">{item.stats}</p>
+                  <h3 className="font-medium text-lg text-foreground">{item.title}</h3>
+                  <p className="text-foreground-muted text-sm mt-1">{item.stats}</p>
                 </div>
               </div>
             </div>

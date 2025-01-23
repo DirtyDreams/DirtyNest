@@ -4,7 +4,7 @@ export default function ToolsPage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold mb-2">Tools</h1>
-          <p className="text-gray-400">Access powerful tools and utilities</p>
+          <p className="text-foreground-muted">Access powerful tools and utilities</p>
         </div>
 
         <div className="grid grid-cols-3 gap-6">
@@ -64,15 +64,15 @@ export default function ToolsPage() {
               )
             }
           ].map((tool, index) => (
-            <div 
+            <div
               key={index}
-              className="p-6 bg-[#0F1F1B] rounded-lg hover:bg-[#132420] transition-colors cursor-pointer border border-emerald-900/30"
+              className="p-6 bg-background-card rounded-lg hover:bg-background-hover transition-colors cursor-pointer border border-border-subtle"
             >
-              <div className="w-12 h-12 bg-emerald-900/30 rounded-lg flex items-center justify-center mb-4 text-emerald-400">
+              <div className="w-12 h-12 bg-primary-subtle rounded-lg flex items-center justify-center mb-4 text-primary">
                 {tool.icon}
               </div>
-              <h3 className="text-lg font-medium mb-2">{tool.title}</h3>
-              <p className="text-gray-400 text-sm">{tool.description}</p>
+              <h3 className="text-lg font-medium mb-2 text-foreground">{tool.title}</h3>
+              <p className="text-foreground-muted text-sm">{tool.description}</p>
             </div>
           ))}
         </div>
