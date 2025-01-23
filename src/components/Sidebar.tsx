@@ -82,10 +82,12 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className={`flex flex-col ${isCollapsed ? 'w-16' : 'w-64'} bg-[#0F1F1B] h-screen border-r border-emerald-900/30 transition-all duration-300 relative`}>
+    <div className={`flex flex-col ${isCollapsed ? 'w-16' : 'w-64'} bg-card h-screen border-r border-border transition-all duration-300 relative`}>
       <div className="p-4">
         <div className="flex items-center space-x-2">
-          {!isCollapsed && <span className="text-xl font-bold text-white">DirtyNest</span>}
+          {!isCollapsed && (
+            <span className="text-xl font-bold text-foreground">DirtyNest</span>
+          )}
         </div>
       </div>
 
@@ -97,15 +99,24 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center px-4 py-3 text-sm rounded-lg ${
+                className={`group flex items-center px-4 py-3 text-sm rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-emerald-600/10 text-emerald-400'
-                    : 'text-gray-400 hover:bg-emerald-600/10 hover:text-emerald-400'
-                }`}
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                } ${isCollapsed ? 'justify-center' : ''}`}
                 title={isCollapsed ? item.name : undefined}
               >
-                <item.icon />
-                {!isCollapsed && <span className="ml-3">{item.name}</span>}
+                <div className="relative">
+                  <item.icon />
+                  {isCollapsed && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-card border border-border rounded-md text-sm text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      {item.name}
+                    </div>
+                  )}
+                </div>
+                {!isCollapsed && (
+                  <span className="ml-3">{item.name}</span>
+                )}
               </Link>
             );
           })}
@@ -114,7 +125,8 @@ export default function Sidebar() {
 
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-4 top-8 bg-[#0F1F1B] border border-emerald-900/30 rounded-full p-1.5 text-emerald-400 hover:text-emerald-300"
+        className="absolute -right-4 top-8 bg-card border border-border rounded-full p-1.5 text-primary hover:text-primary/80 hover:bg-hover transition-colors"
+        aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
         {isCollapsed ? <ExpandIcon /> : <CollapseIcon />}
       </button>
