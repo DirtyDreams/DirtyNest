@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 
 interface MenuItem {
@@ -11,7 +12,20 @@ interface MenuItem {
 }
 
 export default function Header() {
+  const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // Generate breadcrumbs from pathname
+  const pathSegments = [
+    { name: 'DirtyNest', path: '/' },
+    ...pathname
+      .split('/')
+      .filter(Boolean)
+      .map((segment, index, array) => ({
+        name: segment.charAt(0).toUpperCase() + segment.slice(1),
+        path: '/' + array.slice(0, index + 1).join('/')
+      }))
+  ];
 
   const menuItems: MenuItem[] = [
     {
@@ -60,13 +74,19 @@ export default function Header() {
     <header className="flex items-center justify-between h-16 px-4 border-b border-emerald-900/30 bg-[#0F1F1B]">
       <div className="flex items-center space-x-2">
         <nav className="flex items-center space-x-1 text-sm text-gray-400">
-          <Link href="/app" className="hover:text-emerald-400">
-            App
-          </Link>
-          <span className="text-gray-600">/</span>
-          <Link href="/focus" className="hover:text-emerald-400">
-            Focus
-          </Link>
+          {pathSegments.map((segment, index) => (
+            <div key={segment.path} className="flex items-center">
+              {index > 0 && <span className="mx-1 text-gray-600">/</span>}
+              <Link
+                href={segment.path}
+                className={`hover:text-emerald-400 ${
+                  index === pathSegments.length - 1 ? 'font-medium text-white' : ''
+                }`}
+              >
+                {segment.name}
+              </Link>
+            </div>
+          ))}
         </nav>
       </div>
 
