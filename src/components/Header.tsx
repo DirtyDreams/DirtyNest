@@ -72,7 +72,8 @@ export default function Header() {
 
   return (
     <header className="flex items-center justify-between h-16 px-4 border-b border-emerald-900/30 bg-[#0F1F1B]">
-      <div className="flex items-center space-x-2">
+      <div></div>
+      <div className="flex items-center space-x-2 ml-auto">
         <nav className="flex items-center space-x-1 text-sm text-gray-400">
           {pathSegments.map((segment, index) => (
             <div key={segment.path} className="flex items-center">
@@ -88,48 +89,6 @@ export default function Header() {
             </div>
           ))}
         </nav>
-      </div>
-
-      <div className="flex items-center space-x-4">
-        <div className="relative">
-          <button
-            onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="px-4 py-1 text-sm font-medium text-white bg-emerald-600 rounded-full hover:bg-emerald-700"
-          >
-            Profile
-          </button>
-          
-          {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-lg bg-[#0F1F1B] border border-emerald-900/30 shadow-lg py-1">
-              {menuItems.map((item, index) => (
-                <div key={index}>
-                  {item.href ? (
-                    <Link
-                      href={item.href}
-                      className="flex items-center px-4 py-2 text-sm text-gray-400 hover:bg-[#132420] hover:text-emerald-400"
-                    >
-                      <span className="mr-3">{item.icon}</span>
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <button
-                      onClick={item.onClick}
-                      className="flex items-center w-full px-4 py-2 text-sm text-gray-400 hover:bg-[#132420] hover:text-emerald-400"
-                    >
-                      <span className="mr-3">{item.icon}</span>
-                      {item.label}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <button
-          className="flex items-center justify-center w-8 h-8 text-white bg-emerald-600 rounded-full hover:bg-emerald-700"
-        >
-          A
-        </button>
       </div>
     </header>
   );
