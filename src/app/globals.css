@@ -1,6 +1,79 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 165 20% 8%;
+    --foreground: 0 0% 100%;
+
+    --card: 165 20% 12%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 165 20% 12%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 165 20% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 165 10% 70%;
+    --muted-foreground: 165 20% 20%;
+
+    --accent: 165 20% 15%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 165 20% 20%;
+    --input: 165 20% 20%;
+    --ring: 160 84% 39%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 165 20% 8%;
+    --foreground: 0 0% 100%;
+
+    --card: 165 20% 12%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 165 20% 12%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 165 20% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 165 10% 70%;
+    --muted-foreground: 165 20% 20%;
+
+    --accent: 165 20% 15%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 165 20% 20%;
+    --input: 165 20% 20%;
+    --ring: 160 84% 39%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
 @layer components {
   .btn-primary {
     @apply bg-emerald-600 hover:bg-emerald-700 text-white;

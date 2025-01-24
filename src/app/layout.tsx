@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/theme/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import BottomBar from "@/components/BottomBar";
@@ -25,16 +26,18 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geist.variable} font-sans`}>
         <ThemeProvider>
-          <div className="flex h-screen bg-background text-foreground">
-            <Sidebar />
-            <div className="flex flex-col flex-1 bg-card">
-              <Header />
-              <main className="flex-1 overflow-auto pb-16 bg-card">
-                {children}
-              </main>
+          <TooltipProvider>
+            <div className="flex h-screen bg-background text-foreground">
+              <Sidebar />
+              <div className="flex flex-col flex-1 bg-card">
+                <Header />
+                <main className="flex-1 overflow-auto pb-16 bg-card">
+                  {children}
+                </main>
+              </div>
+              <BottomBar />
             </div>
-            <BottomBar />
-          </div>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>
