@@ -22,13 +22,15 @@ import {
   Globe,
   Lock,
   Activity,
+  Puzzle,
 } from "lucide-react";
 import { applyThemePreset, getAllThemes, deleteCustomTheme, type ThemePreset } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 import SystemDiagnosticsTab from "./settings/SystemDiagnosticsTab";
+import PluginsSettingsTab from "./settings/PluginsSettingsTab";
 
-type SettingsSection = "general" | "ai" | "agents" | "apikeys" | "storage" | "diagnostics";
+type SettingsSection = "general" | "ai" | "agents" | "plugins" | "apikeys" | "storage" | "diagnostics";
 
 export default function SettingsView() {
   const [activeTab, setActiveTab] = useState<SettingsSection>("general");
@@ -230,6 +232,7 @@ export default function SettingsView() {
     { id: "general", label: "General & HUD", icon: Sliders, tag: "CORE" },
     { id: "ai", label: "AI & Chatbot", icon: Bot, tag: "NEURAL" },
     { id: "agents", label: "Agent Swarm", icon: Cpu, tag: "SWARM" },
+    { id: "plugins", label: "Plugins & Extensions", icon: Puzzle, tag: "MCP" },
     { id: "apikeys", label: "API Keys & Mesh", icon: Key, tag: "AUTH" },
     { id: "storage", label: "Storage & Backup", icon: Database, tag: "SQL" },
     { id: "diagnostics", label: "Self-Diagnostics", icon: Activity, tag: "BENCH" },
@@ -734,6 +737,9 @@ export default function SettingsView() {
               </div>
             </div>
           )}
+
+          {/* PLUGINS & EXTENSIONS HUB */}
+          {activeTab === "plugins" && <PluginsSettingsTab />}
 
           {/* DIAGNOSTICS & BENCHMARK SUITE */}
           {activeTab === "diagnostics" && <SystemDiagnosticsTab />}

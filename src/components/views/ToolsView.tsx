@@ -42,6 +42,7 @@ import {
   Cpu,
   Share2,
   Radio,
+  Settings,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import JwtDebugger from "@/components/tools/JwtDebugger";
@@ -556,6 +557,14 @@ export default function ToolsView() {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2">
+            <a
+              href="#settings"
+              onClick={() => cyberAudio.play("click")}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40 text-xs font-bold transition-all cursor-pointer"
+            >
+              <Settings size={14} />
+              <span>PLUGIN SETTINGS</span>
+            </a>
             <button
               onClick={() => {
                 cyberAudio.play("click");
