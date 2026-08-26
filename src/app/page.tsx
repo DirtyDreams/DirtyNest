@@ -312,46 +312,49 @@ export default function Home() {
         {/* Central Tactical Workspace */}
         <main className={`flex-1 min-w-0 max-w-full ml-0 md:ml-[68px] ${isRightPanelOpen ? "xl:mr-[340px]" : "xl:mr-[52px]"} px-3 sm:px-5 py-3 sm:py-4 pb-40 flex flex-col transition-all duration-300`}>
           {/* Top Operational Breadcrumb HUD Bar */}
-          <header className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-4 pb-3 border-b border-white/5">
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              {/* Mobile Drawer Hamburger Trigger */}
-              <button
-                onClick={() => {
-                  cyberAudio.play("click");
-                  setMobileDrawerOpen(true);
-                }}
-                className="md:hidden p-2 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
-                title="Open Tactical Menu"
-                aria-label="Open Navigation Menu"
-              >
-                <Menu size={18} />
-              </button>
-
-              <div className="flex items-center gap-2">
-                <span
-                  className="text-base font-extrabold tracking-wider"
-                  style={{
-                    fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
-                    color: "#00FF41",
-                    textShadow: "0 0 12px rgba(0,255,65,0.4)",
+          <header className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/5 relative z-20">
+            {/* Left: Brand & Mobile Trigger */}
+            <div className="flex items-center justify-between 2xl:justify-start gap-2.5 sm:gap-3 shrink-0">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                {/* Mobile Drawer Hamburger Trigger */}
+                <button
+                  onClick={() => {
+                    cyberAudio.play("click");
+                    setMobileDrawerOpen(true);
                   }}
+                  className="md:hidden p-2 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
+                  title="Open Tactical Menu"
+                  aria-label="Open Navigation Menu"
                 >
-                  DirtyNest
-                </span>
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30">
-                  OPERATIONAL
-                </span>
-              </div>
+                  <Menu size={18} />
+                </button>
 
-              <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-[#4F536E]">
-                <span>NODE://ROOT/MAIN</span>
-                <span>•</span>
-                <UptimeBadge />
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-base font-extrabold tracking-wider"
+                    style={{
+                      fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
+                      color: "#00FF41",
+                      textShadow: "0 0 12px rgba(0,255,65,0.4)",
+                    }}
+                  >
+                    DirtyNest
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30">
+                    OPERATIONAL
+                  </span>
+                </div>
+
+                <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-[#4F536E]">
+                  <span>NODE://ROOT/MAIN</span>
+                  <span>•</span>
+                  <UptimeBadge />
+                </div>
               </div>
             </div>
 
-            {/* View Mode Quick Navigation Chips (Visible and scrollable on all viewports) */}
-            <div className="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/5 font-mono text-xs overflow-x-auto scrollbar-none max-w-full order-last lg:order-none w-full lg:w-auto" role="tablist" aria-label="Deck Views">
+            {/* View Mode Quick Navigation Chips (Scrollable and contained) */}
+            <div className="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/5 font-mono text-xs overflow-x-auto scrollbar-none max-w-full 2xl:max-w-3xl 2xl:mx-2 shrink" role="tablist" aria-label="Deck Views">
               <button
                 role="tab"
                 aria-selected={activeView === "dashboard"}
@@ -493,8 +496,8 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Quick Action HUD Controls */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Quick Action HUD Controls (Always aligned on the right) */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 self-end 2xl:self-auto">
               {/* Customize Dashboard Button */}
               {activeView === "dashboard" && (
                 <button
