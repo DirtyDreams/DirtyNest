@@ -21,6 +21,9 @@ import {
   Puzzle,
   Sparkles,
   Search,
+  Image as ImageIcon,
+  Mic,
+  Share2,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
@@ -28,6 +31,9 @@ import { useToast } from "@/components/common/ToastProvider";
 // Dedicated Settings Tab Components
 import DashboardSettingsTab from "./settings/DashboardSettingsTab";
 import HermesSettingsTab from "./settings/HermesSettingsTab";
+import ImageStudioSettingsTab from "./settings/ImageStudioSettingsTab";
+import SoundStudioSettingsTab from "./settings/SoundStudioSettingsTab";
+import SocialMediaSettingsTab from "./settings/SocialMediaSettingsTab";
 import ChatbotSettingsTab from "./settings/ChatbotSettingsTab";
 import NexusSettingsTab from "./settings/NexusSettingsTab";
 import ControlRoomSettingsTab from "./settings/ControlRoomSettingsTab";
@@ -47,6 +53,9 @@ import SystemDiagnosticsTab from "./settings/SystemDiagnosticsTab";
 export type SettingsTabId =
   | "dashboard"
   | "hermes"
+  | "image_studio"
+  | "sound_studio"
+  | "social_media"
   | "chatbot"
   | "nexus"
   | "control_room"
@@ -75,6 +84,8 @@ const SETTINGS_TABS: SettingsTabDef[] = [
   // PRIMARY VIEWS
   { id: "dashboard", label: "Dashboard / Overview", icon: LayoutDashboard, tag: "BENTO", group: "PRIMARY VIEWS" },
   { id: "hermes", label: "Hermes Agent Engine", icon: Brain, tag: "100% BRAIN", group: "PRIMARY VIEWS" },
+  { id: "image_studio", label: "Image Studio & Diffusion", icon: ImageIcon, tag: "LATENTS", group: "PRIMARY VIEWS" },
+  { id: "sound_studio", label: "Sound Studio & Voice", icon: Mic, tag: "CLONING", group: "PRIMARY VIEWS" },
   { id: "chatbot", label: "Chatbot AI & Persona", icon: Bot, tag: "NEURAL", group: "PRIMARY VIEWS" },
   { id: "nexus", label: "Persona Nexus Studio", icon: Users, tag: "RP", group: "PRIMARY VIEWS" },
   { id: "control_room", label: "Control Room & Broadcast", icon: Radio, tag: "STREAM", group: "PRIMARY VIEWS" },
@@ -86,6 +97,7 @@ const SETTINGS_TABS: SettingsTabDef[] = [
   { id: "logs", label: "System Logs & Audit", icon: ScrollText, tag: "AUDIT", group: "PRIMARY VIEWS" },
 
   // TACTICAL FEEDS
+  { id: "social_media", label: "Social Media Command Hub", icon: Share2, tag: "BROADCAST", group: "TACTICAL FEEDS" },
   { id: "api", label: "API Health & Vault", icon: Wifi, tag: "KEYS", group: "TACTICAL FEEDS" },
   { id: "rss", label: "Intel & Threat RSS Feeds", icon: Rss, tag: "INTEL", group: "TACTICAL FEEDS" },
   { id: "calendar", label: "Schedule & Calendar", icon: Calendar, tag: "CRON", group: "TACTICAL FEEDS" },
@@ -245,6 +257,8 @@ export default function SettingsView() {
         <div className="lg:col-span-3 p-5 sm:p-6 rounded-2xl cyber-card bg-[#07070B]/90 border border-white/10">
           {activeTab === "dashboard" && <DashboardSettingsTab />}
           {activeTab === "hermes" && <HermesSettingsTab />}
+          {activeTab === "image_studio" && <ImageStudioSettingsTab />}
+          {activeTab === "sound_studio" && <SoundStudioSettingsTab />}
           {activeTab === "chatbot" && <ChatbotSettingsTab />}
           {activeTab === "nexus" && <NexusSettingsTab />}
           {activeTab === "control_room" && <ControlRoomSettingsTab />}
@@ -254,6 +268,7 @@ export default function SettingsView() {
           {activeTab === "tools" && <ToolsSettingsTab />}
           {activeTab === "stats" && <StatsSettingsTab />}
           {activeTab === "logs" && <LogsSettingsTab />}
+          {activeTab === "social_media" && <SocialMediaSettingsTab />}
           {activeTab === "api" && <ApiHealthSettingsTab />}
           {activeTab === "rss" && <RssSettingsTab />}
           {activeTab === "calendar" && <CalendarSettingsTab />}

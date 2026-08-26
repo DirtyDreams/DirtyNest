@@ -27,6 +27,9 @@ import {
   Wifi,
   Rss,
   Users,
+  Image as ImageIcon,
+  Mic,
+  Share2,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
@@ -60,6 +63,30 @@ export default function CommandPalette() {
       action: () => navigateToDeck("dashboard"),
       shortcut: "G O",
       icon: <Layers size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "deck_image_studio",
+      label: "Switch Deck: Image Studio & Neural Diffusion Canvas",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("image_studio"),
+      shortcut: "G I",
+      icon: <ImageIcon size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "deck_sound_studio",
+      label: "Switch Deck: Sound Studio // Voice Cloning & Virtual Influencer",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("sound_studio"),
+      shortcut: "G V",
+      icon: <Mic size={14} className="text-[#BF40FF]" />,
+    },
+    {
+      id: "deck_social_media",
+      label: "Switch Deck: Social Media Command Hub & Omnichannel Broadcast",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("social_media"),
+      shortcut: "G M",
+      icon: <Share2 size={14} className="text-[#00F0FF]" />,
     },
     {
       id: "deck_chatbot",

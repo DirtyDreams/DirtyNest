@@ -100,6 +100,18 @@ const ScheduleView = dynamic(() => import("@/components/views/ScheduleView"), {
   ssr: false,
   loading: () => <ViewLoadingSkeleton title="MISSION SCHEDULE & CALENDAR" />,
 });
+const ImageStudioView = dynamic(() => import("@/components/views/ImageStudioView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="IMAGE STUDIO & DIFFUSION CANVAS" />,
+});
+const SoundStudioView = dynamic(() => import("@/components/views/SoundStudioView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="SOUND STUDIO & VOICE CLONING" />,
+});
+const SocialMediaView = dynamic(() => import("@/components/views/SocialMediaView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="SOCIAL MEDIA COMMAND HUB" />,
+});
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { UptimeBadge } from "@/components/common/UptimeBadge";
 import { useAppStore } from "@/stores/useAppStore";
@@ -132,6 +144,9 @@ import {
   Wifi,
   Rss,
   Calendar,
+  Image as ImageIcon,
+  Mic,
+  Share2,
 } from "lucide-react";
 
 export default function Home() {
@@ -613,6 +628,48 @@ export default function Home() {
 
               <button
                 role="tab"
+                aria-selected={activeView === "image_studio"}
+                onClick={() => handleSelectView("image_studio")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeView === "image_studio"
+                    ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                    : "text-[#9499B3] hover:text-[#00FF41]"
+                }`}
+              >
+                <ImageIcon size={13} />
+                <span>IMAGE STUDIO</span>
+              </button>
+
+              <button
+                role="tab"
+                aria-selected={activeView === "sound_studio"}
+                onClick={() => handleSelectView("sound_studio")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeView === "sound_studio"
+                    ? "bg-[#BF40FF]/15 text-[#BF40FF] font-bold border border-[#BF40FF]/30 shadow-[0_0_8px_rgba(191,64,255,0.2)]"
+                    : "text-[#9499B3] hover:text-[#BF40FF]"
+                }`}
+              >
+                <Mic size={13} />
+                <span>SOUND STUDIO</span>
+              </button>
+
+              <button
+                role="tab"
+                aria-selected={activeView === "social_media"}
+                onClick={() => handleSelectView("social_media")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeView === "social_media"
+                    ? "bg-[#00F0FF]/15 text-[#00F0FF] font-bold border border-[#00F0FF]/30 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
+                    : "text-[#9499B3] hover:text-[#00F0FF]"
+                }`}
+              >
+                <Share2 size={13} />
+                <span>SOCIAL MEDIA</span>
+              </button>
+
+              <button
+                role="tab"
                 aria-selected={activeView === "chatbot"}
                 onClick={() => handleSelectView("chatbot")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
@@ -919,6 +976,30 @@ export default function Home() {
                       })}
                   </div>
                 </div>
+              </ErrorBoundary>
+            </ProtectedAccessGate>
+          )}
+
+          {activeView === "image_studio" && (
+            <ProtectedAccessGate minClearance={1} viewName="Image Studio & Diffusion Canvas">
+              <ErrorBoundary fallbackTitle="IMAGE STUDIO MALFUNCTION">
+                <ImageStudioView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
+          )}
+
+          {activeView === "sound_studio" && (
+            <ProtectedAccessGate minClearance={1} viewName="Sound Studio & Voice Cloning">
+              <ErrorBoundary fallbackTitle="SOUND STUDIO MALFUNCTION">
+                <SoundStudioView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
+          )}
+
+          {activeView === "social_media" && (
+            <ProtectedAccessGate minClearance={1} viewName="Social Media Broadcast Hub">
+              <ErrorBoundary fallbackTitle="SOCIAL MEDIA COMMAND MALFUNCTION">
+                <SocialMediaView />
               </ErrorBoundary>
             </ProtectedAccessGate>
           )}
