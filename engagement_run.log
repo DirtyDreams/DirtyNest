@@ -1,0 +1,30 @@
+[FAIL] r/feethustle 1vx0qvi: [
+  {
+    "status": "failed",
+    "message": "TypeError: Failed to fetch"
+  }
+]
+[OK ] r/feethustle 1vxbs5c: [
+  {
+    "status": "success",
+    "message": "Comment posted on t3_1vxbs5c"
+  }
+]
+[OK ] r/feethustle 1vugpni: [
+  {
+    "status": "success",
+    "message": "Comment posted on t3_1vugpni"
+  }
+]
+[OK ] r/feetfinderadvice 1vx7t7c: [
+  {
+    "status": "success",
+    "message": "Comment posted on t3_1vx7t7c"
+  }
+]
+[OK ] r/feetfinderadvice 1vxdreb: [
+  {
+    "status": "success",
+    "message": "Comment posted on t3_1vxdreb"
+  }
+]

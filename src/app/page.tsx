@@ -17,6 +17,7 @@ import CalendarWidget from "@/components/widgets/Calendar";
 import DoraMetricsBar from "@/components/widgets/DoraMetricsBar";
 import AiInsightBrief from "@/components/widgets/AiInsightBrief";
 import QuickActionHub from "@/components/widgets/QuickActionHub";
+import HermesStatusWidget from "@/components/widgets/HermesStatusWidget";
 import ServiceStatusCompact from "@/components/widgets/ServiceStatusCompact";
 import PipelineQueueWidget from "@/components/widgets/PipelineQueueWidget";
 import AiAgentQuotaWidget from "@/components/widgets/AiAgentQuotaWidget";
@@ -834,6 +835,9 @@ export default function Home() {
                           case "docker":
                           case "service_status":
                             widgetNode = <ServiceStatusCompact />;
+                            break;
+                          case "hermes_brain":
+                            widgetNode = <HermesStatusWidget />;
                             break;
                           case "ai_quota":
                             widgetNode = <AiAgentQuotaWidget />;

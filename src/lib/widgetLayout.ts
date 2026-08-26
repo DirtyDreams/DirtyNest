@@ -20,7 +20,8 @@ export const ALL_WIDGETS_METADATA: WidgetMetadata[] = [
   // ROW 2: Threat Intel Stream
   { id: "rss_feed", name: "Cyber Threat & Intel RSS Feed", category: "CORE", description: "Real-time vulnerability advisories & CVE updates", defaultSpan: "2-col" },
 
-  // ROW 3: AI Quotas & Security Audit
+  // ROW 3: Hermes Master Brain & AI Security Audit
+  { id: "hermes_brain", name: "Hermes Master Brain & Skills HUD", category: "AI & TOKENS", description: "Live cognitive activity, active memory count, and running skills", defaultSpan: "1-col" },
   { id: "ai_quota", name: "AI Model Quotas & Burndown", category: "AI & TOKENS", description: "Multi-LLM rate limits (TPM/RPM) and token cost telemetry", defaultSpan: "1-col" },
   { id: "agent_security_beacon", name: "Agent Security Beacon & Audit", category: "AI & TOKENS", description: "Zero-trust local audit logging for AI agent shell/file mutations", defaultSpan: "1-col" },
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Settings as SettingsIcon,
   LayoutDashboard,
+  Brain,
   Bot,
   Users,
   Radio,
@@ -24,8 +25,9 @@ import {
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 
-// 14 Dedicated Settings Tab Components
+// Dedicated Settings Tab Components
 import DashboardSettingsTab from "./settings/DashboardSettingsTab";
+import HermesSettingsTab from "./settings/HermesSettingsTab";
 import ChatbotSettingsTab from "./settings/ChatbotSettingsTab";
 import NexusSettingsTab from "./settings/NexusSettingsTab";
 import ControlRoomSettingsTab from "./settings/ControlRoomSettingsTab";
@@ -44,6 +46,7 @@ import SystemDiagnosticsTab from "./settings/SystemDiagnosticsTab";
 
 export type SettingsTabId =
   | "dashboard"
+  | "hermes"
   | "chatbot"
   | "nexus"
   | "control_room"
@@ -71,6 +74,7 @@ interface SettingsTabDef {
 const SETTINGS_TABS: SettingsTabDef[] = [
   // PRIMARY VIEWS
   { id: "dashboard", label: "Dashboard / Overview", icon: LayoutDashboard, tag: "BENTO", group: "PRIMARY VIEWS" },
+  { id: "hermes", label: "Hermes Agent Engine", icon: Brain, tag: "100% BRAIN", group: "PRIMARY VIEWS" },
   { id: "chatbot", label: "Chatbot AI & Persona", icon: Bot, tag: "NEURAL", group: "PRIMARY VIEWS" },
   { id: "nexus", label: "Persona Nexus Studio", icon: Users, tag: "RP", group: "PRIMARY VIEWS" },
   { id: "control_room", label: "Control Room & Broadcast", icon: Radio, tag: "STREAM", group: "PRIMARY VIEWS" },
@@ -240,6 +244,7 @@ export default function SettingsView() {
         {/* Right Active Tab Content */}
         <div className="lg:col-span-3 p-5 sm:p-6 rounded-2xl cyber-card bg-[#07070B]/90 border border-white/10">
           {activeTab === "dashboard" && <DashboardSettingsTab />}
+          {activeTab === "hermes" && <HermesSettingsTab />}
           {activeTab === "chatbot" && <ChatbotSettingsTab />}
           {activeTab === "nexus" && <NexusSettingsTab />}
           {activeTab === "control_room" && <ControlRoomSettingsTab />}
