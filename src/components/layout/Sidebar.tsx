@@ -14,12 +14,14 @@ import {
   Container,
   Radio,
   ScrollText,
+  Users,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export type NavViewId =
   | "dashboard"
   | "chatbot"
+  | "nexus"
   | "control_room"
   | "agents"
   | "knowledge"
@@ -41,6 +43,7 @@ interface SidebarProps {
 export const navItems = [
   { icon: LayoutDashboard, label: "Overview", id: "dashboard" as NavViewId, tag: "MAIN", isPrimaryView: true },
   { icon: Bot, label: "Chatbot AI", id: "chatbot" as NavViewId, tag: "AI", isPrimaryView: true },
+  { icon: Users, label: "Persona Nexus", id: "nexus" as NavViewId, tag: "RP", isPrimaryView: true },
   { icon: Radio, label: "Control Room", id: "control_room" as NavViewId, tag: "CTRL", isPrimaryView: true },
   { icon: Cpu, label: "AI Agents", id: "agents" as NavViewId, tag: "AGY", isPrimaryView: true },
   { icon: Database, label: "Knowledge", id: "knowledge" as NavViewId, tag: "DATA", isPrimaryView: true },

@@ -26,6 +26,7 @@ import {
   Lock,
   Wifi,
   Rss,
+  Users,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
@@ -67,6 +68,14 @@ export default function CommandPalette() {
       action: () => navigateToDeck("chatbot"),
       shortcut: "G C",
       icon: <Bot size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "deck_nexus",
+      label: "Switch Deck: Persona Nexus // Character Discovery & Roleplay",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("nexus"),
+      shortcut: "G N",
+      icon: <Users size={14} className="text-[#00FF41]" />,
     },
     {
       id: "deck_control_room",

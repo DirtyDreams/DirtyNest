@@ -32,6 +32,10 @@ const ChatbotView = dynamic(() => import("@/components/views/ChatbotView"), {
   ssr: false,
   loading: () => <ViewLoadingSkeleton title="AI CHATBOT & CANVAS" />,
 });
+const PersonaNexusView = dynamic(() => import("@/components/views/PersonaNexusView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="PERSONA NEXUS & CHARACTERS" />,
+});
 const AiAgentsView = dynamic(() => import("@/components/views/AiAgentsView"), {
   ssr: false,
   loading: () => <ViewLoadingSkeleton title="AGENT SWARM FLEET" />,
@@ -808,6 +812,14 @@ export default function Home() {
             <ProtectedAccessGate minClearance={2} viewName="Neural Chatbot Matrix">
               <ErrorBoundary fallbackTitle="NEURAL CHATBOT MALFUNCTION">
                 <ChatbotView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
+          )}
+
+          {activeView === "nexus" && (
+            <ProtectedAccessGate minClearance={1} viewName="Persona Nexus Characters">
+              <ErrorBoundary fallbackTitle="PERSONA NEXUS MALFUNCTION">
+                <PersonaNexusView />
               </ErrorBoundary>
             </ProtectedAccessGate>
           )}
