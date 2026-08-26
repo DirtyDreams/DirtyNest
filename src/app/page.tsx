@@ -40,6 +40,8 @@ import SettingsModal from "@/components/modals/SettingsModal";
 import DashboardCustomizeModal, { DashboardWidgetConfig } from "@/components/modals/DashboardCustomizeModal";
 import ThemeCustomizerModal from "@/components/modals/ThemeCustomizerModal";
 import AudioMixerModal from "@/components/modals/AudioMixerModal";
+import HermesQuickCommandModal from "@/components/modals/HermesQuickCommandModal";
+import HermesMasterStatusBadge from "@/components/common/HermesMasterStatusBadge";
 import TerminalDock from "@/components/terminal/TerminalDock";
 import dynamic from "next/dynamic";
 import ViewLoadingSkeleton from "@/components/common/ViewLoadingSkeleton";
@@ -162,6 +164,7 @@ export default function Home() {
     setCustomWidgets,
   } = useAppStore();
 
+  const [isHermesCommandModalOpen, setIsHermesCommandModalOpen] = useState(false);
   const { isAuthenticated, isLocked, recordActivity, lockSession } = useAuthStore();
 
   useEffect(() => {
@@ -228,12 +231,20 @@ export default function Home() {
     };
   }, [recordActivity]);
 
-  // Global hotkeys (Terminal `, Right Panel Ctrl+\, Lock Session Ctrl+L)
+  // Global Keyboard Shortcuts
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    const isInput = ["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName);
+    const isInput =
+      e.target instanceof HTMLInputElement ||
+      e.target instanceof HTMLTextAreaElement ||
+      (e.target as HTMLElement).isContentEditable;
+
     if (e.key === "`" && !isInput) {
       e.preventDefault();
       toggleTerminal();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && !isInput) {
+      e.preventDefault();
+      setIsHermesCommandModalOpen((prev) => !prev);
     }
     if ((e.ctrlKey || e.metaKey) && e.key === "\\" && !isInput) {
       e.preventDefault();
@@ -243,7 +254,7 @@ export default function Home() {
       e.preventDefault();
       lockSession();
     }
-  }, [toggleTerminal, toggleRightPanel, lockSession]);
+  }, [toggleTerminal, toggleRightPanel, lockSession, setIsHermesCommandModalOpen]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -508,17 +519,20 @@ export default function Home() {
                   <span className="hidden 2xl:inline">DECK</span>
                 </button>
 
+                {/* Hermes Master Brain Status HUD Badge */}
+                <HermesMasterStatusBadge onOpenCommandDrawer={() => setIsHermesCommandModalOpen(true)} />
+
                 {/* Command palette search trigger */}
                 <button
                   onClick={triggerCmdPalette}
                   className="h-9 flex items-center gap-1.5 px-2.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
-                  title="Open Command Palette (Ctrl+K)"
+                  title="Open Command Palette (Ctrl+P)"
                   aria-label="Open Command Palette"
                 >
                   <Search size={14} className="group-hover:text-[#00FF41]" />
                   <span className="text-xs font-mono hidden 2xl:inline">Palette</span>
                   <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] group-hover:text-[#00FF41] hidden sm:inline">
-                    ^K
+                    ^P
                   </kbd>
                 </button>
 
@@ -1041,6 +1055,12 @@ export default function Home() {
       <MobileDeckSheet
         isOpen={isMobileDeckSheetOpen}
         onClose={() => setMobileDeckSheetOpen(false)}
+      />
+
+      {/* Hermes Master Command Palette Modal */}
+      <HermesQuickCommandModal
+        isOpen={isHermesCommandModalOpen}
+        onClose={() => setIsHermesCommandModalOpen(false)}
       />
 
       {/* Persistent Bottom HUD Status Bar (Desktop) */}

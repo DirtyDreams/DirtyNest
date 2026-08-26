@@ -51,6 +51,7 @@ import {
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 import ArtifactsCanvas from "./chatbot/ArtifactsCanvas";
+import HermesMessageBlock from "./chatbot/HermesMessageBlock";
 
 export type ChatMode = "standard" | "reasoning" | "deep_research" | "code_interpreter";
 
@@ -148,16 +149,27 @@ export default function ChatbotView() {
     {
       id: "sys-1",
       sender: "system",
-      text: "NEURAL LINK ESTABLISHED // DEEP RESEARCH ENGINE ONLINE // GROUNDING: WEB + OBSIDIAN VAULT + CODE SANDBOX",
+      text: "HERMES NEURAL ENGINE ONLINE // NOUS-HERMES-3-70B // ACP PROTOCOL V2 // PERSISTENT MEMORY & 42 SKILLS LOADED",
       timestamp: "06:00:01",
     },
     {
       id: "ai-1",
       sender: "ai",
-      text: "Greetings, Commander. DirtyNest Deep Research Subsystem is fully initialized with recursive web search, Obsidian Vault vector embeddings, and multi-step cognitive reasoning. Select a research template or enter your operational directive to begin.",
+      text: `<thought>
+1. Checking DirtyNest cluster topology: all 8 microservices report 0 packet loss.
+2. Verified SQLite FTS5 persistent memory store: 1,420 vector nodes loaded with sub-10ms recall.
+3. Hermes Skills Hub active: 42 autonomous skills compiled and ready for dispatch.
+</thought>
+<tool_call>
+{"name": "hermes_mesh_status", "parameters": {"cluster": "dirtynest-core", "check_skills": true}}
+</tool_call>
+<tool_response>
+{"status": "ONLINE", "active_skills": 42, "memory_recall_accuracy": "99.8%", "sandbox": "Docker-AirGap"}
+</tool_response>
+Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator powering DirtyNest. Enter your operational directive or use /skills to trigger automated workflows.`,
       timestamp: "06:00:04",
-      model: "Gemini 3.7 Flash",
-      tokens: 42,
+      model: "Nous-Hermes-3-70B",
+      tokens: 68,
     },
   ]);
 
@@ -807,11 +819,24 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                 );
               }
 
+              if (!isUser && (msg.text.includes("<thought>") || msg.text.includes("<tool_call>") || msg.text.includes("<tool_response>"))) {
+                return (
+                  <div key={msg.id} className="w-full">
+                    <HermesMessageBlock
+                      content={msg.text}
+                      sender="bot"
+                      timestamp={msg.timestamp}
+                      model={msg.model}
+                    />
+                  </div>
+                );
+              }
+
               return (
                 <div key={msg.id} className={`flex flex-col gap-2 ${isUser ? "items-end" : "items-start"}`}>
                   {/* Sender Header */}
                   <div className="flex items-center gap-2 text-[10px] text-[#4F536E]">
-                    <span>{isUser ? "OPERATOR // DIRECTIVE" : msg.model || "DIRTYNEST AI"}</span>
+                    <span>{isUser ? "OPERATOR // DIRECTIVE" : msg.model || "HERMES AI"}</span>
                     <span>•</span>
                     <span>{msg.timestamp}</span>
                     {msg.tokens && (

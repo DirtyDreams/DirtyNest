@@ -46,42 +46,42 @@ interface HarnessMeta {
 const HARNESSES: HarnessMeta[] = [
   {
     id: "hermes",
-    name: "Hermes Agent Core",
-    codename: "HERMES-AUTONOMY-V2.5",
+    name: "Hermes Master Orchestrator",
+    codename: "HERMES-MASTER-AI-BRAIN",
     model: "Nous-Hermes-3-Llama-70B",
-    tagline: "Primary tactical harness: multi-step reasoning, persistent memory, and self-improving skill creation",
+    tagline: "100% Master AI Backend: multi-step reasoning, persistent memory, and self-improving skill creation",
     color: "#00FF41",
     accentHex: "rgba(0, 255, 65, 0.2)",
     contextWindow: "128k Tokens",
     temperature: 0.2,
     runtime: "Cloud Multi-Agent RPC",
-    defaultPrompt: "You are Hermes, an autonomous tactical agent. Execute plans with precision and request human clearance before mutating file systems or launching network probes.",
+    defaultPrompt: "You are Hermes, the 100% Master AI Brain of DirtyNest. Orchestrate plans with precision, dispatch coding tasks to subordinate workers (Pi / OpenCode), and enforce zero-trust security.",
   },
   {
     id: "pi",
-    name: "Pi Reflection Harness",
-    codename: "PI-EMPATHY-REASONER",
+    name: "Pi Code Synthesis Worker",
+    codename: "PI-SUBORDINATE-CODER",
     model: "Inflection-2.5 / Deep-Reflection",
-    tagline: "Conversational empathy, deep user intent alignment, and iterative hypothesis critique",
+    tagline: "Dedicated code synthesis sub-harness: empathetic refactoring, architectural critique & edge-case linting",
     color: "#BF40FF",
     accentHex: "rgba(191, 64, 255, 0.2)",
     contextWindow: "64k Tokens",
     temperature: 0.7,
     runtime: "V8 Isolate",
-    defaultPrompt: "You are Pi Reasoner. Analyze the psychological and architectural context of every request. Question edge cases with empathy.",
+    defaultPrompt: "You are Pi Code Synthesis Worker. You operate as a specialized sub-harness under Hermes Master Brain.",
   },
   {
     id: "opencode",
-    name: "OpenCode Local Mesh",
-    codename: "OPENCODE-DEEPSEEK-OLLAMA",
+    name: "OpenCode Local AST Worker",
+    codename: "OPENCODE-CUDA-SUBORDINATE",
     model: "DeepSeek-Coder-V2-Lite-Q8",
-    tagline: "Local open-weights code harness with zero telemetry leakage and hardware CUDA offloading",
+    tagline: "Air-gapped local open-weights code engine with hardware CUDA offloading for high-speed AST transforms",
     color: "#FFB800",
     accentHex: "rgba(255, 184, 0, 0.2)",
     contextWindow: "32k Tokens",
     temperature: 0.3,
     runtime: "Local CUDA (RTX 4090)",
-    defaultPrompt: "You are OpenCode Local. Run within the air-gapped DirtyNest sandbox and execute safe code transformations.",
+    defaultPrompt: "You are OpenCode Local AST Worker. Run within the air-gapped DirtyNest sandbox and execute safe code transformations under Hermes dispatch.",
   },
 ];
 
@@ -361,7 +361,7 @@ export default function ControlRoomView() {
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black" style={{ color: isSelected ? h.color : "#F1F3F9" }}>
-                    {h.name} {h.id === "hermes" && "★ PRIMARY"}
+                    {h.name} {h.id === "hermes" ? "★ 100% MASTER BRAIN" : "⚡ SUBORDINATE CODER"}
                   </span>
                   <span className="w-2 h-2 rounded-full" style={{ background: h.color }} />
                 </div>
