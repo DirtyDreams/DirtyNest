@@ -135,8 +135,10 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
             <button
               key={item.id}
               type="button"
+              aria-label={`Navigate to ${item.label}`}
+              aria-current={isActive ? "page" : undefined}
               onClick={() => handleNavClick(item)}
-              className="relative flex items-center gap-3.5 px-3 py-2 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn"
+              className="relative flex items-center gap-3.5 px-3 py-2 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00FF41] focus:outline-none"
               style={{
                 background: isActive ? "rgba(0,255,65,0.09)" : "transparent",
                 color: isActive ? "#00FF41" : "#9499B3",
@@ -210,8 +212,10 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
             <button
               key={item.id}
               type="button"
+              aria-label={`Open telemetry view ${item.label}`}
+              aria-current={isActive ? "page" : undefined}
               onClick={() => handleNavClick(item)}
-              className="relative flex items-center gap-3.5 px-3 py-1.5 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn"
+              className="relative flex items-center gap-3.5 px-3 py-1.5 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00F0FF] focus:outline-none"
               style={{
                 background: isActive ? "rgba(0,240,255,0.08)" : "transparent",
                 color: isActive ? "#00F0FF" : "#9499B3",

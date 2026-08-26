@@ -25,18 +25,57 @@ import DashboardCustomizeModal, { DashboardWidgetConfig } from "@/components/mod
 import ThemeCustomizerModal from "@/components/modals/ThemeCustomizerModal";
 import AudioMixerModal from "@/components/modals/AudioMixerModal";
 import TerminalDock from "@/components/terminal/TerminalDock";
-import ChatbotView from "@/components/views/ChatbotView";
-import AiAgentsView from "@/components/views/AiAgentsView";
-import ControlRoomView from "@/components/views/ControlRoomView";
-import DockerView from "@/components/views/DockerView";
-import ToolsView from "@/components/views/ToolsView";
-import StatsView from "@/components/views/StatsView";
-import LogsView from "@/components/views/LogsView";
-import SettingsView from "@/components/views/SettingsView";
-import KnowledgeView from "@/components/views/KnowledgeView";
-import ApiHealthView from "@/components/views/ApiHealthView";
-import IntelFeedView from "@/components/views/IntelFeedView";
-import ScheduleView from "@/components/views/ScheduleView";
+import dynamic from "next/dynamic";
+import ViewLoadingSkeleton from "@/components/common/ViewLoadingSkeleton";
+
+const ChatbotView = dynamic(() => import("@/components/views/ChatbotView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="AI CHATBOT & CANVAS" />,
+});
+const AiAgentsView = dynamic(() => import("@/components/views/AiAgentsView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="AGENT SWARM FLEET" />,
+});
+const ControlRoomView = dynamic(() => import("@/components/views/ControlRoomView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="CONTROL ROOM & DAG TOPOLOGY" />,
+});
+const DockerView = dynamic(() => import("@/components/views/DockerView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="DOCKER CONTAINER MATRIX" />,
+});
+const ToolsView = dynamic(() => import("@/components/views/ToolsView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="DEVELOPER TOOLS SUITE" />,
+});
+const StatsView = dynamic(() => import("@/components/views/StatsView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="SYSTEM MONITOR & TELEMETRY" />,
+});
+const LogsView = dynamic(() => import("@/components/views/LogsView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="SYSTEM & SECURITY LOGS" />,
+});
+const SettingsView = dynamic(() => import("@/components/views/SettingsView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="CONFIGURATION & PARAMETERS" />,
+});
+const KnowledgeView = dynamic(() => import("@/components/views/KnowledgeView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="KNOWLEDGE VAULT & PKM" />,
+});
+const ApiHealthView = dynamic(() => import("@/components/views/ApiHealthView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="API HEALTH MATRIX" />,
+});
+const IntelFeedView = dynamic(() => import("@/components/views/IntelFeedView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="CYBER INTEL WIRE" />,
+});
+const ScheduleView = dynamic(() => import("@/components/views/ScheduleView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="MISSION SCHEDULE & CALENDAR" />,
+});
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { UptimeBadge } from "@/components/common/UptimeBadge";
 import { useAppStore } from "@/stores/useAppStore";
