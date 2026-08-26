@@ -130,7 +130,7 @@ export default function MobileDrawer({
         </div>
 
         {/* Quick Tools Bar */}
-        <div className="p-3 border-b border-white/5 grid grid-cols-3 gap-2 font-mono text-[10px]">
+        <div className="p-3 border-b border-white/5 grid grid-cols-4 gap-1.5 font-mono text-[9px]">
           <button
             type="button"
             onClick={() => {
@@ -144,8 +144,8 @@ export default function MobileDrawer({
                 : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00FF41]"
             }`}
           >
-            <Terminal size={14} className="mb-1" />
-            <span>CLI [`]</span>
+            <Terminal size={13} className="mb-1" />
+            <span>CLI</span>
           </button>
 
           <button
@@ -160,8 +160,8 @@ export default function MobileDrawer({
                 : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#BF40FF]"
             }`}
           >
-            <Headphones size={14} className="mb-1" />
-            <span>{isDronePlaying ? "Drone ON" : "Drone OFF"}</span>
+            <Headphones size={13} className="mb-1" />
+            <span>{isDronePlaying ? "Drone" : "Mute"}</span>
           </button>
 
           <button
@@ -173,8 +173,21 @@ export default function MobileDrawer({
             }}
             className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/[0.03] border border-white/10 text-[#9499B3] hover:text-[#00F0FF] hover:border-[#00F0FF]/40 transition-all cursor-pointer touch-manipulation"
           >
-            <Wrench size={14} className="mb-1" />
+            <Wrench size={13} className="mb-1" />
             <span>DevTools</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              cyberAudio.play("click");
+              window.dispatchEvent(new CustomEvent("dirtynest-open-theme-studio"));
+              onClose();
+            }}
+            className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/[0.03] border border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40 transition-all cursor-pointer touch-manipulation"
+          >
+            <Sliders size={13} className="mb-1" />
+            <span>Themes</span>
           </button>
         </div>
 

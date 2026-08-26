@@ -22,7 +22,7 @@ import {
   Globe,
   Lock,
 } from "lucide-react";
-import { applyThemePreset } from "@/lib/theme";
+import { applyThemePreset, getAllThemes, deleteCustomTheme, type ThemePreset } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 type SettingsSection = "general" | "ai" | "agents" | "apikeys" | "storage";
@@ -35,7 +35,8 @@ export default function SettingsView() {
   const [pollInterval, setPollInterval] = useState("2.5");
   const [soundVolume, setSoundVolume] = useState("80");
   const [scanlinesActive, setScanlinesActive] = useState(false);
-  const [activeTheme, setActiveTheme] = useState("cyber2077");
+  const [activeTheme, setActiveTheme] = useState("matrix");
+  const [themeList, setThemeList] = useState<any[]>([]);
 
   // AI settings
   const [defaultAiModel, setDefaultAiModel] = useState("gemini-2.5-pro");
@@ -58,7 +59,32 @@ export default function SettingsView() {
   const [githubToken, setGithubToken] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
 
+  const refreshThemeList = () => {
+    try {
+      const all = getAllThemes();
+      setThemeList(all);
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+        const saved = localStorage.getItem("dirtynest_theme");
+        if (saved) setActiveTheme(saved);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
+    refreshThemeList();
+
+    const handleThemeApplied = (e: CustomEvent<ThemePreset>) => {
+      if (e.detail?.id) setActiveTheme(e.detail.id);
+    };
+    const handleThemeListUpdated = () => {
+      refreshThemeList();
+    };
+
+    window.addEventListener("dirtynest-theme-applied" as any, handleThemeApplied);
+    window.addEventListener("dirtynest-themes-list-updated" as any, handleThemeListUpdated);
+
     try {
       if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
         setGithubToken(localStorage.getItem("dirtynest_gh_token") || "");
@@ -75,6 +101,11 @@ export default function SettingsView() {
     } catch {
       // ignore
     }
+
+    return () => {
+      window.removeEventListener("dirtynest-theme-applied" as any, handleThemeApplied);
+      window.removeEventListener("dirtynest-themes-list-updated" as any, handleThemeListUpdated);
+    };
   }, []);
 
   const saveAllSettings = () => {
@@ -280,31 +311,109 @@ export default function SettingsView() {
               </div>
 
               {/* Themes Selector */}
-              <div className="space-y-2">
-                <label className="text-xs text-[#9499B3] uppercase font-bold flex items-center gap-2">
-                  <Palette size={14} className="text-[#BF40FF]" />
-                  <span>Cyber Colorway Palette</span>
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { id: "cyber2077", name: "Night City", color: "#00FF41" },
-                    { id: "synthwave", name: "Synthwave Outrun", color: "#FF1493" },
-                    { id: "matrix", name: "Matrix Green", color: "#00FF41" },
-                    { id: "amber", name: "Amber CRT", color: "#FFB000" },
-                  ].map((th) => (
-                    <button
-                      key={th.id}
-                      onClick={() => handleThemeChange(th.id)}
-                      className={`p-3 rounded-xl border text-xs flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                        activeTheme === th.id
-                          ? "bg-white/10 border-[#00FF41] text-[#F1F3F9] font-bold"
-                          : "bg-white/[0.02] border-white/5 text-[#9499B3] hover:bg-white/5"
-                      }`}
-                    >
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: th.color }} />
-                      <span>{th.name}</span>
-                    </button>
-                  ))}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-[#9499B3] uppercase font-bold flex items-center gap-2">
+                    <Palette size={14} className="text-[#BF40FF]" />
+                    <span>Cyber Colorway Palette ({themeList.length})</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      cyberAudio.play("click");
+                      window.dispatchEvent(new CustomEvent("dirtynest-open-theme-studio"));
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00FF41]/15 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/25 text-xs font-bold font-mono transition-all cursor-pointer"
+                  >
+                    <Sparkles size={12} />
+                    <span>THEME STUDIO & CREATOR</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {themeList.map((th) => {
+                    const isSelected = activeTheme === th.id;
+                    return (
+                      <div
+                        key={th.id}
+                        onClick={() => handleThemeChange(th.id)}
+                        className={`p-3 rounded-xl border text-xs flex flex-col justify-between transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-white/10 border-[#00FF41] shadow-[0_0_12px_rgba(0,255,65,0.2)]"
+                            : "bg-white/[0.02] border-white/5 text-[#9499B3] hover:bg-white/5 hover:border-white/15"
+                        }`}
+                        style={{
+                          background: `linear-gradient(135deg, ${th.bgDeep} 0%, rgba(20,20,35,0.6) 100%)`,
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className="font-bold truncate"
+                              style={{ color: isSelected ? th.primary : "#F1F3F9" }}
+                            >
+                              {th.name}
+                            </span>
+                            {isSelected && (
+                              <span
+                                className="text-[8px] font-bold px-1.5 py-0.2 rounded shrink-0"
+                                style={{ background: `${th.primary}25`, color: th.primary }}
+                              >
+                                ACTIVE
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            {th.isCustom && (
+                              <button
+                                type="button"
+                                title="Delete custom theme"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cyberAudio.play("click");
+                                  if (confirm(`Delete custom theme "${th.name}"?`)) {
+                                    deleteCustomTheme(th.id);
+                                    refreshThemeList();
+                                  }
+                                }}
+                                className="p-1 rounded bg-white/5 hover:bg-red-500/20 text-[#9499B3] hover:text-[#FF2A6D] transition-colors"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Color Pips */}
+                        <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-black/40 border border-white/5">
+                          <div
+                            className="w-3.5 h-3.5 rounded-full"
+                            style={{ background: th.primary }}
+                            title={`Primary: ${th.primary}`}
+                          />
+                          <div
+                            className="w-3.5 h-3.5 rounded-full"
+                            style={{ background: th.secondary }}
+                            title={`Secondary: ${th.secondary}`}
+                          />
+                          <div
+                            className="w-3.5 h-3.5 rounded-full"
+                            style={{ background: th.accent }}
+                            title={`Accent: ${th.accent}`}
+                          />
+                          <div
+                            className="w-3.5 h-3.5 rounded-full border border-white/15"
+                            style={{ background: th.bgDeep }}
+                            title={`Abyss: ${th.bgDeep}`}
+                          />
+                          <span className="text-[9px] text-[#4F536E] ml-auto uppercase font-mono">
+                            {th.isCustom ? "Custom" : "Built-in"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

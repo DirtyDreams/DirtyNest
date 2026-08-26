@@ -17,6 +17,7 @@ import CalendarWidget from "@/components/widgets/Calendar";
 import DevToolsModal from "@/components/modals/DevToolsModal";
 import SettingsModal from "@/components/modals/SettingsModal";
 import DashboardCustomizeModal, { DashboardWidgetConfig } from "@/components/modals/DashboardCustomizeModal";
+import ThemeCustomizerModal from "@/components/modals/ThemeCustomizerModal";
 import TerminalDock from "@/components/terminal/TerminalDock";
 import ChatbotView from "@/components/views/ChatbotView";
 import AiAgentsView from "@/components/views/AiAgentsView";
@@ -56,6 +57,7 @@ export default function Home() {
   const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [isDronePlaying, setIsDronePlaying] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
@@ -157,8 +159,15 @@ export default function Home() {
         handleSelectView(e.detail);
       }
     };
+    const handleOpenThemeStudio = () => {
+      setIsThemeModalOpen(true);
+    };
     window.addEventListener("dirtynest-navigate" as any, handleCustomNav);
-    return () => window.removeEventListener("dirtynest-navigate" as any, handleCustomNav);
+    window.addEventListener("dirtynest-open-theme-studio" as any, handleOpenThemeStudio);
+    return () => {
+      window.removeEventListener("dirtynest-navigate" as any, handleCustomNav);
+      window.removeEventListener("dirtynest-open-theme-studio" as any, handleOpenThemeStudio);
+    };
   }, []);
 
   const formatUptime = (totalSec: number) => {
@@ -230,6 +239,10 @@ export default function Home() {
         isOpen={isCustomizeOpen}
         onClose={() => setIsCustomizeOpen(false)}
         onLayoutChange={handleLayoutUpdated}
+      />
+      <ThemeCustomizerModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
       />
       <TerminalDock isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
 
@@ -482,7 +495,7 @@ export default function Home() {
               </button>
 
               {/* Theme Palette Switcher */}
-              <ThemeMenu />
+              <ThemeMenu onOpenCustomizer={() => setIsThemeModalOpen(true)} />
 
               {/* Fullscreen Toggle */}
               <button
