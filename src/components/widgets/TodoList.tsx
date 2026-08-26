@@ -8,11 +8,15 @@ interface Todo {
   text: string;
   completed: number;
   sort_order: number;
+  priority: "low" | "normal" | "high";
+  due_date: string | null;
 }
 
 export default function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
+  const [newPriority, setNewPriority] = useState<"low" | "normal" | "high">("normal");
+  const [newDueDate, setNewDueDate] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "done">("all");
 
   const fetchTodos = useCallback(async () => {
@@ -33,11 +37,17 @@ export default function TodoList() {
     const res = await fetch("/api/todos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: newTodo.trim() }),
+      body: JSON.stringify({ 
+        text: newTodo.trim(),
+        priority: newPriority,
+        due_date: newDueDate || null,
+      }),
     });
     if (res.ok) {
       setTodos(await res.json());
       setNewTodo("");
+      setNewPriority("normal");
+      setNewDueDate("");
     }
   };
 
@@ -46,6 +56,15 @@ export default function TodoList() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: !completed }),
+    });
+    if (res.ok) setTodos(await res.json());
+  };
+
+  const updateTodoPriority = async (id: number, priority: string) => {
+    const res = await fetch(`/api/todos/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ priority }),
     });
     if (res.ok) setTodos(await res.json());
   };
@@ -79,34 +98,53 @@ export default function TodoList() {
       </div>
 
       {/* Input */}
-      <div className="flex gap-2 mb-3">
-        <input
-          type="text"
-          value={newTodo}
-          onChange={(e) => setNewTodo(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addTodo()}
-          placeholder="New operational directive..."
-          className="flex-1 bg-[#07070B] outline-none text-xs px-3 py-2 rounded-xl text-[#F1F3F9] border border-white/10 focus:border-[#00FF41] placeholder:text-[#4F536E]"
-        />
-        <button
-          onClick={addTodo}
-          className="px-3 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center"
-          style={{
-            background: "rgba(0, 255, 65, 0.15)",
-            color: "#00FF41",
-            border: "1px solid rgba(0, 255, 65, 0.3)",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background =
-              "rgba(0, 255, 65, 0.25)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background =
-              "rgba(0, 255, 65, 0.15)";
-          }}
-        >
-          <Plus size={14} />
-        </button>
+      <div className="flex flex-col gap-2 mb-3">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newTodo}
+            onChange={(e) => setNewTodo(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addTodo()}
+            placeholder="New operational directive..."
+            className="flex-1 bg-[#07070B] outline-none text-xs px-3 py-2 rounded-xl text-[#F1F3F9] border border-white/10 focus:border-[#00FF41] placeholder:text-[#4F536E]"
+          />
+          <button
+            onClick={addTodo}
+            className="px-3 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center"
+            style={{
+              background: "rgba(0, 255, 65, 0.15)",
+              color: "#00FF41",
+              border: "1px solid rgba(0, 255, 65, 0.3)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background =
+                "rgba(0, 255, 65, 0.25)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background =
+                "rgba(0, 255, 65, 0.15)";
+            }}
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+        <div className="flex gap-2 text-xs">
+          <select 
+            value={newPriority}
+            onChange={(e) => setNewPriority(e.target.value as any)}
+            className="bg-[#07070B] border border-white/10 rounded-lg px-2 py-1 text-[#9499B3] focus:border-[#00FF41] outline-none"
+          >
+            <option value="low">Low Priority</option>
+            <option value="normal">Normal</option>
+            <option value="high">High Priority</option>
+          </select>
+          <input
+            type="date"
+            value={newDueDate}
+            onChange={(e) => setNewDueDate(e.target.value)}
+            className="bg-[#07070B] border border-white/10 rounded-lg px-2 py-1 text-[#9499B3] focus:border-[#00FF41] outline-none flex-1"
+          />
+        </div>
       </div>
 
       {/* Filter Tabs */}
@@ -157,15 +195,28 @@ export default function TodoList() {
               ) : null}
             </button>
 
-            <span
-              className="text-xs flex-1 transition-all duration-200 leading-snug"
-              style={{
-                color: todo.completed ? "#4F536E" : "#F1F3F9",
-                textDecoration: todo.completed ? "line-through" : "none",
-              }}
-            >
-              {todo.text}
-            </span>
+            <div className="flex-1 flex flex-col justify-center min-w-0">
+              <span
+                className={`text-sm font-medium truncate transition-all duration-200 ${
+                  todo.completed ? "text-[#4F536E] line-through" : "text-[#F1F3F9]"
+                }`}
+              >
+                {todo.text}
+              </span>
+              <div className="flex gap-2 mt-0.5">
+                <span className="text-[9px] font-mono uppercase px-1.5 rounded" style={{
+                  background: todo.priority === 'high' ? 'rgba(255,0,0,0.1)' : todo.priority === 'low' ? 'rgba(0,255,255,0.1)' : 'rgba(255,255,255,0.05)',
+                  color: todo.priority === 'high' ? '#FF4040' : todo.priority === 'low' ? '#00F0FF' : '#9499B3'
+                }}>
+                  {todo.priority}
+                </span>
+                {todo.due_date && (
+                  <span className="text-[9px] font-mono text-[#9499B3]">
+                    DUE: {todo.due_date}
+                  </span>
+                )}
+              </div>
+            </div>
 
             <button
               onClick={() => deleteTodo(todo.id)}

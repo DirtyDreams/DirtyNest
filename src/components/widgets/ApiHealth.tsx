@@ -71,7 +71,7 @@ export default function ApiHealth() {
   const upCount = endpoints.filter((e) => e.status === "up").length;
 
   return (
-    <div className="cyber-card p-5 relative">
+    <div className="cyber-card p-5 relative flex flex-col gap-3">
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
       <div className="hud-corner hud-corner-bl" />
@@ -118,7 +118,7 @@ export default function ApiHealth() {
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 flex-1 flex flex-col justify-start">
         {filtered.map((ep) => {
           const isUp = ep.status === "up";
           const isDegraded = ep.status === "degraded";
@@ -182,6 +182,19 @@ export default function ApiHealth() {
             </div>
           );
         })}
+      </div>
+
+      {/* Cluster Latency Summary Strip */}
+      <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-[#4F536E]">
+        <div className="flex items-center gap-2">
+          <span>LATENCY P50: <strong className="text-[#00FF41]">18ms</strong></span>
+          <span>•</span>
+          <span>P99: <strong className="text-[#00F0FF]">112ms</strong></span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[#9499B3]">
+          <Zap size={11} className="text-[#00FF41]" />
+          <span>REALTIME WS MESH ACTIVE</span>
+        </div>
       </div>
     </div>
   );

@@ -33,6 +33,11 @@ interface AppState {
   isFullscreen: boolean;
   setIsFullscreen: (fullscreen: boolean) => void;
 
+  // Right Tactical Deck Panel
+  isRightPanelOpen: boolean;
+  setRightPanelOpen: (open: boolean) => void;
+  toggleRightPanel: () => void;
+
   // Dashboard Customization
   customWidgets: Record<string, boolean>;
   setCustomWidgets: (widgets: Record<string, boolean>) => void;
@@ -79,6 +84,23 @@ export const useAppStore = create<AppState>((set) => ({
 
   isFullscreen: false,
   setIsFullscreen: (fullscreen) => set({ isFullscreen: fullscreen }),
+
+  isRightPanelOpen: true,
+  setRightPanelOpen: (open) => {
+    set({ isRightPanelOpen: open });
+    try {
+      localStorage.setItem("dirtynest_right_panel_open", String(open));
+    } catch {}
+  },
+  toggleRightPanel: () => {
+    set((state) => {
+      const next = !state.isRightPanelOpen;
+      try {
+        localStorage.setItem("dirtynest_right_panel_open", String(next));
+      } catch {}
+      return { isRightPanelOpen: next };
+    });
+  },
 
   customWidgets: {
     system_stats: true,

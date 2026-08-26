@@ -25,6 +25,14 @@ export async function PATCH(
       updates.push("text = ?");
       values.push(body.text.trim());
     }
+    if (body.priority) {
+      updates.push("priority = ?");
+      values.push(body.priority);
+    }
+    if (body.due_date !== undefined) {
+      updates.push("due_date = ?");
+      values.push(body.due_date);
+    }
 
     if (updates.length > 0) {
       values.push(numId);

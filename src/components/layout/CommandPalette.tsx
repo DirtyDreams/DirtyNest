@@ -21,6 +21,8 @@ import {
   Database,
   Settings,
   ScrollText,
+  FileText,
+  CheckCircle2,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
@@ -220,6 +222,35 @@ export default function CommandPalette() {
       action: () => window.location.reload(),
       shortcut: "R B",
       icon: <Terminal size={14} className="text-[#FFB800]" />,
+    },
+    // New Search Enhancements
+    {
+      id: "note_bpe",
+      label: "Search Note: BPE Tokenizer from Scratch",
+      category: "Knowledge Vault",
+      action: () => navigateToDeck("knowledge"),
+      icon: <FileText size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "note_zero_trust",
+      label: "Search Note: Zero-Trust Mesh Topology",
+      category: "Knowledge Vault",
+      action: () => navigateToDeck("knowledge"),
+      icon: <FileText size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "todo_ebpf",
+      label: "Todo: Deploy eBPF filter",
+      category: "Todos",
+      action: () => navigateToDeck("dashboard"),
+      icon: <CheckCircle2 size={14} className="text-[#00F0FF]" />,
+    },
+    {
+      id: "cal_standup",
+      label: "Calendar: Daily Sync",
+      category: "Calendar",
+      action: () => navigateToDeck("calendar"),
+      icon: <Calendar size={14} className="text-[#BF40FF]" />,
     },
   ];
 

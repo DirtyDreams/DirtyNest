@@ -83,7 +83,7 @@ export default function RssFeed() {
   );
 
   return (
-    <div className="cyber-card p-5 relative flex flex-col" style={{ minHeight: "380px" }}>
+    <div className="cyber-card p-5 relative flex flex-col gap-3">
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
       <div className="hud-corner hud-corner-bl" />
@@ -175,6 +175,17 @@ export default function RssFeed() {
             </article>
           );
         })}
+      </div>
+
+      {/* Feed Status Summary Strip */}
+      <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-[#4F536E]">
+        <div className="flex items-center gap-2">
+          <span>SOURCES: <strong className="text-[#BF40FF]">VERCEL LAB · DEEPMIND · HN · WIREGUARD</strong></span>
+        </div>
+        <div className="flex items-center gap-1 text-[#00FF41]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-ping" />
+          <span>STREAM AUTO-POLL: 60s</span>
+        </div>
       </div>
     </div>
   );

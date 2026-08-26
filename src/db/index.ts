@@ -32,6 +32,8 @@ export async function getDb(): Promise<Database> {
       text TEXT NOT NULL,
       completed INTEGER NOT NULL DEFAULT 0,
       sort_order INTEGER NOT NULL DEFAULT 0,
+      priority TEXT DEFAULT 'normal',
+      due_date TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -72,6 +74,13 @@ export async function getDb(): Promise<Database> {
       status_code TEXT DEFAULT '200',
       ip_origin TEXT DEFAULT '127.0.0.1',
       hash_sig TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS focus_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      duration_minutes INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      completed_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
 

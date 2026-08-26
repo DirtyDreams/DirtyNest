@@ -63,7 +63,7 @@ export default function GitHubActivity() {
   };
 
   return (
-    <div className="cyber-card p-5 relative">
+    <div className="cyber-card p-5 relative flex flex-col gap-4">
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
       <div className="hud-corner hud-corner-bl" />

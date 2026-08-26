@@ -84,7 +84,7 @@ export default function StatsView() {
     });
 
     const pathStr = `M ${coords.join(" L ")}`;
-    const areaStr = `${pathStr} L ${width},${height} L 0 revolutionary,${height} Z`;
+    const areaStr = `${pathStr} L ${width},${height} L 0,${height} Z`;
 
     return (
       <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
@@ -94,6 +94,7 @@ export default function StatsView() {
             <stop offset="100%" stopColor={color} stopOpacity="0.0" />
           </linearGradient>
         </defs>
+        <path d={areaStr} fill={`url(#grad-${color})`} stroke="none" />
         <path d={pathStr} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {points.map((p, idx) => {
           const x = idx * step;

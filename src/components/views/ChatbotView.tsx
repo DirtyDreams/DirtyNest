@@ -46,6 +46,7 @@ import {
   FileCode
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { useToast } from "@/components/common/ToastProvider";
 
 export type ChatMode = "standard" | "reasoning" | "deep_research" | "code_interpreter";
 
@@ -210,7 +211,9 @@ export default function ChatbotView() {
     );
   };
 
-  const handleSend = (customPrompt?: string) => {
+  const toast = useToast();
+
+  const handleSend = async (customPrompt?: string) => {
     const textToSend = customPrompt || input;
     if (!textToSend.trim() || isGenerating) return;
 
@@ -230,7 +233,7 @@ export default function ChatbotView() {
 
     const activeAiModel = AI_MODELS.find((m) => m.id === selectedModel);
 
-    // Deep Research Multi-Phase Simulation
+    // Deep Research Multi-Phase Simulation (kept simulated for complex UI logic)
     if (activeMode === "deep_research") {
       const researchMsgId = `ai-research-${Date.now()}`;
       
@@ -396,27 +399,87 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
         cyberAudio.play("chime");
       }, 4800);
     } else {
-      // Standard or Extended Reasoning response
-      setTimeout(() => {
-        const aiResponse: Message = {
-          id: `ai-${Date.now()}`,
-          sender: "ai",
-          text: `**Directive Acknowledged.** Analyzing: "${textToSend}"\n\nExecution completed within the ${activeAiModel?.name} neural framework. Telemetry verified and aligned with active DirtyNest runtime protocols.`,
-          timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
-          model: activeAiModel?.name,
-          tokens: 420,
+      // Real LLM Integration for standard and reasoning modes
+      let apiKey = "";
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+        apiKey = localStorage.getItem("dirtynest_gemini_key") || "";
+      }
+
+      if (!apiKey) {
+        toast.error("NO API KEY DETECTED", "Configure your Gemini API key in Settings > API Keys.");
+        setIsGenerating(false);
+        return;
+      }
+
+      const aiMsgId = `ai-${Date.now()}`;
+      const aiResponse: Message = {
+        id: aiMsgId,
+        sender: "ai",
+        text: "",
+        timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
+        model: activeAiModel?.name,
+        mode: activeMode,
+        thinkingTimeSec: activeMode === "reasoning" ? 0 : undefined,
+        thinkingTrace: activeMode === "reasoning" ? "Initiating deep reasoning chain...\n" : undefined,
+      };
+
+      setMessages((prev) => [...prev, aiResponse]);
+
+      try {
+        const payload = {
+          messages: [...messages, userMsg],
+          apiKey,
+          model: selectedModel,
           mode: activeMode,
-          thinkingTimeSec: activeMode === "reasoning" ? 6.2 : undefined,
-          thinkingTrace:
-            activeMode === "reasoning"
-              ? `* Checked constraints and context boundaries.\n* Evaluated potential security implications.\n* Formulated direct, actionable response.`
-              : undefined,
         };
 
-        setMessages((prev) => [...prev, aiResponse]);
-        setIsGenerating(false);
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to communicate with AI core.");
+        }
+
+        if (!res.body) throw new Error("No readable stream returned.");
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let done = false;
+        let responseText = "";
+
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+          if (value) {
+            const chunkText = decoder.decode(value, { stream: true });
+            responseText += chunkText;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === aiMsgId
+                  ? { ...msg, text: responseText }
+                  : msg
+              )
+            );
+          }
+        }
+        
         cyberAudio.play("chime");
-      }, 1200);
+      } catch (err: any) {
+        console.error("Chat error:", err);
+        toast.error("COMMUNICATION FAILURE", err.message);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === aiMsgId
+              ? { ...msg, text: `**ERROR:** ${err.message}` }
+              : msg
+          )
+        );
+      } finally {
+        setIsGenerating(false);
+      }
     }
   };
 
@@ -673,7 +736,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           )}
 
           {/* Scrollable Messages Stream */}
-          <div className="flex flex-col gap-4 overflow-y-auto max-h-[520px] pr-2">
+          <div className="flex flex-col gap-4 overflow-y-auto flex-1 min-h-[320px] max-h-[580px] pr-2">
             {messages.map((msg) => {
               const isUser = msg.sender === "user";
               const isSystem = msg.sender === "system";

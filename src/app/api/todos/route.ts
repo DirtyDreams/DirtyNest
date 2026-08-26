@@ -10,13 +10,13 @@ export async function POST(request: Request) {
   try {
     const db = await getDb();
     const body = await request.json();
-    const { text } = body || {};
+    const { text, priority = "normal", due_date = null } = body || {};
     if (!text || typeof text !== "string" || !text.trim()) {
       return Response.json({ error: "Text is required" }, { status: 400 });
     }
     const maxOrder = db.exec("SELECT COALESCE(MAX(sort_order), -1) + 1 as next_order FROM todos");
     const nextOrder = maxOrder.length > 0 ? (maxOrder[0].values[0][0] as number) : 0;
-    db.run("INSERT INTO todos (text, sort_order) VALUES (?, ?)", [text.trim(), nextOrder]);
+    db.run("INSERT INTO todos (text, sort_order, priority, due_date) VALUES (?, ?, ?, ?)", [text.trim(), nextOrder, priority, due_date]);
     persistDb();
 
     try {

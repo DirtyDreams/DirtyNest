@@ -1,0 +1,16 @@
+{
+  "name": "DirtyNest Dashboard",
+  "short_name": "DirtyNest",
+  "description": "High-performance terminal AI and control center.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07070B",
+  "theme_color": "#07070B",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "192x192 512x512",
+      "type": "image/x-icon"
+    }
+  ]
+}

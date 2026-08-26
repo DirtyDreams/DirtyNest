@@ -17,7 +17,23 @@ export default function FocusTimer() {
   const [timeLeft, setTimeLeft] = useState(MODE_DURATIONS.work);
   const [isActive, setIsActive] = useState(false);
   const [completedSessions, setCompletedSessions] = useState(2);
+  const [totalFocusMinutes, setTotalFocusMinutes] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  const fetchTotalTime = () => {
+    fetch("/api/focus/total")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.total_minutes) {
+          setTotalFocusMinutes(data.total_minutes);
+        }
+      })
+      .catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchTotalTime();
+  }, []);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -30,6 +46,19 @@ export default function FocusTimer() {
       if (soundEnabled) {
         cyberAudio.playChime();
       }
+      
+      // Save session to DB
+      fetch("/api/focus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          duration_minutes: MODE_DURATIONS[mode] / 60,
+          type: mode,
+        }),
+      }).then(() => {
+        if (mode === "work") fetchTotalTime();
+      }).catch(console.error);
+
       if (mode === "work") {
         setCompletedSessions((prev) => prev + 1);
         setMode("shortBreak");
@@ -87,6 +116,11 @@ export default function FocusTimer() {
           >
             {soundEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
           </button>
+          {totalFocusMinutes > 0 && (
+            <span className="text-[9px] font-mono font-bold text-[#9499B3] px-1.5 py-0.5">
+              {Math.floor(totalFocusMinutes / 60)}h {totalFocusMinutes % 60}m logged
+            </span>
+          )}
           <span
             className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase"
             style={{

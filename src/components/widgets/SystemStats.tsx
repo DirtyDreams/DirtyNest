@@ -181,7 +181,7 @@ export default function SystemStats() {
   }, []);
 
   return (
-    <div className="cyber-card p-5 relative">
+    <div className="cyber-card p-5 relative flex flex-col gap-3.5">
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
       <div className="hud-corner hud-corner-bl" />
@@ -197,7 +197,7 @@ export default function SystemStats() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -231,7 +231,7 @@ export default function SystemStats() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 mb-1">
+              <div className="flex items-center gap-1.5 mb-0.5">
                 <Icon size={14} className="shrink-0" style={{ color: stat.color }} />
                 <span className="text-xs font-mono font-bold text-[#F1F3F9] tracking-wider">
                   {stat.label}
@@ -253,6 +253,22 @@ export default function SystemStats() {
             </div>
           );
         })}
+      </div>
+
+      {/* GPU & Thermal Quick Metrics Strip */}
+      <div className="pt-3 border-t border-white/5 grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
+        <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5">
+          <span className="text-[#4F536E] block">GPU VRAM</span>
+          <span className="font-bold text-[#BF40FF] mt-0.5 block">18.2 / 24 GB</span>
+        </div>
+        <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5">
+          <span className="text-[#4F536E] block">DIE TEMP</span>
+          <span className="font-bold text-[#00FF41] mt-0.5 block">54°C OPTIMAL</span>
+        </div>
+        <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5">
+          <span className="text-[#4F536E] block">SWAP LOAD</span>
+          <span className="font-bold text-[#00F0FF] mt-0.5 block">0.8 / 8.0 GB</span>
+        </div>
       </div>
     </div>
   );

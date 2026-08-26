@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { applyThemePreset } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { useToast } from "@/components/common/ToastProvider";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ type ModalTab = "general" | "ai" | "agents" | "apikeys" | "storage";
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<ModalTab>("general");
+  const toast = useToast();
   const [githubToken, setGithubToken] = useState("");
   const [pollInterval, setPollInterval] = useState("2.5");
   const [soundVolume, setSoundVolume] = useState("80");
@@ -68,6 +70,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const saveSettings = () => {
     try {
+      cyberAudio.play("toggle");
       if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
         localStorage.setItem("dirtynest_gh_token", githubToken);
         localStorage.setItem("dirtynest_poll_interval", pollInterval);
@@ -76,12 +79,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         localStorage.setItem("dirtynest_openai_key", openaiKey);
         localStorage.setItem("dirtynest_ollama_url", ollamaUrl);
       }
+      toast.success("SYSTEM DIRECTIVE UPDATED", "Your neural configurations have been saved successfully.");
+      setTimeout(() => onClose(), 800);
     } catch {
       // ignore
     }
-    cyberAudio.play("toggle");
-    setSavedMessage(true);
-    setTimeout(() => setSavedMessage(false), 2000);
   };
 
   const toggleScanlines = (active: boolean) => {

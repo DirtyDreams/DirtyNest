@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Terminal, Shield, Activity, Radio, Cpu, Headphones } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { useAppStore } from "@/stores/useAppStore";
 
 export default function StatusBar({
   onToggleTerminal,
@@ -11,6 +12,7 @@ export default function StatusBar({
   onToggleTerminal: () => void;
   isTerminalOpen: boolean;
 }) {
+  const { isRightPanelOpen } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [fps, setFps] = useState(60);
   const [latency, setLatency] = useState(14);
@@ -27,7 +29,7 @@ export default function StatusBar({
   }, []);
 
   return (
-    <footer className="hidden md:flex fixed bottom-0 left-[68px] right-0 h-7 bg-[#07070B]/90 backdrop-blur-xl border-t border-white/5 z-30 px-4 items-center justify-between font-mono text-[10px] text-[#9499B3]">
+    <footer className={`hidden md:flex fixed bottom-0 left-[68px] ${isRightPanelOpen ? "xl:right-[340px]" : "xl:right-[52px]"} right-0 h-7 bg-[#07070B]/90 backdrop-blur-xl border-t border-white/5 z-20 px-4 items-center justify-between font-mono text-[10px] text-[#9499B3] transition-all duration-300`}>
       {/* Left: Node & Socket Telemetry */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5">

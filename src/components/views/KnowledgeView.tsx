@@ -1287,7 +1287,7 @@ export default function KnowledgeView() {
 
                 {/* TAB 1: MARKDOWN VIEWER & WIKILINK HIGHLIGHTING */}
                 {activeTab === "viewer" && (
-                  <div className="p-4 rounded-xl bg-black/40 border border-white/5 max-h-[500px] overflow-y-auto text-xs text-[#F1F3F9] leading-relaxed space-y-3 font-mono">
+                  <div className="p-4 rounded-xl bg-black/40 border border-white/5 min-h-[460px] max-h-[620px] overflow-y-auto text-xs text-[#F1F3F9] leading-relaxed space-y-3 font-mono">
                     <div className="whitespace-pre-wrap font-sans text-xs text-[#D1D5DB] leading-6 selection:bg-[#00FF41]/30 selection:text-[#00FF41]">
                       {selectedDoc.content}
                     </div>

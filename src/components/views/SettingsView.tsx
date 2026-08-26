@@ -24,12 +24,13 @@ import {
 } from "lucide-react";
 import { applyThemePreset, getAllThemes, deleteCustomTheme, type ThemePreset } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { useToast } from "@/components/common/ToastProvider";
 
 type SettingsSection = "general" | "ai" | "agents" | "apikeys" | "storage";
 
 export default function SettingsView() {
   const [activeTab, setActiveTab] = useState<SettingsSection>("general");
-  const [savedMessage, setSavedMessage] = useState(false);
+  const toast = useToast();
 
   // General settings
   const [pollInterval, setPollInterval] = useState("2.5");
@@ -119,12 +120,11 @@ export default function SettingsView() {
         localStorage.setItem("dirtynest_deepseek_key", deepseekKey);
         localStorage.setItem("dirtynest_ollama_url", ollamaUrl);
       }
+      cyberAudio.play("toggle");
+      toast.success("SYSTEM DIRECTIVE UPDATED", "Your neural configurations have been saved successfully.");
     } catch {
       // ignore
     }
-    cyberAudio.play("toggle");
-    setSavedMessage(true);
-    setTimeout(() => setSavedMessage(false), 2500);
   };
 
   const toggleScanlines = (active: boolean) => {
@@ -186,6 +186,44 @@ export default function SettingsView() {
     }
   };
 
+  const importData = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!data.app || data.app !== "DirtyNest") {
+        toast.error("INVALID BACKUP", "The selected file is not a valid DirtyNest backup.");
+        return;
+      }
+
+      cyberAudio.play("toggle");
+      const res = await fetch("/api/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (res.ok) {
+        toast.success("RESTORE COMPLETE", "Backup restored successfully. Please refresh.");
+        if (data.config) {
+          if (data.config.pollInterval) localStorage.setItem("dirtynest_poll_interval", data.config.pollInterval);
+          if (data.config.defaultAiModel) setDefaultAiModel(data.config.defaultAiModel);
+          if (data.config.defaultTemperature) setDefaultTemperature(data.config.defaultTemperature);
+          if (data.config.maxConcurrency) setMaxConcurrency(data.config.maxConcurrency);
+        }
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        toast.error("RESTORE FAILED", "Database restore encountered an error.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("RESTORE ERROR", "Failed to parse backup file.");
+    }
+  };
+
   const tabs = [
     { id: "general", label: "General & HUD", icon: Sliders, tag: "CORE" },
     { id: "ai", label: "AI & Chatbot", icon: Bot, tag: "NEURAL" },
@@ -219,12 +257,6 @@ export default function SettingsView() {
 
         {/* Save CTA */}
         <div className="flex items-center gap-3">
-          {savedMessage && (
-            <span className="text-xs text-[#00FF41] flex items-center gap-1.5 animate-pulse">
-              <Check size={14} />
-              <span>CONFIG APPLIED & PERSISTED</span>
-            </span>
-          )}
           <button
             onClick={saveAllSettings}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25 transition-all cursor-pointer shadow-[0_0_15px_rgba(0,255,65,0.2)]"
@@ -690,6 +722,11 @@ export default function SettingsView() {
                     <Download size={15} />
                     <span>EXPORT COMPLETE JSON SNAPSHOT</span>
                   </button>
+                  <label className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30 hover:bg-[#00F0FF]/25 transition-all cursor-pointer font-bold text-xs">
+                    <Upload size={15} />
+                    <span>IMPORT JSON SNAPSHOT</span>
+                    <input type="file" accept=".json" onChange={importData} className="hidden" />
+                  </label>
                 </div>
               </div>
             </div>

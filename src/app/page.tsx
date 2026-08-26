@@ -33,6 +33,7 @@ import { UptimeBadge } from "@/components/common/UptimeBadge";
 import { useAppStore } from "@/stores/useAppStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
+import { ToastProvider } from "@/components/common/ToastProvider";
 import {
   Terminal,
   Activity,
@@ -77,6 +78,8 @@ export default function Home() {
     setMobileDeckSheetOpen,
     isFullscreen,
     setIsFullscreen,
+    isRightPanelOpen,
+    toggleRightPanel,
     customWidgets,
     setCustomWidgets,
   } = useAppStore();
@@ -117,13 +120,18 @@ export default function Home() {
     };
   }, [setActiveView, setCustomWidgets]);
 
-  // Global hotkey for terminal (backtick)
+  // Global hotkeys (Terminal ` and Right Panel Ctrl+\)
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === "`" && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) {
+    const isInput = ["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName);
+    if (e.key === "`" && !isInput) {
       e.preventDefault();
       toggleTerminal();
     }
-  }, [toggleTerminal]);
+    if ((e.ctrlKey || e.metaKey) && e.key === "\\" && !isInput) {
+      e.preventDefault();
+      toggleRightPanel();
+    }
+  }, [toggleTerminal, toggleRightPanel]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -170,11 +178,61 @@ export default function Home() {
     const handleOpenThemeStudio = () => {
       setThemeModalOpen(true);
     };
+
+    let leaderTimeout: NodeJS.Timeout | null = null;
+    let isLeaderActive = false;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement).isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.key === "g" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        isLeaderActive = true;
+        if (leaderTimeout) clearTimeout(leaderTimeout);
+        leaderTimeout = setTimeout(() => {
+          isLeaderActive = false;
+        }, 1000); // 1 second window
+        return;
+      }
+
+      if (isLeaderActive) {
+        let viewId: NavViewId | null = null;
+        switch (e.key) {
+          case "d": viewId = "dashboard"; break;
+          case "c": viewId = "chatbot"; break;
+          case "r": viewId = "control_room"; break;
+          case "a": viewId = "agents"; break;
+          case "k": viewId = "knowledge"; break;
+          case "t": viewId = "tools"; break;
+          case "s": viewId = "stats"; break;
+          case "l": viewId = "logs"; break;
+          // Settings uses 'g ,' or 'g S' typically, but let's use 'g ,'
+          case ",": viewId = "settings"; break;
+        }
+
+        if (viewId) {
+          handleSelectView(viewId);
+          isLeaderActive = false;
+          if (leaderTimeout) clearTimeout(leaderTimeout);
+        }
+      }
+    };
+
     window.addEventListener("dirtynest-navigate", handleCustomNav);
     window.addEventListener("dirtynest-open-theme-studio", handleOpenThemeStudio);
+    window.addEventListener("keydown", handleKeyDown);
+    
     return () => {
       window.removeEventListener("dirtynest-navigate", handleCustomNav);
       window.removeEventListener("dirtynest-open-theme-studio", handleOpenThemeStudio);
+      window.removeEventListener("keydown", handleKeyDown);
+      if (leaderTimeout) clearTimeout(leaderTimeout);
     };
   }, [setThemeModalOpen]);
 
@@ -216,7 +274,7 @@ export default function Home() {
   };
 
   return (
-    <>
+    <ToastProvider>
       <CommandPalette />
       <DevToolsModal isOpen={isDevToolsOpen} onClose={() => setDevToolsOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
@@ -232,7 +290,7 @@ export default function Home() {
       <TerminalDock isOpen={isTerminalOpen} onClose={() => setTerminalOpen(false)} />
 
       {/* Main Responsive Grid Layout */}
-      <div className="flex min-h-screen bg-[#07070B] text-[#F1F3F9] font-sans antialiased overflow-x-hidden selection:bg-[#00FF41]/20 selection:text-[#00FF41]">
+      <div className="flex min-h-screen bg-[#07070B] text-[#F1F3F9] font-sans antialiased selection:bg-[#00FF41]/20 selection:text-[#00FF41]">
         {/* Left Interactive Nav Sidebar */}
         <Sidebar
           activeView={activeView}
@@ -241,7 +299,7 @@ export default function Home() {
         />
 
         {/* Central Tactical Workspace */}
-        <main className="flex-1 min-w-0 max-w-full ml-0 md:ml-[68px] xl:mr-[350px] px-3 sm:px-5 py-3 sm:py-4 pb-24 md:pb-12 min-h-screen flex flex-col transition-all duration-300">
+        <main className={`flex-1 min-w-0 max-w-full ml-0 md:ml-[68px] ${isRightPanelOpen ? "xl:mr-[340px]" : "xl:mr-[52px]"} px-3 sm:px-5 py-3 sm:py-4 pb-40 flex flex-col transition-all duration-300`}>
           {/* Top Operational Breadcrumb HUD Bar */}
           <header className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-4 pb-3 border-b border-white/5">
             <div className="flex items-center gap-2.5 sm:gap-3">
@@ -442,15 +500,23 @@ export default function Home() {
                 </button>
               )}
 
-              {/* Mobile Tactical Deck Button (visible when RightPanel is hidden) */}
+              {/* Tactical Deck Toggle Button (Desktop & Mobile) */}
               <button
                 onClick={() => {
                   cyberAudio.play("click");
-                  setMobileDeckSheetOpen(true);
+                  if (window.innerWidth >= 1280) {
+                    toggleRightPanel();
+                  } else {
+                    setMobileDeckSheetOpen(true);
+                  }
                 }}
-                className="xl:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#00F0FF]/10 border border-[#00F0FF]/30 text-[#00F0FF] hover:bg-[#00F0FF]/20 transition-all text-xs font-mono font-bold cursor-pointer"
-                title="Open Tactical Deck (Tasks, Notes, Timer)"
-                aria-label="Open Tactical Deck"
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer ${
+                  isRightPanelOpen
+                    ? "bg-[#00F0FF]/15 text-[#00F0FF] border-[#00F0FF]/40 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
+                    : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00F0FF] hover:border-[#00F0FF]/40"
+                }`}
+                title="Toggle Tactical Deck Panel (Hotkey: Ctrl + \)"
+                aria-label="Toggle Tactical Deck"
               >
                 <Layers size={13} />
                 <span className="hidden sm:inline">DECK</span>
@@ -528,7 +594,7 @@ export default function Home() {
           {/* ACTIVE VIEW RENDERING WITH ERROR BOUNDARIES */}
           {activeView === "dashboard" && (
             <ErrorBoundary fallbackTitle="DASHBOARD WIDGET GRID ERROR">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 pb-6 animate-fade-in">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 pb-6 animate-fade-in items-start">
                 {customWidgets.system_stats !== false && (
                   <div id="stats-widget">
                     <SystemStats />
@@ -651,6 +717,6 @@ export default function Home() {
         onToggleTerminal={toggleTerminal}
         isTerminalOpen={isTerminalOpen}
       />
-    </>
+    </ToastProvider>
   );
 }
