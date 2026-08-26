@@ -19,6 +19,11 @@ import {
   Rss,
   Wifi,
   GitBranch,
+  Rocket,
+  Zap,
+  Server,
+  GitPullRequest,
+  TrendingUp,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -35,14 +40,16 @@ export interface DashboardWidgetConfig {
 export type DashboardPreset = "tactical_sre" | "ai_researcher" | "cyber_ops" | "developer_docker" | "minimalist" | "custom";
 
 const DEFAULT_WIDGETS: DashboardWidgetConfig[] = [
+  { id: "dora_metrics", name: "DORA Engineering Health Metrics", description: "Deployment frequency, lead time, failure rate, and MTTR", icon: TrendingUp, enabled: true, gridSpan: "full", category: "SYSTEM" },
+  { id: "ai_insight", name: "Tactical AI Operations Briefing", description: "Natural language cluster synthesis & autonomous recommendations", icon: Sparkles, enabled: true, gridSpan: "full", category: "AI & AGENTS" },
+  { id: "quick_actions", name: "Tactical Action Hub & Quick Dispatch", description: "1-click triggers for canary deploy, CVE scan, and cache purge", icon: Zap, enabled: true, gridSpan: "half", category: "NETWORK & DEV" },
+  { id: "service_status", name: "Service Radar Status Matrix", description: "High-density status & latency pills of all 8 core services", icon: Server, enabled: true, gridSpan: "half", category: "NETWORK & DEV" },
+  { id: "pipeline_queue", name: "CI/CD & Swarm Workflow Queue", description: "Live progress of running builds and background agent jobs", icon: GitPullRequest, enabled: true, gridSpan: "half", category: "NETWORK & DEV" },
   { id: "system_stats", name: "System Telemetry & Resource Monitor", description: "CPU, Memory, Disk, and eBPF Daemon load metrics", icon: Cpu, enabled: true, gridSpan: "half", category: "SYSTEM" },
   { id: "github_activity", name: "GitHub Repository Commit Matrix", description: "Recent commits, PRs, and branch activities", icon: GitBranch, enabled: true, gridSpan: "half", category: "NETWORK & DEV" },
   { id: "api_health", name: "API & Microservice Health Probes", description: "Status of SQLite-Vec, Auth Proxy, and Redis mesh", icon: Wifi, enabled: true, gridSpan: "half", category: "NETWORK & DEV" },
   { id: "rss_feed", name: "Cyber Threat & Intel RSS Feed", description: "Real-time vulnerability advisories & CVE updates", icon: Rss, enabled: true, gridSpan: "half", category: "NETWORK & DEV" },
   { id: "calendar", name: "Operations & Deployment Calendar", description: "Scheduled cron jobs, maintenance windows, and sprints", icon: Calendar, enabled: true, gridSpan: "full", category: "SYSTEM" },
-  { id: "docker_quick", name: "Docker Container Quick Status", description: "Active container lifecycle & memory pulse", icon: Boxes, enabled: true, gridSpan: "half", category: "SYSTEM" },
-  { id: "hermes_quick", name: "Hermes Agent Live Cognitive Feed", description: "Real-time thought stream & tool clearance alerts", icon: Radio, enabled: true, gridSpan: "half", category: "AI & AGENTS" },
-  { id: "cost_tracker", name: "AI Swarm Inference Cost Matrix", description: "Real-time token burn and provider spend meter", icon: DollarSign, enabled: true, gridSpan: "half", category: "AI & AGENTS" },
 ];
 
 interface Props {

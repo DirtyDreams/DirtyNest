@@ -14,6 +14,11 @@ import GitHubActivity from "@/components/widgets/GitHubActivity";
 import RssFeed from "@/components/widgets/RssFeed";
 import ApiHealth from "@/components/widgets/ApiHealth";
 import CalendarWidget from "@/components/widgets/Calendar";
+import DoraMetricsBar from "@/components/widgets/DoraMetricsBar";
+import AiInsightBrief from "@/components/widgets/AiInsightBrief";
+import QuickActionHub from "@/components/widgets/QuickActionHub";
+import ServiceStatusCompact from "@/components/widgets/ServiceStatusCompact";
+import PipelineQueueWidget from "@/components/widgets/PipelineQueueWidget";
 import DevToolsModal from "@/components/modals/DevToolsModal";
 import SettingsModal from "@/components/modals/SettingsModal";
 import DashboardCustomizeModal, { DashboardWidgetConfig } from "@/components/modals/DashboardCustomizeModal";
@@ -690,32 +695,76 @@ export default function Home() {
           {activeView === "dashboard" && (
             <ProtectedAccessGate minClearance={1} viewName="Overview Dashboard">
               <ErrorBoundary fallbackTitle="DASHBOARD WIDGET GRID ERROR">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 pb-6 animate-fade-in items-start">
-                  {customWidgets.system_stats !== false && (
-                    <div id="stats-widget">
-                      <SystemStats />
+                <div className="flex flex-col gap-4 sm:gap-5 pb-6 animate-fade-in">
+                  {/* Top North Star DORA Metrics Bar */}
+                  {customWidgets.dora_metrics !== false && (
+                    <div id="dora-widget">
+                      <DoraMetricsBar />
                     </div>
                   )}
-                  {customWidgets.github_activity !== false && (
-                    <div id="git-widget">
-                      <GitHubActivity />
+
+                  {/* Tactical AI Executive Briefing */}
+                  {customWidgets.ai_insight !== false && (
+                    <div id="ai-brief-widget">
+                      <AiInsightBrief />
                     </div>
                   )}
-                  {customWidgets.rss_feed !== false && (
-                    <div id="rss-widget">
-                      <RssFeed />
-                    </div>
-                  )}
-                  {customWidgets.api_health !== false && (
-                    <div id="api-widget">
-                      <ApiHealth />
-                    </div>
-                  )}
-                  {customWidgets.calendar !== false && (
-                    <div id="calendar-widget" className="lg:col-span-2">
-                      <CalendarWidget />
-                    </div>
-                  )}
+
+                  {/* 2-Column Grid: Action Hub & Service Status */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
+                    {customWidgets.quick_actions !== false && (
+                      <div id="quick-actions-widget">
+                        <QuickActionHub />
+                      </div>
+                    )}
+                    {customWidgets.service_status !== false && (
+                      <div id="service-status-widget">
+                        <ServiceStatusCompact />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2-Column Grid: Pipeline Queue & System Telemetry */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
+                    {customWidgets.pipeline_queue !== false && (
+                      <div id="pipeline-widget">
+                        <PipelineQueueWidget />
+                      </div>
+                    )}
+                    {customWidgets.system_stats !== false && (
+                      <div id="stats-widget">
+                        <SystemStats />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2-Column Grid: GitHub Activity & RSS Intel Feed */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
+                    {customWidgets.github_activity !== false && (
+                      <div id="git-widget">
+                        <GitHubActivity />
+                      </div>
+                    )}
+                    {customWidgets.rss_feed !== false && (
+                      <div id="rss-widget">
+                        <RssFeed />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2-Column Grid: API Health Probes & Operations Calendar */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
+                    {customWidgets.api_health !== false && (
+                      <div id="api-widget">
+                        <ApiHealth />
+                      </div>
+                    )}
+                    {customWidgets.calendar !== false && (
+                      <div id="calendar-widget">
+                        <CalendarWidget />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </ErrorBoundary>
             </ProtectedAccessGate>
