@@ -39,6 +39,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     try {
       customThemes = JSON.parse(localStorage.getItem('dirtynest_custom_themes') || '[]');
     } catch(e) {}
+    var hexRegex = /^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+    function sanitize(val, fallback) {
+      return (typeof val === 'string' && hexRegex.test(val.trim())) ? val.trim() : fallback;
+    }
     var defaults = [
       { id: 'matrix', primary: '#00FF41', secondary: '#BF40FF', accent: '#00F0FF', bgDeep: '#07070B' },
       { id: 'cyber2077', primary: '#FFE600', secondary: '#FF0055', accent: '#00F0FF', bgDeep: '#0A080E' },
@@ -48,12 +52,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       { id: 'arctic', primary: '#00F0FF', secondary: '#FFFFFF', accent: '#7000FF', bgDeep: '#040811' },
       { id: 'tokyo_midnight', primary: '#B026FF', secondary: '#00F0FF', accent: '#FF007F', bgDeep: '#080414' }
     ];
-    var all = defaults.concat(customThemes);
-    var t = all.find(function(x) { return x.id === themeId; }) || defaults[0];
+    var safeCustom = customThemes.filter(function(x) { return x && typeof x === 'object'; }).map(function(c) {
+      return {
+        id: String(c.id || '').replace(/[^a-zA-Z0-9_-]/g, ''),
+        primary: sanitize(c.primary, '#00FF41'),
+        secondary: sanitize(c.secondary, '#BF40FF'),
+        accent: sanitize(c.accent, '#00F0FF'),
+        bgDeep: sanitize(c.bgDeep, '#07070B')
+      };
+    });
+    var all = defaults.concat(safeCustom);
+    var rawT = all.find(function(x) { return x.id === themeId; }) || defaults[0];
+    var t = {
+      primary: sanitize(rawT.primary, '#00FF41'),
+      secondary: sanitize(rawT.secondary, '#BF40FF'),
+      accent: sanitize(rawT.accent, '#00F0FF'),
+      bgDeep: sanitize(rawT.bgDeep, '#07070B')
+    };
     function hexToRgb(h) {
       var c = (h || '#00FF41').replace('#', '').trim();
-      if (c.length === 3) c = c.split('').map(function(x) { return x + x; }).join('');
-      var n = parseInt(c, 16) || 0;
+      if (c.length === 3 || c.length === 4) c = c.slice(0, 3).split('').map(function(x) { return x + x; }).join('');
+      var n = parseInt(c.slice(0, 6), 16) || 0;
       return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
     }
     var p = hexToRgb(t.primary), s = hexToRgb(t.secondary), a = hexToRgb(t.accent), bg = hexToRgb(t.bgDeep);

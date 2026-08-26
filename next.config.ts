@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     "localhost:3000",
     "*.trycloudflare.com",
-    "locally-returns-karen-long.trycloudflare.com",
   ],
 };
 

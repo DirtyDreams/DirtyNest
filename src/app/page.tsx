@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import Sidebar, { NavViewId } from "@/components/layout/Sidebar";
 import RightPanel from "@/components/layout/RightPanel";
 import StatusBar from "@/components/layout/StatusBar";
@@ -28,6 +28,9 @@ import StatsView from "@/components/views/StatsView";
 import LogsView from "@/components/views/LogsView";
 import SettingsView from "@/components/views/SettingsView";
 import KnowledgeView from "@/components/views/KnowledgeView";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { UptimeBadge } from "@/components/common/UptimeBadge";
+import { useAppStore } from "@/stores/useAppStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
 import {
@@ -47,34 +50,38 @@ import {
   LayoutDashboard,
   Container,
   Radio,
-  Sparkles,
   Layers,
   Menu,
 } from "lucide-react";
 
 export default function Home() {
-  const [mounted, setMounted] = useState(false);
-  const [activeView, setActiveView] = useState<NavViewId>("dashboard");
-  const [uptimeSeconds, setUptimeSeconds] = useState(14820);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
-  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
-  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
-  const [isDronePlaying, setIsDronePlaying] = useState(false);
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [isMobileDeckSheetOpen, setIsMobileDeckSheetOpen] = useState(false);
-  const [customWidgets, setCustomWidgets] = useState<Record<string, boolean>>({
-    system_stats: true,
-    github_activity: true,
-    api_health: true,
-    rss_feed: true,
-    calendar: true,
-  });
+  const {
+    activeView,
+    setActiveView,
+    isDevToolsOpen,
+    setDevToolsOpen,
+    isSettingsOpen,
+    setSettingsOpen,
+    isCustomizeOpen,
+    setCustomizeOpen,
+    isThemeModalOpen,
+    setThemeModalOpen,
+    isTerminalOpen,
+    setTerminalOpen,
+    toggleTerminal,
+    isDronePlaying,
+    toggleDrone,
+    isMobileDrawerOpen,
+    setMobileDrawerOpen,
+    isMobileDeckSheetOpen,
+    setMobileDeckSheetOpen,
+    isFullscreen,
+    setIsFullscreen,
+    customWidgets,
+    setCustomWidgets,
+  } = useAppStore();
 
   useEffect(() => {
-    setMounted(true);
     // Sync initial view from URL hash if provided
     if (typeof window !== "undefined" && window.location.hash) {
       const initialHash = window.location.hash.replace("#", "") as NavViewId;
@@ -84,16 +91,12 @@ export default function Home() {
     }
 
     const handleHashChange = () => {
-      if (window.location.hash) {
+      if (typeof window !== "undefined" && window.location.hash) {
         const hash = window.location.hash.replace("#", "") as NavViewId;
         if (hash) setActiveView(hash);
       }
     };
     window.addEventListener("hashchange", handleHashChange);
-
-    const interval = setInterval(() => {
-      setUptimeSeconds((prev) => prev + 1);
-    }, 1000);
 
     try {
       const savedTheme = localStorage.getItem("dirtynest_theme") || "matrix";
@@ -110,18 +113,17 @@ export default function Home() {
     }
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener("hashchange", handleHashChange);
     };
-  }, []);
+  }, [setActiveView, setCustomWidgets]);
 
   // Global hotkey for terminal (backtick)
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === "`" && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) {
       e.preventDefault();
-      setIsTerminalOpen((prev) => !prev);
+      toggleTerminal();
     }
-  }, []);
+  }, [toggleTerminal]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -129,9 +131,9 @@ export default function Home() {
   }, [handleKeyDown]);
 
   const handleSelectView = (viewId: NavViewId) => {
-    setIsMobileDrawerOpen(false);
-    setIsMobileDeckSheetOpen(false);
-    setIsCustomizeOpen(false);
+    setMobileDrawerOpen(false);
+    setMobileDeckSheetOpen(false);
+    setCustomizeOpen(false);
     if (typeof window !== "undefined") {
       try {
         window.history.replaceState(null, "", `#${viewId}`);
@@ -159,44 +161,22 @@ export default function Home() {
 
   // Listen for custom navigation events from CommandPalette
   useEffect(() => {
-    const handleCustomNav = (e: CustomEvent<NavViewId>) => {
-      if (e.detail) {
-        handleSelectView(e.detail);
+    const handleCustomNav = (e: Event) => {
+      const customEvent = e as CustomEvent<NavViewId>;
+      if (customEvent.detail) {
+        handleSelectView(customEvent.detail);
       }
     };
     const handleOpenThemeStudio = () => {
-      setIsThemeModalOpen(true);
+      setThemeModalOpen(true);
     };
-    window.addEventListener("dirtynest-navigate" as any, handleCustomNav);
-    window.addEventListener("dirtynest-open-theme-studio" as any, handleOpenThemeStudio);
+    window.addEventListener("dirtynest-navigate", handleCustomNav);
+    window.addEventListener("dirtynest-open-theme-studio", handleOpenThemeStudio);
     return () => {
-      window.removeEventListener("dirtynest-navigate" as any, handleCustomNav);
-      window.removeEventListener("dirtynest-open-theme-studio" as any, handleOpenThemeStudio);
+      window.removeEventListener("dirtynest-navigate", handleCustomNav);
+      window.removeEventListener("dirtynest-open-theme-studio", handleOpenThemeStudio);
     };
-  }, []);
-
-  const formatUptime = (totalSec: number) => {
-    const hrs = Math.floor(totalSec / 3600);
-    const mins = Math.floor((totalSec % 3600) / 60);
-    const secs = totalSec % 60;
-    return `${hrs.toString().padStart(2, "0")}h ${mins.toString().padStart(2, "0")}m ${secs.toString().padStart(2, "0")}s`;
-  };
-
-  const toggleScanlines = () => {
-    cyberAudio.play("click");
-    try {
-      if (typeof document !== "undefined" && document.body) {
-        document.body.classList.toggle("scan-overlay");
-      }
-    } catch {
-      // ignore
-    }
-  };
-
-  const toggleDroneAudio = () => {
-    const active = cyberAudio.toggleDrone();
-    setIsDronePlaying(active);
-  };
+  }, [setThemeModalOpen]);
 
   const toggleFullscreen = () => {
     cyberAudio.play("click");
@@ -238,18 +218,18 @@ export default function Home() {
   return (
     <>
       <CommandPalette />
-      <DevToolsModal isOpen={isDevToolsOpen} onClose={() => setIsDevToolsOpen(false)} />
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <DevToolsModal isOpen={isDevToolsOpen} onClose={() => setDevToolsOpen(false)} />
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
       <DashboardCustomizeModal
         isOpen={isCustomizeOpen}
-        onClose={() => setIsCustomizeOpen(false)}
+        onClose={() => setCustomizeOpen(false)}
         onLayoutChange={handleLayoutUpdated}
       />
       <ThemeCustomizerModal
         isOpen={isThemeModalOpen}
-        onClose={() => setIsThemeModalOpen(false)}
+        onClose={() => setThemeModalOpen(false)}
       />
-      <TerminalDock isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
+      <TerminalDock isOpen={isTerminalOpen} onClose={() => setTerminalOpen(false)} />
 
       {/* Main Responsive Grid Layout */}
       <div className="flex min-h-screen bg-[#07070B] text-[#F1F3F9] font-sans antialiased overflow-x-hidden selection:bg-[#00FF41]/20 selection:text-[#00FF41]">
@@ -257,7 +237,7 @@ export default function Home() {
         <Sidebar
           activeView={activeView}
           onSelectView={handleSelectView}
-          onOpenSettingsModal={() => setIsSettingsOpen(true)}
+          onOpenSettingsModal={() => setSettingsOpen(true)}
         />
 
         {/* Central Tactical Workspace */}
@@ -269,7 +249,7 @@ export default function Home() {
               <button
                 onClick={() => {
                   cyberAudio.play("click");
-                  setIsMobileDrawerOpen(true);
+                  setMobileDrawerOpen(true);
                 }}
                 className="md:hidden p-2 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
                 title="Open Tactical Menu"
@@ -297,20 +277,15 @@ export default function Home() {
               <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-[#4F536E]">
                 <span>NODE://ROOT/MAIN</span>
                 <span>•</span>
-                <div className="flex items-center gap-1">
-                  <span>
-                    UPTIME:{" "}
-                    <span className="text-[#00F0FF]" suppressHydrationWarning>
-                      {mounted ? formatUptime(uptimeSeconds) : "04h 07m 00s"}
-                    </span>
-                  </span>
-                </div>
+                <UptimeBadge />
               </div>
             </div>
 
             {/* View Mode Quick Navigation Chips (Visible and scrollable on all viewports) */}
-            <div className="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/5 font-mono text-xs overflow-x-auto scrollbar-none max-w-full order-last lg:order-none w-full lg:w-auto">
+            <div className="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/5 font-mono text-xs overflow-x-auto scrollbar-none max-w-full order-last lg:order-none w-full lg:w-auto" role="tablist" aria-label="Deck Views">
               <button
+                role="tab"
+                aria-selected={activeView === "dashboard"}
                 onClick={() => handleSelectView("dashboard")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "dashboard"
@@ -323,6 +298,8 @@ export default function Home() {
               </button>
 
               <button
+                role="tab"
+                aria-selected={activeView === "chatbot"}
                 onClick={() => handleSelectView("chatbot")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "chatbot"
@@ -335,6 +312,8 @@ export default function Home() {
               </button>
 
               <button
+                role="tab"
+                aria-selected={activeView === "control_room"}
                 onClick={() => handleSelectView("control_room")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "control_room"
@@ -347,6 +326,8 @@ export default function Home() {
               </button>
 
               <button
+                role="tab"
+                aria-selected={activeView === "agents"}
                 onClick={() => handleSelectView("agents")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "agents"
@@ -359,6 +340,8 @@ export default function Home() {
               </button>
 
               <button
+                role="tab"
+                aria-selected={activeView === "knowledge"}
                 onClick={() => handleSelectView("knowledge")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "knowledge"
@@ -371,6 +354,8 @@ export default function Home() {
               </button>
 
               <button
+                role="tab"
+                aria-selected={activeView === "docker"}
                 onClick={() => handleSelectView("docker")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "docker"
@@ -383,6 +368,8 @@ export default function Home() {
               </button>
 
               <button
+                role="tab"
+                aria-selected={activeView === "tools"}
                 onClick={() => handleSelectView("tools")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "tools"
@@ -395,6 +382,8 @@ export default function Home() {
               </button>
 
               <button
+                role="tab"
+                aria-selected={activeView === "stats"}
                 onClick={() => handleSelectView("stats")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "stats"
@@ -407,6 +396,8 @@ export default function Home() {
               </button>
 
               <button
+                role="tab"
+                aria-selected={activeView === "logs"}
                 onClick={() => handleSelectView("logs")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "logs"
@@ -419,6 +410,8 @@ export default function Home() {
               </button>
 
               <button
+                role="tab"
+                aria-selected={activeView === "settings"}
                 onClick={() => handleSelectView("settings")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "settings"
@@ -438,10 +431,11 @@ export default function Home() {
                 <button
                   onClick={() => {
                     cyberAudio.play("click");
-                    setIsCustomizeOpen(true);
+                    setCustomizeOpen(true);
                   }}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/20 transition-all text-xs font-mono font-bold cursor-pointer"
                   title="Customize Overview Widgets"
+                  aria-label="Customize Overview Widgets"
                 >
                   <Sliders size={13} />
                   <span className="hidden sm:inline">CUSTOMIZE</span>
@@ -452,10 +446,11 @@ export default function Home() {
               <button
                 onClick={() => {
                   cyberAudio.play("click");
-                  setIsMobileDeckSheetOpen(true);
+                  setMobileDeckSheetOpen(true);
                 }}
                 className="xl:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#00F0FF]/10 border border-[#00F0FF]/30 text-[#00F0FF] hover:bg-[#00F0FF]/20 transition-all text-xs font-mono font-bold cursor-pointer"
                 title="Open Tactical Deck (Tasks, Notes, Timer)"
+                aria-label="Open Tactical Deck"
               >
                 <Layers size={13} />
                 <span className="hidden sm:inline">DECK</span>
@@ -466,6 +461,7 @@ export default function Home() {
                 onClick={triggerCmdPalette}
                 className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
                 title="Open Command Palette (Ctrl+K)"
+                aria-label="Open Command Palette"
               >
                 <Search size={14} className="group-hover:text-[#00FF41]" />
                 <span className="text-xs font-mono hidden md:inline">Command Palette</span>
@@ -476,8 +472,9 @@ export default function Home() {
 
               {/* DevTools Matrix modal button */}
               <button
-                onClick={() => setIsDevToolsOpen(true)}
+                onClick={() => setDevToolsOpen(true)}
                 title="Developer Tools Matrix"
+                aria-label="Open Developer Tools"
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer"
               >
                 <Wrench size={14} />
@@ -486,8 +483,9 @@ export default function Home() {
 
               {/* Terminal CLI Toggle */}
               <button
-                onClick={() => setIsTerminalOpen(!isTerminalOpen)}
+                onClick={toggleTerminal}
                 title="Toggle Cyber CLI Terminal (Hotkey: `)"
+                aria-label="Toggle Terminal"
                 className={`flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl border transition-all cursor-pointer ${
                   isTerminalOpen
                     ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 font-bold"
@@ -500,8 +498,9 @@ export default function Home() {
 
               {/* Ambient Focus Audio Drone */}
               <button
-                onClick={toggleDroneAudio}
+                onClick={toggleDrone}
                 title={isDronePlaying ? "Mute Ambient Focus Drone" : "Start Binaural Theta Focus Drone"}
+                aria-label="Toggle Ambient Focus Drone"
                 className={`p-2 rounded-xl border transition-all cursor-pointer ${
                   isDronePlaying
                     ? "bg-[#BF40FF]/20 text-[#BF40FF] border-[#BF40FF]/40 shadow-[0_0_10px_rgba(191,64,255,0.3)] animate-pulse"
@@ -512,12 +511,13 @@ export default function Home() {
               </button>
 
               {/* Theme Palette Switcher */}
-              <ThemeMenu onOpenCustomizer={() => setIsThemeModalOpen(true)} />
+              <ThemeMenu onOpenCustomizer={() => setThemeModalOpen(true)} />
 
               {/* Fullscreen Toggle */}
               <button
                 onClick={toggleFullscreen}
                 title="Toggle Fullscreen Deck"
+                aria-label="Toggle Fullscreen"
                 className="hidden sm:flex p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer"
               >
                 {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
@@ -525,54 +525,92 @@ export default function Home() {
             </div>
           </header>
 
-          {/* ACTIVE VIEW RENDERING */}
+          {/* ACTIVE VIEW RENDERING WITH ERROR BOUNDARIES */}
           {activeView === "dashboard" && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 pb-6 animate-fade-in">
-              {customWidgets.system_stats !== false && (
-                <div id="stats-widget">
-                  <SystemStats />
-                </div>
-              )}
-              {customWidgets.github_activity !== false && (
-                <div id="git-widget">
-                  <GitHubActivity />
-                </div>
-              )}
-              {customWidgets.rss_feed !== false && (
-                <div id="rss-widget">
-                  <RssFeed />
-                </div>
-              )}
-              {customWidgets.api_health !== false && (
-                <div id="api-widget">
-                  <ApiHealth />
-                </div>
-              )}
-              {customWidgets.calendar !== false && (
-                <div id="calendar-widget" className="lg:col-span-2">
-                  <CalendarWidget />
-                </div>
-              )}
-            </div>
+            <ErrorBoundary fallbackTitle="DASHBOARD WIDGET GRID ERROR">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 pb-6 animate-fade-in">
+                {customWidgets.system_stats !== false && (
+                  <div id="stats-widget">
+                    <SystemStats />
+                  </div>
+                )}
+                {customWidgets.github_activity !== false && (
+                  <div id="git-widget">
+                    <GitHubActivity />
+                  </div>
+                )}
+                {customWidgets.rss_feed !== false && (
+                  <div id="rss-widget">
+                    <RssFeed />
+                  </div>
+                )}
+                {customWidgets.api_health !== false && (
+                  <div id="api-widget">
+                    <ApiHealth />
+                  </div>
+                )}
+                {customWidgets.calendar !== false && (
+                  <div id="calendar-widget" className="lg:col-span-2">
+                    <CalendarWidget />
+                  </div>
+                )}
+              </div>
+            </ErrorBoundary>
           )}
 
-          {activeView === "chatbot" && <ChatbotView />}
+          {activeView === "chatbot" && (
+            <ErrorBoundary fallbackTitle="NEURAL CHATBOT MALFUNCTION">
+              <ChatbotView />
+            </ErrorBoundary>
+          )}
 
-          {activeView === "control_room" && <ControlRoomView />}
+          {activeView === "control_room" && (
+            <ErrorBoundary fallbackTitle="CONTROL ROOM MALFUNCTION">
+              <ControlRoomView />
+            </ErrorBoundary>
+          )}
 
-          {activeView === "agents" && <AiAgentsView />}
+          {activeView === "agents" && (
+            <ErrorBoundary fallbackTitle="AI AGENT SWARM MALFUNCTION">
+              <AiAgentsView />
+            </ErrorBoundary>
+          )}
 
-          {activeView === "knowledge" && <KnowledgeView />}
+          {activeView === "knowledge" && (
+            <ErrorBoundary fallbackTitle="KNOWLEDGE VAULT MALFUNCTION">
+              <KnowledgeView />
+            </ErrorBoundary>
+          )}
 
-          {activeView === "docker" && <DockerView />}
+          {activeView === "docker" && (
+            <ErrorBoundary fallbackTitle="DOCKER MANAGER MALFUNCTION">
+              <DockerView />
+            </ErrorBoundary>
+          )}
 
-          {activeView === "tools" && <ToolsView />}
+          {activeView === "tools" && (
+            <ErrorBoundary fallbackTitle="TACTICAL TOOLS MALFUNCTION">
+              <ToolsView />
+            </ErrorBoundary>
+          )}
 
-          {activeView === "stats" && <StatsView />}
+          {activeView === "stats" && (
+            <ErrorBoundary fallbackTitle="SYSTEM TELEMETRY MALFUNCTION">
+              <StatsView />
+            </ErrorBoundary>
+          )}
 
-          {activeView === "logs" && <LogsView />}
+          {activeView === "logs" && (
+            <ErrorBoundary fallbackTitle="OPERATIONS LOG MALFUNCTION">
+              <LogsView />
+            </ErrorBoundary>
+          )}
 
-          {activeView === "settings" && <SettingsView />}
+          {activeView === "settings" && (
+            <ErrorBoundary fallbackTitle="CONFIGURATION MALFUNCTION">
+              <SettingsView />
+            </ErrorBoundary>
+          )}
         </main>
 
         {/* Right Tactical Sidebar with Tabbed Focus Deck */}
@@ -583,34 +621,34 @@ export default function Home() {
       <MobileNavBar
         activeView={activeView}
         onSelectView={handleSelectView}
-        onOpenDeckSheet={() => setIsMobileDeckSheetOpen(true)}
-        onOpenDrawer={() => setIsMobileDrawerOpen(true)}
+        onOpenDeckSheet={() => setMobileDeckSheetOpen(true)}
+        onOpenDrawer={() => setMobileDrawerOpen(true)}
       />
 
       {/* Mobile Navigation Drawer */}
       <MobileDrawer
         isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
+        onClose={() => setMobileDrawerOpen(false)}
         activeView={activeView}
         onSelectView={handleSelectView}
-        onOpenSettingsModal={() => setIsSettingsOpen(true)}
-        onOpenDevTools={() => setIsDevToolsOpen(true)}
-        onToggleTerminal={() => setIsTerminalOpen(!isTerminalOpen)}
+        onOpenSettingsModal={() => setSettingsOpen(true)}
+        onOpenDevTools={() => setDevToolsOpen(true)}
+        onToggleTerminal={toggleTerminal}
         isTerminalOpen={isTerminalOpen}
         isDronePlaying={isDronePlaying}
-        onToggleDrone={toggleDroneAudio}
-        uptimeText={formatUptime(uptimeSeconds)}
+        onToggleDrone={toggleDrone}
+        uptimeText="SYSTEM ONLINE"
       />
 
       {/* Mobile Tactical Deck Sheet */}
       <MobileDeckSheet
         isOpen={isMobileDeckSheetOpen}
-        onClose={() => setIsMobileDeckSheetOpen(false)}
+        onClose={() => setMobileDeckSheetOpen(false)}
       />
 
       {/* Persistent Bottom HUD Status Bar (Desktop) */}
       <StatusBar
-        onToggleTerminal={() => setIsTerminalOpen(!isTerminalOpen)}
+        onToggleTerminal={toggleTerminal}
         isTerminalOpen={isTerminalOpen}
       />
     </>

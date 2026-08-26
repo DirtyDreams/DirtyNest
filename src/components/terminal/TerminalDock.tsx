@@ -80,13 +80,88 @@ export default function TerminalDock({
           newHistory.push({ type: "error", text: "Usage: calc <expression>" });
         } else {
           try {
-            // Safe mathematical expression evaluator
-            const sanitized = args.replace(/\^/g, "**").replace(/[^0-9+\-*/().%\s*]/g, "");
-            // eslint-disable-next-line no-new-func
-            const result = Function(`'use strict'; return (${sanitized})`)();
+            // Safe mathematical expression evaluator without Function/eval
+            const cleanExpr = args.replace(/\s+/g, "");
+            if (!/^[0-9+\-*/().%^]+$/.test(cleanExpr)) {
+              throw new Error("Invalid characters in expression");
+            }
+            // Simple recursive descent / token evaluator for basic arithmetic
+            const evaluateSimpleMath = (expr: string): number => {
+              // Tokenize
+              const tokens = expr.match(/([0-9.]+|\*\*|[+\-*/%()^])/g);
+              if (!tokens) throw new Error("Parse error");
+              
+              let pos = 0;
+              const peek = () => tokens[pos];
+              const consume = (expected?: string) => {
+                const tok = tokens[pos++];
+                if (expected && tok !== expected) throw new Error(`Expected ${expected}`);
+                return tok;
+              };
+
+              const parsePrimary = (): number => {
+                const tok = peek();
+                if (tok === "(") {
+                  consume("(");
+                  const val = parseExpression();
+                  consume(")");
+                  return val;
+                }
+                if (tok === "-" || tok === "+") {
+                  const sign = consume() === "-" ? -1 : 1;
+                  return sign * parsePrimary();
+                }
+                const num = parseFloat(consume());
+                if (isNaN(num)) throw new Error("Invalid number");
+                return num;
+              };
+
+              const parsePower = (): number => {
+                let left = parsePrimary();
+                while (peek() === "^" || peek() === "**") {
+                  consume();
+                  const right = parsePower();
+                  left = Math.pow(left, right);
+                }
+                return left;
+              };
+
+              const parseTerm = (): number => {
+                let left = parsePower();
+                while (peek() === "*" || peek() === "/" || peek() === "%") {
+                  const op = consume();
+                  const right = parsePower();
+                  if (op === "*") left = left * right;
+                  else if (op === "/") {
+                    if (right === 0) throw new Error("Division by zero");
+                    left = left / right;
+                  }
+                  else if (op === "%") left = left % right;
+                }
+                return left;
+              };
+
+              const parseExpression = (): number => {
+                let left = parseTerm();
+                while (peek() === "+" || peek() === "-") {
+                  const op = consume();
+                  const right = parseTerm();
+                  if (op === "+") left = left + right;
+                  else if (op === "-") left = left - right;
+                }
+                return left;
+              };
+
+              const res = parseExpression();
+              if (pos < tokens.length) throw new Error("Unexpected trailing tokens");
+              return res;
+            };
+
+            const result = evaluateSimpleMath(cleanExpr);
             newHistory.push({ type: "output", text: `RESULT: ${result}` });
-          } catch {
-            newHistory.push({ type: "error", text: "Math parsing error: Invalid expression" });
+          } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Invalid expression";
+            newHistory.push({ type: "error", text: `Math parsing error: ${msg}` });
           }
         }
         break;

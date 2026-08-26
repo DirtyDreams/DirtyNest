@@ -1090,6 +1090,6 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
   );
 }
 
-function BrainCircuitIcon(props: any) {
+function BrainCircuitIcon(props: React.ComponentProps<typeof Cpu>) {
   return <Cpu {...props} />;
 }

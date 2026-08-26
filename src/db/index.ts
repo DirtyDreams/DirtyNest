@@ -273,7 +273,7 @@ export async function getDb(): Promise<Database> {
 
     for (const log of seedLogs) {
       const ts = new Date(now - log.offsetMinutes * 60 * 1000).toISOString();
-      const hash = "0x" + Math.random().toString(16).substring(2, 10).toUpperCase();
+      const hash = "0x" + crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
       db.run(
         "INSERT INTO system_logs (timestamp, level, category, action, actor, details, latency_ms, status_code, ip_origin, hash_sig) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [ts, log.level, log.category, log.action, log.actor, log.details, log.latency_ms, log.status_code, "127.0.0.1", hash]
@@ -374,7 +374,7 @@ export async function insertLog(
   const database = await getDb();
   const timestamp = new Date().toISOString();
   const detailsStr = typeof details === "object" ? JSON.stringify(details) : (details || "");
-  const hash_sig = "0x" + Math.random().toString(16).substring(2, 10).toUpperCase();
+  const hash_sig = "0x" + crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
 
   database.run(
     "INSERT INTO system_logs (timestamp, level, category, action, actor, details, latency_ms, status_code, ip_origin, hash_sig) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",

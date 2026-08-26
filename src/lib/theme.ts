@@ -80,7 +80,17 @@ export function getCustomThemes(): ThemePreset[] {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) {
-        return parsed.map((t) => ({ ...t, isCustom: true }));
+        return parsed
+          .filter((t) => t && typeof t === "object")
+          .map((t) => ({
+            id: String(t.id || `custom-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, ""),
+            name: String(t.name || "Custom Theme").slice(0, 32),
+            primary: sanitizeColor(t.primary, "#00FF41"),
+            secondary: sanitizeColor(t.secondary, "#BF40FF"),
+            accent: sanitizeColor(t.accent, "#00F0FF"),
+            bgDeep: sanitizeColor(t.bgDeep, "#07070B"),
+            isCustom: true,
+          }));
       }
     }
   } catch {
@@ -95,9 +105,14 @@ export function getAllThemes(): ThemePreset[] {
 }
 
 export function saveCustomTheme(theme: Omit<ThemePreset, "isCustom" | "id"> & { id?: string; isCustom?: boolean }): ThemePreset {
+  const cleanId = (theme.id || `custom-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, "");
   const customTheme: ThemePreset = {
-    ...theme,
-    id: theme.id || `custom-${Date.now()}`,
+    id: cleanId,
+    name: String(theme.name || "Custom Theme").slice(0, 32),
+    primary: sanitizeColor(theme.primary, "#00FF41"),
+    secondary: sanitizeColor(theme.secondary, "#BF40FF"),
+    accent: sanitizeColor(theme.accent, "#00F0FF"),
+    bgDeep: sanitizeColor(theme.bgDeep, "#07070B"),
     isCustom: true,
   };
 
@@ -140,10 +155,25 @@ export function deleteCustomTheme(themeId: string): boolean {
   }
 }
 
+const HEX_REGEX = /^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+
+export function isValidHex(color: string): boolean {
+  return typeof color === "string" && HEX_REGEX.test(color.trim());
+}
+
+export function sanitizeColor(color: string, fallback: string): string {
+  if (isValidHex(color)) {
+    return color.trim();
+  }
+  return fallback;
+}
+
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  let c = (hex || "#00FF41").replace("#", "").trim();
-  if (c.length === 3) c = c.split("").map((x) => x + x).join("");
-  const n = parseInt(c, 16) || 0;
+  let c = sanitizeColor(hex, "#00FF41").replace("#", "").trim();
+  if (c.length === 3 || c.length === 4) {
+    c = c.slice(0, 3).split("").map((x) => x + x).join("");
+  }
+  const n = parseInt(c.slice(0, 6), 16) || 0;
   return {
     r: (n >> 16) & 255,
     g: (n >> 8) & 255,
@@ -152,17 +182,25 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 }
 
 export function generateThemeCss(preset: ThemePreset): string {
-  const p = hexToRgb(preset.primary);
-  const s = hexToRgb(preset.secondary);
-  const a = hexToRgb(preset.accent);
-  const bg = hexToRgb(preset.bgDeep);
+  const safePrimary = sanitizeColor(preset.primary, "#00FF41");
+  const safeSecondary = sanitizeColor(preset.secondary, "#BF40FF");
+  const safeAccent = sanitizeColor(preset.accent, "#00F0FF");
+  const safeBg = sanitizeColor(preset.bgDeep, "#07070B");
+
+  const p = hexToRgb(safePrimary);
+  const s = hexToRgb(safeSecondary);
+  const a = hexToRgb(safeAccent);
+  const bg = hexToRgb(safeBg);
 
   return `
     :root {
-      --color-neon-green: ${preset.primary};
-      --color-neon-purple: ${preset.secondary};
-      --color-neon-cyan: ${preset.accent};
-      --bg-deep: ${preset.bgDeep};
+      --color-neon-green: ${safePrimary};
+      --color-neon-purple: ${safeSecondary};
+      --color-neon-cyan: ${safeAccent};
+      --bg-deep: ${safeBg};
+      --color-primary: ${safePrimary};
+      --color-secondary: ${safeSecondary};
+      --color-accent: ${safeAccent};
       --color-primary: ${preset.primary};
       --color-secondary: ${preset.secondary};
       --color-accent: ${preset.accent};

@@ -1,0 +1,91 @@
+import { create } from "zustand";
+import { NavViewId } from "@/components/layout/Sidebar";
+import { cyberAudio } from "@/lib/cyberAudio";
+
+interface AppState {
+  // Navigation
+  activeView: NavViewId;
+  setActiveView: (view: NavViewId) => void;
+
+  // Modals & Panels
+  isDevToolsOpen: boolean;
+  setDevToolsOpen: (open: boolean) => void;
+  isSettingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
+  isCustomizeOpen: boolean;
+  setCustomizeOpen: (open: boolean) => void;
+  isThemeModalOpen: boolean;
+  setThemeModalOpen: (open: boolean) => void;
+  isTerminalOpen: boolean;
+  setTerminalOpen: (open: boolean) => void;
+  toggleTerminal: () => void;
+  isMobileDrawerOpen: boolean;
+  setMobileDrawerOpen: (open: boolean) => void;
+  isMobileDeckSheetOpen: boolean;
+  setMobileDeckSheetOpen: (open: boolean) => void;
+
+  // Global Audio / Drone
+  isDronePlaying: boolean;
+  setDronePlaying: (playing: boolean) => void;
+  toggleDrone: () => boolean;
+
+  // Viewport / Screen
+  isFullscreen: boolean;
+  setIsFullscreen: (fullscreen: boolean) => void;
+
+  // Dashboard Customization
+  customWidgets: Record<string, boolean>;
+  setCustomWidgets: (widgets: Record<string, boolean>) => void;
+}
+
+export const useAppStore = create<AppState>((set) => ({
+  activeView: "dashboard",
+  setActiveView: (view) => {
+    set({ activeView: view });
+    if (typeof window !== "undefined") {
+      window.location.hash = view;
+    }
+  },
+
+  isDevToolsOpen: false,
+  setDevToolsOpen: (open) => set({ isDevToolsOpen: open }),
+
+  isSettingsOpen: false,
+  setSettingsOpen: (open) => set({ isSettingsOpen: open }),
+
+  isCustomizeOpen: false,
+  setCustomizeOpen: (open) => set({ isCustomizeOpen: open }),
+
+  isThemeModalOpen: false,
+  setThemeModalOpen: (open) => set({ isThemeModalOpen: open }),
+
+  isTerminalOpen: false,
+  setTerminalOpen: (open) => set({ isTerminalOpen: open }),
+  toggleTerminal: () => set((state) => ({ isTerminalOpen: !state.isTerminalOpen })),
+
+  isMobileDrawerOpen: false,
+  setMobileDrawerOpen: (open) => set({ isMobileDrawerOpen: open }),
+
+  isMobileDeckSheetOpen: false,
+  setMobileDeckSheetOpen: (open) => set({ isMobileDeckSheetOpen: open }),
+
+  isDronePlaying: false,
+  setDronePlaying: (playing) => set({ isDronePlaying: playing }),
+  toggleDrone: () => {
+    const active = cyberAudio.toggleDrone();
+    set({ isDronePlaying: active });
+    return active;
+  },
+
+  isFullscreen: false,
+  setIsFullscreen: (fullscreen) => set({ isFullscreen: fullscreen }),
+
+  customWidgets: {
+    system_stats: true,
+    github_activity: true,
+    api_health: true,
+    rss_feed: true,
+    calendar: true,
+  },
+  setCustomWidgets: (widgets) => set({ customWidgets: widgets }),
+}));
