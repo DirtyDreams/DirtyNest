@@ -1,0 +1,259 @@
+@import "tailwindcss";
+
+/* ============================================================
+   DIRTYNEST — Cyberpunk Design System v3.5
+   Matrix Green + Cyber Purple + Neon Cyan + Luminous Glass
+   ============================================================ */
+
+@theme inline {
+  --color-background: var(--bg-deep);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains);
+
+  /* Core palette */
+  --color-neon-green: #00FF41;
+  --color-neon-purple: #BF40FF;
+  --color-neon-cyan: #00F0FF;
+  --color-neon-amber: #FFB800;
+  --color-neon-red: #FF2A6D;
+
+  /* Background layers */
+  --color-bg-deep: #07070B;
+  --color-bg-surface: #0D0E17;
+  --color-bg-card: rgba(12, 13, 24, 0.72);
+  --color-bg-card-hover: rgba(18, 20, 38, 0.88);
+  --color-bg-sidebar: rgba(8, 9, 15, 0.94);
+
+  /* Text */
+  --color-text-primary: #F1F3F9;
+  --color-text-secondary: #9499B3;
+  --color-text-muted: #4F536E;
+}
+
+:root {
+  --bg-deep: #07070B;
+  --text-primary: #F1F3F9;
+  --color-neon-green: #00FF41;
+  --color-neon-purple: #BF40FF;
+  --color-neon-cyan: #00F0FF;
+}
+
+body {
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-inter, 'Inter', system-ui, -apple-system, sans-serif);
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 100vh;
+  -webkit-overflow-scrolling: touch;
+  background-image: 
+    radial-gradient(circle at 12% 18%, rgba(0, 255, 65, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 88% 50%, rgba(191, 64, 255, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 50% 92%, rgba(0, 240, 255, 0.04) 0%, transparent 50%),
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+}
+
+/* Safe area insets for notched phones */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0.5rem);
+}
+
+/* ============================================================
+   Scrollbars
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 65, 0.25);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neon-green);
+  box-shadow: 0 0 10px var(--color-neon-green);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 65, 0.25) rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================================
+   Cyberpunk Glassmorphism Card
+   ============================================================ */
+.cyber-card {
+  position: relative;
+  background: rgba(12, 13, 24, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 
+    0 16px 40px -12px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cyber-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100%);
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.cyber-card:hover {
+  border-color: rgba(0, 255, 65, 0.35);
+  box-shadow: 
+    0 20px 48px -12px rgba(0, 0, 0, 0.85),
+    0 0 24px rgba(0, 255, 65, 0.12),
+    0 0 0 1px rgba(0, 255, 65, 0.2) inset;
+}
+
+.cyber-card:hover::before {
+  background: linear-gradient(90deg, transparent 0%, var(--color-neon-green) 50%, transparent 100%);
+  opacity: 1;
+}
+
+/* Corner accent notches for tactical HUD */
+.hud-corner {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-color: var(--color-neon-green);
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+.cyber-card:hover .hud-corner {
+  opacity: 1;
+}
+
+.hud-corner-tl { top: 5px; left: 5px; border-top: 1.5px solid; border-left: 1.5px solid; }
+.hud-corner-tr { top: 5px; right: 5px; border-top: 1.5px solid; border-right: 1.5px solid; }
+.hud-corner-bl { bottom: 5px; left: 5px; border-bottom: 1.5px solid; border-left: 1.5px solid; }
+.hud-corner-br { bottom: 5px; right: 5px; border-bottom: 1.5px solid; border-right: 1.5px solid; }
+
+/* ============================================================
+   Neon Glows & Badges
+   ============================================================ */
+.neon-glow-green {
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.6), 0 0 20px rgba(0, 255, 65, 0.3);
+}
+
+.neon-glow-purple {
+  text-shadow: 0 0 10px rgba(191, 64, 255, 0.6), 0 0 20px rgba(191, 64, 255, 0.3);
+}
+
+.neon-glow-cyan {
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.6), 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+/* ============================================================
+   Widget header pattern
+   ============================================================ */
+.widget-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.widget-header h3 {
+  font-family: var(--font-jetbrains, 'JetBrains Mono', monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #9499B3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.widget-header .icon {
+  color: var(--color-neon-green);
+  filter: drop-shadow(0 0 6px rgba(0, 255, 65, 0.5));
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   CRT Scanline toggle
+   ============================================================ */
+.scan-overlay::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 65, 0.015) 2px,
+    rgba(0, 255, 65, 0.015) 4px
+  );
+}
+
+/* ============================================================
+   Micro-animations
+   ============================================================ */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+
+.animate-blink {
+  animation: blink 1.2s step-end infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+@keyframes glow-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-glow-bar {
+  animation: glow-bar 2.5s infinite linear;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

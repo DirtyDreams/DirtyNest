@@ -1,0 +1,355 @@
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Search,
+  ArrowRight,
+  ExternalLink,
+  Command,
+  Sliders,
+  Terminal,
+  Activity,
+  Calendar,
+  Sparkles,
+  Layers,
+  Wrench,
+  Headphones,
+  Timer,
+  Palette,
+  Bot,
+  Cpu,
+  Database,
+  Settings,
+} from "lucide-react";
+import { cyberAudio } from "@/lib/cyberAudio";
+import { applyThemePreset } from "@/lib/theme";
+
+interface CommandItem {
+  id: string;
+  label: string;
+  category: string;
+  action: () => void;
+  shortcut?: string;
+  icon?: React.ReactNode;
+}
+
+export default function CommandPalette() {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const navigateToDeck = (viewId: string) => {
+    window.dispatchEvent(
+      new CustomEvent("dirtynest-navigate", { detail: viewId })
+    );
+  };
+
+  const commands: CommandItem[] = [
+    {
+      id: "deck_overview",
+      label: "Switch Deck: Overview Operations",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("dashboard"),
+      shortcut: "G O",
+      icon: <Layers size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "deck_chatbot",
+      label: "Switch Deck: Cyber AI Chatbot Core",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("chatbot"),
+      shortcut: "G C",
+      icon: <Bot size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "deck_control_room",
+      label: "Switch Deck: Agent Control Room (Hermes, Pi, Codex, OpenCode)",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("control_room"),
+      shortcut: "G H",
+      icon: <Bot size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "deck_agents",
+      label: "Switch Deck: Autonomous AI Agent Swarm",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("agents"),
+      shortcut: "G A",
+      icon: <Cpu size={14} className="text-[#00F0FF]" />,
+    },
+    {
+      id: "deck_knowledge",
+      label: "Switch Deck: Knowledge Matrix // DataCore Vault",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("knowledge"),
+      shortcut: "G K",
+      icon: <Database size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "deck_docker",
+      label: "Switch Deck: Docker Container Hub & Compose Stacks",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("docker"),
+      shortcut: "G D",
+      icon: <Cpu size={14} className="text-[#00F0FF]" />,
+    },
+    {
+      id: "deck_tools",
+      label: "Switch Deck: Tactical Developer Tools Matrix",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("tools"),
+      shortcut: "G T",
+      icon: <Wrench size={14} className="text-[#BF40FF]" />,
+    },
+    {
+      id: "deck_stats",
+      label: "Switch Deck: Stats & Prometheus Telemetry Matrix",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("stats"),
+      shortcut: "G M",
+      icon: <Activity size={14} className="text-[#BF40FF]" />,
+    },
+    {
+      id: "deck_settings",
+      label: "Switch Deck: Comprehensive Settings & Config",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("settings"),
+      shortcut: "G S",
+      icon: <Settings size={14} className="text-[#FFB800]" />,
+    },
+    {
+      id: "drone_audio",
+      label: "Toggle Ambient Theta Drone Hum",
+      category: "Audio",
+      action: () => cyberAudio.toggleDrone(),
+      shortcut: "T D",
+      icon: <Headphones size={14} className="text-[#BF40FF]" />,
+    },
+    {
+      id: "theme_cyber",
+      label: "Theme: Night City 2077",
+      category: "Colorways",
+      action: () => applyThemePreset("cyber2077"),
+      icon: <Palette size={14} className="text-[#FFE600]" />,
+    },
+    {
+      id: "theme_synth",
+      label: "Theme: Synthwave Outrun",
+      category: "Colorways",
+      action: () => applyThemePreset("synthwave"),
+      icon: <Palette size={14} className="text-[#FF1493]" />,
+    },
+    {
+      id: "theme_matrix",
+      label: "Theme: Matrix Core (Green)",
+      category: "Colorways",
+      action: () => applyThemePreset("matrix"),
+      icon: <Palette size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "theme_amber",
+      label: "Theme: Amber Phosphor CRT",
+      category: "Colorways",
+      action: () => applyThemePreset("amber"),
+      icon: <Palette size={14} className="text-[#FFB000]" />,
+    },
+    {
+      id: "scanlines",
+      label: "Toggle CRT Matrix Scanlines",
+      category: "Interface",
+      action: () => document.body.classList.toggle("scan-overlay"),
+      shortcut: "T S",
+      icon: <Sliders size={14} className="text-[#BF40FF]" />,
+    },
+    {
+      id: "github",
+      label: "Launch GitHub Workspace",
+      category: "Warp Gate",
+      action: () => window.open("https://github.com", "_blank"),
+      icon: <ExternalLink size={14} className="text-[#00F0FF]" />,
+    },
+    {
+      id: "hackernews",
+      label: "Launch Hacker News Stream",
+      category: "Warp Gate",
+      action: () => window.open("https://news.ycombinator.com", "_blank"),
+      icon: <ExternalLink size={14} className="text-[#00F0FF]" />,
+    },
+    {
+      id: "reload",
+      label: "Soft Reboot Command Center",
+      category: "System",
+      action: () => window.location.reload(),
+      shortcut: "R B",
+      icon: <Terminal size={14} className="text-[#FFB800]" />,
+    },
+  ];
+
+  const filtered = commands.filter(
+    (cmd) =>
+      cmd.label.toLowerCase().includes(query.toLowerCase()) ||
+      cmd.category.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      setOpen((prev) => !prev);
+      setQuery("");
+      setSelectedIndex(0);
+    }
+    if (e.key === "Escape") {
+      setOpen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    const handleOpenEvent = () => {
+      setOpen(true);
+      setQuery("");
+      setSelectedIndex(0);
+    };
+    window.addEventListener("dirtynest-open-palette", handleOpenEvent);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("dirtynest-open-palette", handleOpenEvent);
+    };
+  }, [handleKeyDown]);
+
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 40);
+    }
+  }, [open]);
+
+  const handleCommandKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((i) => Math.min(i + 1, filtered.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter" && filtered[selectedIndex]) {
+      filtered[selectedIndex].action();
+      setOpen(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4"
+      style={{
+        background: "rgba(0, 0, 0, 0.78)",
+        backdropFilter: "blur(10px)",
+      }}
+      onClick={() => setOpen(false)}
+    >
+      <div
+        className="w-full max-w-xl max-h-[85vh] flex flex-col cyber-card overflow-hidden animate-fade-in shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)]"
+        style={{
+          border: "1px solid rgba(0, 255, 65, 0.3)",
+          background: "rgba(11, 12, 20, 0.95)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={handleCommandKeyDown}
+      >
+        {/* Search Header */}
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10 shrink-0">
+          <Search size={18} className="text-[#00FF41]" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIndex(0);
+            }}
+            placeholder="Execute protocol, warp link, or search..."
+            className="flex-1 min-w-0 bg-transparent outline-none text-sm text-[#F1F3F9] font-mono placeholder:text-[#4F536E]"
+          />
+          <kbd className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[#9499B3]">
+            ESC
+          </kbd>
+        </div>
+
+        {/* Results Stream */}
+        <div className="flex-1 max-h-[50vh] sm:max-h-[340px] overflow-y-auto p-2 space-y-1">
+          {filtered.map((cmd, idx) => {
+            const isSelected = idx === selectedIndex;
+            return (
+              <button
+                key={cmd.id}
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer"
+                style={{
+                  background: isSelected
+                    ? "rgba(0, 255, 65, 0.12)"
+                    : "transparent",
+                  border: isSelected
+                    ? "1px solid rgba(0, 255, 65, 0.25)"
+                    : "1px solid transparent",
+                  color: isSelected ? "#00FF41" : "#F1F3F9",
+                }}
+                onClick={() => {
+                  cmd.action();
+                  setOpen(false);
+                }}
+                onMouseEnter={() => setSelectedIndex(idx)}
+              >
+                <div
+                  className="p-1.5 rounded-lg"
+                  style={{
+                    background: isSelected ? "rgba(0, 255, 65, 0.15)" : "rgba(255, 255, 255, 0.04)",
+                  }}
+                >
+                  {cmd.icon || <Command size={14} />}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-mono font-medium block truncate">
+                    {cmd.label}
+                  </span>
+                  <span className="text-[9px] font-mono uppercase text-[#4F536E]">
+                    {cmd.category}
+                  </span>
+                </div>
+
+                {cmd.shortcut && (
+                  <kbd className="text-[10px] font-mono text-[#9499B3] px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
+                    {cmd.shortcut}
+                  </kbd>
+                )}
+
+                {isSelected && (
+                  <ArrowRight size={14} className="text-[#00FF41] shrink-0" />
+                )}
+              </button>
+            );
+          })}
+
+          {filtered.length === 0 && (
+            <div className="text-center py-10 text-xs font-mono text-[#4F536E]">
+              NO MATCHING DIRECTIVES FOUND
+            </div>
+          )}
+        </div>
+
+        {/* Footer info */}
+        <div className="px-4 py-2 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-[#4F536E] bg-black/20">
+          <div className="flex items-center gap-3">
+            <span>
+              <kbd className="px-1 py-0.2 rounded bg-white/5 border border-white/5">↑↓</kbd> NAVIGATE
+            </span>
+            <span>
+              <kbd className="px-1 py-0.2 rounded bg-white/5 border border-white/5">↵</kbd> EXECUTE
+            </span>
+          </div>
+          <span className="text-[#00FF41]">DIRTYNEST KERNEL // READY</span>
+        </div>
+      </div>
+    </div>
+  );
+}
