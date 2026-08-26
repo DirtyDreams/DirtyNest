@@ -94,7 +94,15 @@ cd C:/Users/coyot/workspace/SkillClaw && \
 - agent-reach: Agent Reach v1.5.0 | channels: 4/15 个渠道可用
 ```
 
-> ⚠️ **Durability caveat:** this launch does NOT survive a reboot. After a restart it must be relaunched (or wired into a startup launcher / made self-healing by the watchdog). On-demand daemons on this host: SkillClaw `:30000`, Mina Chrome CDP `:9333`, Minions `:6969`, Main Chrome CDP `:9222`.
+> ⚠️ **Durability caveat:** this launch does NOT survive a reboot. After a restart it must be relaunched (or wired into a startup launcher / made self-healing by the watchdog — see §5.1).
+
+### 5.1 Self-healing watchdog (added 2026-08-26)
+`scripts/daily-health.sh` now attempts an automatic restart of the SkillClaw proxy before alerting:
+- If `127.0.0.1:30000` is not responding, it logs "not responding — attempting restart" and spawns `skillclaw.exe start` via `nohup … >/dev/null 2>&1 </dev/null &` (full fd redirection so the cron shell returns promptly — a bare `&` keeps the child's inherited stdout pipe open and **hangs the cron shell for 7 min**).
+- After a 4s wait it re-checks: logs `RESTORED` (success) or `STILL DOWN`.
+- The final alert `grep -q DOWN` matches only the `check_port` result lines (the provisional line was reworded to avoid the word DOWN), so a successfully self-healed run exits 0 (no false alert).
+
+**Verified end-to-end:** killed the proxy via `taskkill`, ran the watchdog under `timeout 45` → `exit 0`, proxy back to `404`, trace shows `not responding → RESTORED → UP`. No hang, no false alert.
 
 ---
 

@@ -25,6 +25,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import AgentMemoryInspector from "./agents/AgentMemoryInspector";
+import CreateAgentModal from "./agents/CreateAgentModal";
 
 interface Agent {
   id: string;
@@ -141,6 +143,8 @@ export default function AiAgentsView() {
   const [isSwarmActive, setIsSwarmActive] = useState(true);
   const [filterTag, setFilterTag] = useState("ALL");
   const [missionInput, setMissionInput] = useState("");
+  const [inspectingAgent, setInspectingAgent] = useState<Agent | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([
     { id: "l-1", time: "04:56:10", agent: "SENTINEL-01", level: "PASS", message: "Port 3000 boundary isolation verified. Zero open vulnerabilities." },
     { id: "l-2", time: "04:56:15", agent: "SCRAPER-INTEL", level: "INFO", message: "Fetched 12 new articles from Next.js 16 Edge Stream." },
@@ -270,6 +274,17 @@ export default function AiAgentsView() {
         {/* Global Action Controls */}
         <div className="flex items-center gap-2.5">
           <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setIsCreateModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/40 hover:bg-[#00FF41]/25 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,255,65,0.2)]"
+          >
+            <Plus size={14} />
+            <span>SYNTHESIZE AGENT</span>
+          </button>
+
+          <button
             onClick={toggleSwarm}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
               isSwarmActive
@@ -364,17 +379,31 @@ export default function AiAgentsView() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => toggleAgentStatus(agent.id)}
-                  title={isPaused ? "Resume Agent" : "Pause Agent"}
-                  className={`p-1.5 rounded-lg border text-[10px] transition-all cursor-pointer ${
-                    isPaused
-                      ? "bg-white/5 text-[#9499B3] border-white/10 hover:text-[#00FF41]"
-                      : "bg-[#00FF41]/10 text-[#00FF41] border-[#00FF41]/30 hover:bg-[#FF2A6D]/10 hover:text-[#FF2A6D]"
-                  }`}
-                >
-                  {isPaused ? <Play size={12} /> : <Pause size={12} />}
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      cyberAudio.play("click");
+                      setInspectingAgent(agent);
+                    }}
+                    title="Inspect & Edit Agent Context Memory"
+                    className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] text-[#9499B3] hover:text-[#00F0FF] hover:border-[#00F0FF]/40 transition-all cursor-pointer flex items-center gap-1"
+                  >
+                    <Database size={12} />
+                    <span className="hidden sm:inline">MEMORY</span>
+                  </button>
+
+                  <button
+                    onClick={() => toggleAgentStatus(agent.id)}
+                    title={isPaused ? "Resume Agent" : "Pause Agent"}
+                    className={`p-1.5 rounded-lg border text-[10px] transition-all cursor-pointer ${
+                      isPaused
+                        ? "bg-white/5 text-[#9499B3] border-white/10 hover:text-[#00FF41]"
+                        : "bg-[#00FF41]/10 text-[#00FF41] border-[#00FF41]/30 hover:bg-[#FF2A6D]/10 hover:text-[#FF2A6D]"
+                    }`}
+                  >
+                    {isPaused ? <Play size={12} /> : <Pause size={12} />}
+                  </button>
+                </div>
               </div>
 
               {/* Role description */}
@@ -480,6 +509,24 @@ export default function AiAgentsView() {
           </button>
         </form>
       </div>
+
+      {/* AGENT MEMORY INSPECTOR MODAL */}
+      {inspectingAgent && (
+        <AgentMemoryInspector
+          agentName={inspectingAgent.name}
+          agentColor={inspectingAgent.color}
+          onClose={() => setInspectingAgent(null)}
+        />
+      )}
+
+      {/* CREATE CUSTOM AGENT WIZARD MODAL */}
+      <CreateAgentModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onAddAgent={(newAgent) => {
+          setAgents((prev) => [newAgent, ...prev]);
+        }}
+      />
     </div>
   );
 }

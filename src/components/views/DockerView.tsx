@@ -28,8 +28,11 @@ import {
   Database,
   ArrowDownToLine,
   Filter,
+  ShieldAlert,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import DockerTerminalModal from "./docker/DockerTerminalModal";
+import DockerCveScannerModal from "./docker/DockerCveScannerModal";
 
 interface DockerContainerItem {
   id: string;
@@ -168,6 +171,8 @@ export default function DockerView() {
   const [showPullModal, setShowPullModal] = useState(false);
   const [pullImageInput, setPullImageInput] = useState("alpine:latest");
   const [isPulling, setIsPulling] = useState(false);
+  const [terminalContainer, setTerminalContainer] = useState<DockerContainerItem | null>(null);
+  const [cveImage, setCveImage] = useState<string | null>(null);
 
   // Live Logs Simulation
   const [logs, setLogs] = useState<string[]>([
@@ -487,6 +492,28 @@ export default function DockerView() {
                         >
                           <RotateCw size={13} />
                         </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            cyberAudio.play("click");
+                            setTerminalContainer(c);
+                          }}
+                          className="p-1.5 rounded-lg bg-black/60 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] cursor-pointer"
+                          title="Open In-Browser Exec Terminal"
+                        >
+                          <TerminalIcon size={13} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            cyberAudio.play("click");
+                            setCveImage(c.image);
+                          }}
+                          className="p-1.5 rounded-lg bg-black/60 border border-white/10 hover:border-amber-500/40 text-[#9499B3] hover:text-amber-400 cursor-pointer"
+                          title="Scan Image for CVEs with Trivy"
+                        >
+                          <ShieldAlert size={13} />
+                        </button>
                       </div>
                     </div>
 
@@ -758,6 +785,23 @@ export default function DockerView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* DOCKER IN-BROWSER EXEC TERMINAL MODAL */}
+      {terminalContainer && (
+        <DockerTerminalModal
+          containerName={terminalContainer.name}
+          containerId={terminalContainer.id}
+          onClose={() => setTerminalContainer(null)}
+        />
+      )}
+
+      {/* DOCKER TRIVY CVE SCANNER MODAL */}
+      {cveImage && (
+        <DockerCveScannerModal
+          imageName={cveImage}
+          onClose={() => setCveImage(null)}
+        />
       )}
     </div>
   );

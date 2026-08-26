@@ -30,8 +30,11 @@ import {
   Share2,
   Code2,
   FileCode,
+  OctagonAlert,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import SwarmTopologyGraph from "./control_room/SwarmTopologyGraph";
+import HitlApprovalQueue from "./control_room/HitlApprovalQueue";
 
 export type HarnessId = "hermes" | "pi" | "codex" | "opencode";
 
@@ -214,6 +217,7 @@ export default function ControlRoomView() {
   const [temperature, setTemperature] = useState(0.2);
   const [copiedStep, setCopiedStep] = useState<number | null>(null);
   const [promptInjection, setPromptInjection] = useState("");
+  const [isKillswitchActive, setIsKillswitchActive] = useState(false);
 
   const activeHarness = HARNESSES.find((h) => h.id === selectedHarnessId) || HARNESSES[0];
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0];
@@ -346,6 +350,23 @@ export default function ControlRoomView() {
 
           {/* Quick Actions */}
           <div className="flex items-center gap-2">
+            {/* Emergency Swarm Killswitch */}
+            <button
+              onClick={() => {
+                cyberAudio.play("error");
+                setIsKillswitchActive(!isKillswitchActive);
+              }}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                isKillswitchActive
+                  ? "bg-red-600 text-white border-red-500 shadow-[0_0_20px_rgba(255,0,60,0.8)] animate-pulse"
+                  : "bg-red-500/15 border-red-500/40 text-red-400 hover:bg-red-500/25"
+              }`}
+              title="Emergency Swarm Killswitch: Immediately freeze all autonomous loops"
+            >
+              <OctagonAlert size={14} />
+              <span>{isKillswitchActive ? "KILLSWITCH ENGAGED" : "SWARM FREEZE"}</span>
+            </button>
+
             <button
               onClick={handleForkSession}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-[#F1F3F9] transition-all cursor-pointer"
@@ -389,6 +410,37 @@ export default function ControlRoomView() {
           })}
         </div>
       </div>
+
+      {/* EMERGENCY KILLSWITCH ALERT BANNER */}
+      {isKillswitchActive && (
+        <div className="p-4 rounded-2xl bg-red-600/20 border-2 border-red-500 text-white flex items-center justify-between shadow-[0_0_40px_rgba(255,0,60,0.5)] animate-pulse">
+          <div className="flex items-center gap-3">
+            <OctagonAlert size={24} className="text-red-400" />
+            <div className="flex flex-col">
+              <span className="font-black text-sm text-red-300">EMERGENCY KILLSWITCH ACTIVE</span>
+              <span className="text-xs text-red-200 font-sans">All agent loops, tool invocations, and filesystem writes are frozen.</span>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              cyberAudio.play("chime");
+              setIsKillswitchActive(false);
+            }}
+            className="px-4 py-2 rounded-xl bg-white text-black font-bold text-xs hover:bg-gray-200 cursor-pointer"
+          >
+            DISENGAGE FREEZE
+          </button>
+        </div>
+      )}
+
+      {/* SWARM LANGGRAPH DAG TOPOLOGY GRAPH */}
+      <SwarmTopologyGraph
+        selectedNodeId={selectedHarnessId}
+        onSelectNode={(nodeId) => setSelectedHarnessId(nodeId as HarnessId)}
+      />
+
+      {/* HUMAN-IN-THE-LOOP (HITL) APPROVAL QUEUE */}
+      <HitlApprovalQueue />
 
       {/* MAIN 2-COLUMN CONTROL WORKSPACE */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">

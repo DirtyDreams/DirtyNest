@@ -41,6 +41,7 @@ import {
   Check,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import SemanticRagTester from "./knowledge/SemanticRagTester";
 
 export interface KnowledgeDoc {
   id: string;
@@ -462,7 +463,7 @@ const CATEGORIES = [
 
 export default function KnowledgeView() {
   const [docs, setDocs] = useState<KnowledgeDoc[]>(INITIAL_DOCS);
-  const [viewMode, setViewMode] = useState<"vault" | "obsidian" | "karpathy" | "config">("vault");
+  const [viewMode, setViewMode] = useState<"vault" | "obsidian" | "karpathy" | "config" | "rag_probe">("vault");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL NODES");
   const [selectedDocId, setSelectedDocId] = useState<string>("skill-01");
   const [searchQuery, setSearchQuery] = useState("");
@@ -942,12 +943,27 @@ export default function KnowledgeView() {
           <button
             onClick={() => {
               cyberAudio.play("click");
+              setViewMode("rag_probe");
+            }}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              viewMode === "rag_probe"
+                ? "bg-[#00F0FF]/15 text-[#00F0FF] font-bold border border-[#00F0FF]/30 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
+                : "text-[#9499B3] hover:text-[#00F0FF]"
+            }`}
+          >
+            <Sparkles size={13} />
+            <span>RAG PROBE</span>
+          </button>
+
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
               setViewMode("config");
             }}
             className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               viewMode === "config"
-                ? "bg-[#00F0FF]/15 text-[#00F0FF] font-bold border border-[#00F0FF]/30 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
-                : "text-[#9499B3] hover:text-[#00F0FF]"
+                ? "bg-[#BF40FF]/15 text-[#BF40FF] font-bold border border-[#BF40FF]/30 shadow-[0_0_8px_rgba(191,64,255,0.2)]"
+                : "text-[#9499B3] hover:text-[#BF40FF]"
             }`}
           >
             <Sliders size={13} />
@@ -975,6 +991,9 @@ export default function KnowledgeView() {
           )}
         </div>
       </div>
+
+      {/* VIEW MODE: SEMANTIC RAG TESTER */}
+      {viewMode === "rag_probe" && <SemanticRagTester />}
 
       {/* VIEW MODE: CONFIGURATION PANEL */}
       {viewMode === "config" && (

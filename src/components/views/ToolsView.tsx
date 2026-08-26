@@ -53,6 +53,7 @@ import ApiWorkbench from "@/components/tools/ApiWorkbench";
 import SnippetVault from "@/components/tools/SnippetVault";
 import EnvEditor from "@/components/tools/EnvEditor";
 import NetworkRadar from "@/components/tools/NetworkRadar";
+import DiffViewer from "@/components/tools/DiffViewer";
 
 export interface PluginTool {
   id: string;
@@ -247,7 +248,7 @@ export default function ToolsView() {
     "utilities" | "workbench" | "snippets" | "env" | "network" | "registry" | "mcp_schemas" | "workspace"
   >("utilities");
   const [activeUtilityTab, setActiveUtilityTab] = useState<
-    "jwt" | "json_yaml" | "hashes" | "regex" | "cron"
+    "jwt" | "json_yaml" | "hashes" | "regex" | "cron" | "diff"
   >("jwt");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -738,6 +739,7 @@ export default function ToolsView() {
               { id: "hashes", label: "HASHES & UUID", icon: Hash },
               { id: "regex", label: "REGEX LAB", icon: Search },
               { id: "cron", label: "CRON BUILDER", icon: Clock },
+              { id: "diff", label: "DIFF & PATCH", icon: GitCommit },
             ].map((u) => {
               const Icon = u.icon;
               const isActive = activeUtilityTab === u.id;
@@ -768,6 +770,7 @@ export default function ToolsView() {
             {activeUtilityTab === "hashes" && <HashGenerator />}
             {activeUtilityTab === "regex" && <RegexTester />}
             {activeUtilityTab === "cron" && <CronBuilder />}
+            {activeUtilityTab === "diff" && <DiffViewer />}
           </div>
         </div>
       )}

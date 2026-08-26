@@ -43,10 +43,14 @@ import {
   Image as ImageIcon,
   Video,
   X,
-  FileCode
+  FileCode,
+  Eye,
+  GitFork,
+  DollarSign,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
+import ArtifactsCanvas from "./chatbot/ArtifactsCanvas";
 
 export type ChatMode = "standard" | "reasoning" | "deep_research" | "code_interpreter";
 
@@ -128,6 +132,13 @@ export default function ChatbotView() {
   const [showMentionMenu, setShowMentionMenu] = useState(false);
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [activeBranch, setActiveBranch] = useState<"main" | "alt">("main");
+  const [activeArtifact, setActiveArtifact] = useState<{
+    code: string;
+    language: string;
+    title: string;
+  } | null>(null);
+
   const [attachments, setAttachments] = useState<{ id: string; name: string; type: "image" | "video" | "file"; size: string }[]>([
     { id: "att-1", name: "system_architecture.png", type: "image", size: "2.4 MB" },
     { id: "att-2", name: "auth_service.ts", type: "file", size: "14 KB" }
@@ -532,6 +543,53 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
 
           {/* Top Actions */}
           <div className="flex items-center gap-2">
+            {/* Branching Thread Selector */}
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setActiveBranch(activeBranch === "main" ? "alt" : "main");
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
+              title="Switch or Fork Conversation Branch"
+            >
+              <GitFork size={13} className="text-[#00FF41]" />
+              <span>BRANCH: {activeBranch.toUpperCase()}</span>
+            </button>
+
+            {/* Live Artifact Canvas Toggle */}
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                if (activeArtifact) {
+                  setActiveArtifact(null);
+                } else {
+                  setActiveArtifact({
+                    title: "Tactical Micro-HUD Component",
+                    language: "html",
+                    code: `<div class="p-6 rounded-2xl bg-black/80 border border-[#00FF41]/40 text-center font-mono">
+  <div class="inline-block px-3 py-1 rounded-full bg-[#00FF41]/10 text-[#00FF41] text-xs font-bold border border-[#00FF41]/30 animate-pulse mb-3">
+    SYSTEM OPTIMAL · 99.98% SLA
+  </div>
+  <h2 class="text-xl font-bold text-white mb-2">DIRTYNEST TACTICAL NODE</h2>
+  <p class="text-xs text-gray-400 max-w-sm mx-auto mb-4">Live Sandboxed Artifact Preview with Tailwind CSS and responsive CSS grid rendering.</p>
+  <button class="px-4 py-2 rounded-xl bg-[#00FF41] text-black font-bold text-xs hover:bg-[#00cc34] transition-all shadow-[0_0_15px_rgba(0,255,65,0.4)]">
+    EXECUTE DIRECTIVE
+  </button>
+</div>`,
+                  });
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                activeArtifact
+                  ? "bg-[#00F0FF]/20 text-[#00F0FF] border-[#00F0FF]/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]"
+                  : "bg-white/5 border-white/10 text-[#9499B3] hover:text-[#00F0FF]"
+              }`}
+              title="Toggle Interactive Artifacts Canvas"
+            >
+              <Eye size={13} />
+              <span>CANVAS {activeArtifact ? "OPEN" : "OFF"}</span>
+            </button>
+
             <button
               onClick={() => setShowSourcesDrawer(!showSourcesDrawer)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
@@ -720,9 +778,9 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
 
       {/* MAIN CHAT & RESEARCH WORKSPACE */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        {/* MESSAGES THREAD (Full or 8-Cols if Sources Drawer Open) */}
+        {/* MESSAGES THREAD (Full, 6-Cols if Canvas Open, or 8-Cols if Sources Drawer Open) */}
         <div 
-          className={`relative cyber-card p-4 flex flex-col justify-between gap-4 min-h-[580px] transition-colors ${showSourcesDrawer ? "lg:col-span-8" : "lg:col-span-12"} ${isDragging ? "border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.1)]" : ""}`}
+          className={`relative cyber-card p-4 flex flex-col justify-between gap-4 min-h-[580px] transition-colors ${activeArtifact ? "lg:col-span-6" : showSourcesDrawer ? "lg:col-span-8" : "lg:col-span-12"} ${isDragging ? "border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.1)]" : ""}`}
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
           onDrop={(e) => { e.preventDefault(); setIsDragging(false); /* in a real app, handle files here */ }}
@@ -1109,8 +1167,20 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           </div>
         </div>
 
+        {/* ARTIFACTS LIVE CANVAS PANE (6-Cols) */}
+        {activeArtifact && (
+          <div className="lg:col-span-6 sticky top-4 animate-fade-in">
+            <ArtifactsCanvas
+              title={activeArtifact.title}
+              language={activeArtifact.language}
+              code={activeArtifact.code}
+              onClose={() => setActiveArtifact(null)}
+            />
+          </div>
+        )}
+
         {/* RIGHT SOURCES & CITATION EXPLORER (4 Cols) */}
-        {showSourcesDrawer && (
+        {showSourcesDrawer && !activeArtifact && (
           <div className="lg:col-span-4 cyber-card p-4 flex flex-col gap-3 animate-fade-in">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div className="flex items-center gap-2">

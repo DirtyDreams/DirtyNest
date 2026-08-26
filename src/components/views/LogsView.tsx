@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { SystemLog, LogLevel, LogCategory } from "@/db";
+import LogAiExplainModal from "./logs/LogAiExplainModal";
 
 type SubTab = "stream" | "analytics" | "traces" | "security";
 type ViewMode = "table" | "raw";
@@ -53,6 +54,7 @@ export default function LogsView() {
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [timeRange, setTimeRange] = useState<string>("all");
   const [selectedLog, setSelectedLog] = useState<SystemLog | null>(null);
+  const [aiExplainingLog, setAiExplainingLog] = useState<SystemLog | null>(null);
   const [expandedLogIds, setExpandedLogIds] = useState<Set<number>>(new Set());
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [stats, setStats] = useState<{
@@ -749,13 +751,26 @@ export default function LogsView() {
                             {log.hash_sig || "0x--------"}
                           </td>
                           <td className="py-2.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={(e) => handleCopyLog(log, e)}
-                              className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
-                              title="Copy JSON Payload"
-                            >
-                              {copiedId === log.id ? <Check size={13} className="text-[#00FF41]" /> : <Copy size={13} />}
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cyberAudio.play("click");
+                                  setAiExplainingLog(log);
+                                }}
+                                className="p-1.5 rounded-lg bg-[#BF40FF]/15 hover:bg-[#BF40FF]/25 text-[#BF40FF] transition-all cursor-pointer"
+                                title="Explain with AI & Generate Fix"
+                              >
+                                <Sparkles size={13} />
+                              </button>
+                              <button
+                                onClick={(e) => handleCopyLog(log, e)}
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
+                                title="Copy JSON Payload"
+                              >
+                                {copiedId === log.id ? <Check size={13} className="text-[#00FF41]" /> : <Copy size={13} />}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1207,6 +1222,14 @@ export default function LogsView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* AI LOG ROOT-CAUSE & FIX EXPLAIN MODAL */}
+      {aiExplainingLog && (
+        <LogAiExplainModal
+          log={aiExplainingLog}
+          onClose={() => setAiExplainingLog(null)}
+        />
       )}
     </div>
   );

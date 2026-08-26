@@ -21,12 +21,14 @@ import {
   Zap,
   Globe,
   Lock,
+  Activity,
 } from "lucide-react";
 import { applyThemePreset, getAllThemes, deleteCustomTheme, type ThemePreset } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
+import SystemDiagnosticsTab from "./settings/SystemDiagnosticsTab";
 
-type SettingsSection = "general" | "ai" | "agents" | "apikeys" | "storage";
+type SettingsSection = "general" | "ai" | "agents" | "apikeys" | "storage" | "diagnostics";
 
 export default function SettingsView() {
   const [activeTab, setActiveTab] = useState<SettingsSection>("general");
@@ -230,6 +232,7 @@ export default function SettingsView() {
     { id: "agents", label: "Agent Swarm", icon: Cpu, tag: "SWARM" },
     { id: "apikeys", label: "API Keys & Mesh", icon: Key, tag: "AUTH" },
     { id: "storage", label: "Storage & Backup", icon: Database, tag: "SQL" },
+    { id: "diagnostics", label: "Self-Diagnostics", icon: Activity, tag: "BENCH" },
   ];
 
   return (
@@ -731,6 +734,9 @@ export default function SettingsView() {
               </div>
             </div>
           )}
+
+          {/* DIAGNOSTICS & BENCHMARK SUITE */}
+          {activeTab === "diagnostics" && <SystemDiagnosticsTab />}
         </div>
       </div>
     </div>
