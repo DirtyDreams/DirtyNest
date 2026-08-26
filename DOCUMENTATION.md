@@ -22,7 +22,8 @@ dirty-test/
 │   │   │   ├── todos/              # Todo & task state CRUD
 │   │   │   ├── notes/              # Notes & research dossiers CRUD
 │   │   │   ├── quick-links/        # Warp Gate navigation bookmarks
-│   │   │   └── calendar/           # Operations schedule & cron events
+│   │   │   ├── calendar/           # Operations schedule & cron events
+│   │   │   └── logs/               # Operations & security audit logs CRUD + stats
 │   │   ├── layout.tsx              # Root HTML layout, viewport & theme metadata
 │   │   ├── page.tsx                # Main tactical cockpit & modular layout manager
 │   │   └── globals.css             # Cyberpunk theme variables, glassmorphism, scrollbars
@@ -36,6 +37,7 @@ dirty-test/
 │   │   │   ├── DockerView.tsx      # Container, Image & Compose Orchestrator
 │   │   │   ├── ToolsView.tsx       # Developer utilities, regex, diff, encoder
 │   │   │   ├── StatsView.tsx       # Hardware telemetry & Prometheus metrics
+│   │   │   ├── LogsView.tsx        # Real-time Operations Log & Audit Telemetry Hub
 │   │   │   └── SettingsView.tsx    # Swarm config, API keys & theme profiles
 │   │   │
 │   │   ├── widgets/                # Modular Dashboard & Tactical Deck Widgets
@@ -69,7 +71,8 @@ dirty-test/
 │   │       └── TerminalDock.tsx    # Cyberpunk interactive CLI terminal (Hotkey: `)
 │   │
 │   └── lib/
-│       ├── db.ts                   # SQLite in-memory database with disk persistence
+│       ├── db/index.ts             # SQLite in-memory database with disk persistence (`system_logs`)
+│       ├── logger.ts               # Client & server unified operations log dispatcher
 │       ├── theme.ts                # Dynamic CSS variable injection for colorways
 │       └── cyberAudio.ts           # Web Audio API ambient theta drone & sound effects
 │
@@ -91,6 +94,7 @@ dirty-test/
 | **Docker Hub** | `docker` | `#docker` | Local daemon bridge, container lifecycle controls (Start/Stop/Restart), cached images, Compose stacks. |
 | **Dev Tools** | `tools` | `#tools` | Base64 encoder/decoder, UUID generator, Unix epoch converter, JSON formatter, hash calculators. |
 | **Stats Matrix** | `stats` | `#stats` | Prometheus-style charts, CPU breakdown per core, memory allocation, network I/O throughput. |
+| **System Logs** | `logs` | `#logs` (G L) | Live real-time operations stream, dual table & raw monospace console, telemetry analytics, trace inspector, security ledger, JSON/CSV/TXT export. |
 | **Settings** | `settings` | `#settings` | API key vault (Gemini, OpenAI, Anthropic, DeepSeek, GitHub), swarm parameters, scanline overlays. |
 
 ---
@@ -127,15 +131,38 @@ DirtyNest features a dedicated mobile architecture:
 
 ---
 
-## 6. Backend API & Storage Architecture
+## 6. Operations Log & Audit Telemetry Engine (`LogsView.tsx`)
 
-All data widgets (`TodoList`, `Notes`, `QuickLinks`, `Calendar`) connect to Next.js route handlers backed by an embedded SQLite database (`src/lib/db.ts`):
+A full-spectrum operations hub covering real-time events, error diagnostics, and audit traces:
+
+### Core Capabilities:
+- **Dual Operations Stream**:
+  - **Structured Cyber Table**: Expandable rows, millisecond latency badges, signature hashes, and severity chips (`INFO`, `SUCCESS`, `WARN`, `ERROR`, `AUDIT`, `DEBUG`).
+  - **Cyber Monospace Console Pipe**: Raw streaming output with auto-scrolling, level color-coding, and rapid log dump.
+- **Analytics & Metrics Deck**:
+  - Throughput (operations/min), error/warning breakdown, subsystem activity charts, and latency percentiles.
+- **Deep Trace Inspector**:
+  - Split-pane interface to inspect structured JSON payloads, execution parameters, and stack contexts.
+- **Security Audit Ledger**:
+  - Filtered specifically for RBAC authorizations, security clearance issuances, token refreshes, and rate-limit violations.
+- **Live Stream & Event Simulation**:
+  - Pulsating active stream indicator with 2.5s polling, pause/resume toggle, and a **`SIMULATE EVENT`** button to inject live operational events.
+- **Multi-Format Export**:
+  - Instant export to `JSON`, `CSV`, or raw `TXT/LOG` format.
+
+---
+
+## 7. Backend API & Storage Architecture
+
+All data widgets and operations logs connect to Next.js route handlers backed by an embedded SQLite database (`src/lib/db/index.ts`):
 
 | Endpoint | Methods | Description |
 | :--- | :--- | :--- |
-| `/api/todos` | `GET`, `POST` | List all tasks or create a new todo |
-| `/api/todos/[id]` | `PATCH`, `DELETE` | Toggle completion status or delete task |
-| `/api/notes` | `GET`, `POST` | Fetch all notes or create a research note |
+| `/api/logs` | `GET`, `POST`, `DELETE` | Query logs with search/filters, ingest new logs, or purge log entries |
+| `/api/logs/stats` | `GET` | Aggregated metrics: total operations, error rates, throughput, category distribution |
+| `/api/todos` | `GET`, `POST` | List all tasks or create a new todo (auto-audited to `system_logs`) |
+| `/api/todos/[id]` | `PATCH`, `DELETE` | Toggle completion status or delete task (auto-audited) |
+| `/api/notes` | `GET`, `PUT` | Fetch all notes or save research notes (auto-audited) |
 | `/api/quick-links` | `GET`, `POST` | List bookmarks or add new quick links |
 | `/api/quick-links/[id]` | `DELETE` | Remove a bookmark |
 | `/api/calendar` | `GET`, `POST` | List operations events or schedule a cron item |

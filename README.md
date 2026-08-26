@@ -30,8 +30,9 @@ Comprehensive system documentation, architectural diagrams, API references, and 
 👉 **[DOCUMENTATION.md](./DOCUMENTATION.md)**
 
 ### Key Features Documented
-- 🛰️ **Primary Decks**: Overview, Neural Chatbot (Deep Research), Agent Control Room, AI Swarm, Knowledge Base, Docker Hub, DevTools, Prometheus Stats, Settings.
+- 🛰️ **Primary Decks**: Overview, Neural Chatbot (Deep Research), Agent Control Room, AI Swarm, Knowledge Base, Docker Hub, DevTools, Prometheus Stats, **System Operations & Audit Logs**, Settings.
+- 📜 **System Operations Log Hub**: Live streaming console pipe, structured table view, latency percentiles, error/warning diagnostics, deep trace JSON inspector, security audit ledger, and event simulation.
 - 🧩 **Modular Dashboard Engine**: 5 One-click presets and customizable live widgets.
 - 📱 **Mobile HUD**: Fixed bottom nav bar, swipe drawer, and tactical bottom sheet with touch optimization.
-- 💾 **SQLite Storage & REST APIs**: Persistent todos, notes, bookmarks, and operations calendar.
+- 💾 **SQLite Storage & REST APIs**: Persistent todos, notes, bookmarks, operations calendar, and structured `system_logs`.
 - 🎵 **Web Audio Synthesizer**: Click feedback, interval chimes, and ambient theta focus drone.
