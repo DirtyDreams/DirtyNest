@@ -66,12 +66,12 @@ export default function ThemeMenu({ onOpenCustomizer }: ThemeMenuProps) {
   };
 
   return (
-    <div className="relative shrink-0" ref={menuRef}>
+    <div className="relative shrink-0 flex items-center h-9" ref={menuRef}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
         title="Palette Profile Customizer"
-        className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
+        className={`h-9 w-9 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
           open
             ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 shadow-[0_0_10px_rgba(0,255,65,0.25)]"
             : "bg-white/[0.03] border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41]"

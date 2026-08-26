@@ -314,15 +314,15 @@ export default function Home() {
           {/* Top Operational Breadcrumb HUD Bar */}
           <header className="flex flex-col gap-2.5 mb-4 pb-3 border-b border-white/5 relative z-30">
             {/* Row 1: Brand & Node Status (Left) + Compact Non-wrapping HUD Toolbar (Right) */}
-            <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-4 w-full">
+            <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-4 w-full h-10 shrink-0">
               {/* Left: Brand & Mobile Trigger */}
-              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0 h-9">
                 <button
                   onClick={() => {
                     cyberAudio.play("click");
                     setMobileDrawerOpen(true);
                   }}
-                  className="md:hidden p-2 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
+                  className="md:hidden h-9 w-9 flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
                   title="Open Tactical Menu"
                   aria-label="Open Navigation Menu"
                 >
@@ -352,8 +352,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Right: Quick Action HUD Controls (Strictly Non-Wrapping) */}
-              <div className="flex flex-nowrap items-center gap-1 sm:gap-1.5 shrink-0">
+              {/* Right: Quick Action HUD Controls (Strictly Non-Wrapping, Locked Height) */}
+              <div className="flex flex-nowrap items-center gap-1 sm:gap-1.5 shrink-0 h-9">
                 {/* Customize Dashboard Button */}
                 {activeView === "dashboard" && (
                   <button
@@ -361,7 +361,7 @@ export default function Home() {
                       cyberAudio.play("click");
                       setCustomizeOpen(true);
                     }}
-                    className="p-2 sm:px-2.5 sm:py-2 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/20 transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5"
+                    className="h-9 px-2.5 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/20 transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5"
                     title="Customize Overview Widgets"
                     aria-label="Customize Overview Widgets"
                   >
@@ -380,7 +380,7 @@ export default function Home() {
                       setMobileDeckSheetOpen(true);
                     }
                   }}
-                  className={`p-2 sm:px-2.5 sm:py-2 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
+                  className={`h-9 px-2.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
                     isRightPanelOpen
                       ? "bg-[#00F0FF]/15 text-[#00F0FF] border-[#00F0FF]/40 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
                       : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00F0FF] hover:border-[#00F0FF]/40"
@@ -395,7 +395,7 @@ export default function Home() {
                 {/* Command palette search trigger */}
                 <button
                   onClick={triggerCmdPalette}
-                  className="flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
+                  className="h-9 flex items-center gap-1.5 px-2.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
                   title="Open Command Palette (Ctrl+K)"
                   aria-label="Open Command Palette"
                 >
@@ -411,7 +411,7 @@ export default function Home() {
                   onClick={() => setDevToolsOpen(true)}
                   title="Developer Tools Matrix"
                   aria-label="Open Developer Tools"
-                  className="p-2 sm:px-2.5 sm:py-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer flex items-center gap-1.5"
+                  className="h-9 px-2.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer flex items-center gap-1.5"
                 >
                   <Wrench size={14} />
                   <span className="text-xs font-mono hidden 2xl:inline">DevTools</span>
@@ -422,7 +422,7 @@ export default function Home() {
                   onClick={toggleTerminal}
                   title="Toggle Cyber CLI Terminal (Hotkey: `)"
                   aria-label="Toggle Terminal"
-                  className={`p-2 sm:px-2.5 sm:py-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`h-9 px-2.5 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 ${
                     isTerminalOpen
                       ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 font-bold"
                       : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40"
@@ -440,7 +440,7 @@ export default function Home() {
                   }}
                   title="Open Cyber Audio Matrix & Ambient Soundboard"
                   aria-label="Toggle Ambient Audio Matrix"
-                  className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
+                  className={`h-9 w-9 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
                     isDronePlaying
                       ? "bg-[#BF40FF]/20 text-[#BF40FF] border-[#BF40FF]/40 shadow-[0_0_10px_rgba(191,64,255,0.3)] animate-pulse"
                       : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#BF40FF] hover:border-[#BF40FF]/40"
@@ -457,7 +457,7 @@ export default function Home() {
                   onClick={toggleFullscreen}
                   title="Toggle Fullscreen Deck"
                   aria-label="Toggle Fullscreen"
-                  className="p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer flex items-center justify-center"
+                  className="h-9 w-9 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer flex items-center justify-center"
                 >
                   {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
                 </button>
