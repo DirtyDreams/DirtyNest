@@ -16,6 +16,12 @@ export async function PATCH(
   }
 
   persistDb();
+
+  try {
+    const { insertLog } = await import("@/db");
+    await insertLog("INFO", "UI", "TODO_ITEM_UPDATED", "User-Operator", { id, changes: body });
+  } catch {}
+
   const todos = queryAll<Todo>(db, "SELECT * FROM todos ORDER BY sort_order ASC");
   return Response.json(todos);
 }
@@ -28,6 +34,12 @@ export async function DELETE(
   const db = await getDb();
   db.run("DELETE FROM todos WHERE id = ?", [Number(id)]);
   persistDb();
+
+  try {
+    const { insertLog } = await import("@/db");
+    await insertLog("WARN", "UI", "TODO_ITEM_DELETED", "User-Operator", { id });
+  } catch {}
+
   const todos = queryAll<Todo>(db, "SELECT * FROM todos ORDER BY sort_order ASC");
   return Response.json(todos);
 }

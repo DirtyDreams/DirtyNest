@@ -20,6 +20,7 @@ import {
   Cpu,
   Database,
   Settings,
+  ScrollText,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
@@ -109,6 +110,14 @@ export default function CommandPalette() {
       action: () => navigateToDeck("stats"),
       shortcut: "G M",
       icon: <Activity size={14} className="text-[#BF40FF]" />,
+    },
+    {
+      id: "deck_logs",
+      label: "Switch Deck: Operations & System Audit Logs",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("logs"),
+      shortcut: "G L",
+      icon: <ScrollText size={14} className="text-[#00FF41]" />,
     },
     {
       id: "deck_settings",

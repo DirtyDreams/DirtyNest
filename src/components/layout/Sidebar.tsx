@@ -13,6 +13,7 @@ import {
   Settings,
   Container,
   Radio,
+  ScrollText,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -25,6 +26,7 @@ export type NavViewId =
   | "docker"
   | "tools"
   | "stats"
+  | "logs"
   | "settings"
   | "api"
   | "rss"
@@ -45,6 +47,7 @@ export const navItems = [
   { icon: Container, label: "Docker Hub", id: "docker" as NavViewId, tag: "DOCK", isPrimaryView: true },
   { icon: Wrench, label: "Tools Matrix", id: "tools" as NavViewId, tag: "DEV", isPrimaryView: true },
   { icon: Activity, label: "Stats & Metrics", id: "stats" as NavViewId, tag: "STAT", isPrimaryView: true },
+  { icon: ScrollText, label: "System Logs", id: "logs" as NavViewId, tag: "LOGS", isPrimaryView: true },
   { icon: Settings, label: "Settings", id: "settings" as NavViewId, tag: "SYS", isPrimaryView: true },
   { icon: Wifi, label: "API Health", id: "api" as NavViewId, tag: "01", isPrimaryView: false, target: "api-widget" },
   { icon: Rss, label: "Intel Feed", id: "rss" as NavViewId, tag: "02", isPrimaryView: false, target: "rss-widget" },

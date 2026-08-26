@@ -25,6 +25,7 @@ import ControlRoomView from "@/components/views/ControlRoomView";
 import DockerView from "@/components/views/DockerView";
 import ToolsView from "@/components/views/ToolsView";
 import StatsView from "@/components/views/StatsView";
+import LogsView from "@/components/views/LogsView";
 import SettingsView from "@/components/views/SettingsView";
 import KnowledgeView from "@/components/views/KnowledgeView";
 import { cyberAudio } from "@/lib/cyberAudio";
@@ -32,6 +33,7 @@ import { applyThemePreset } from "@/lib/theme";
 import {
   Terminal,
   Activity,
+  ScrollText,
   Sliders,
   Maximize2,
   Minimize2,
@@ -405,6 +407,18 @@ export default function Home() {
               </button>
 
               <button
+                onClick={() => handleSelectView("logs")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  activeView === "logs"
+                    ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                    : "text-[#9499B3] hover:text-[#00FF41]"
+                }`}
+              >
+                <ScrollText size={12} />
+                <span>LOGS</span>
+              </button>
+
+              <button
                 onClick={() => handleSelectView("settings")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   activeView === "settings"
@@ -555,6 +569,8 @@ export default function Home() {
           {activeView === "tools" && <ToolsView />}
 
           {activeView === "stats" && <StatsView />}
+
+          {activeView === "logs" && <LogsView />}
 
           {activeView === "settings" && <SettingsView />}
         </main>

@@ -16,6 +16,12 @@ export async function POST(request: Request) {
   const nextOrder = maxOrder.length > 0 ? maxOrder[0].values[0][0] as number : 0;
   db.run("INSERT INTO todos (text, sort_order) VALUES (?, ?)", [text.trim(), nextOrder]);
   persistDb();
+
+  try {
+    const { insertLog } = await import("@/db");
+    await insertLog("SUCCESS", "UI", "TODO_ITEM_CREATED", "User-Operator", { text: text.trim(), order: nextOrder });
+  } catch {}
+
   const todos = queryAll<Todo>(db, "SELECT * FROM todos ORDER BY sort_order ASC");
   return Response.json(todos, { status: 201 });
 }
