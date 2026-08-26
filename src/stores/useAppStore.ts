@@ -24,10 +24,13 @@ interface AppState {
   isMobileDeckSheetOpen: boolean;
   setMobileDeckSheetOpen: (open: boolean) => void;
 
-  // Global Audio / Drone
+  // Global Audio / Drone / Soundboard
   isDronePlaying: boolean;
   setDronePlaying: (playing: boolean) => void;
   toggleDrone: () => boolean;
+  isAudioMixerOpen: boolean;
+  setAudioMixerOpen: (open: boolean) => void;
+  toggleAudioMixer: () => void;
 
   // Viewport / Screen
   isFullscreen: boolean;
@@ -81,6 +84,9 @@ export const useAppStore = create<AppState>((set) => ({
     set({ isDronePlaying: active });
     return active;
   },
+  isAudioMixerOpen: false,
+  setAudioMixerOpen: (open) => set({ isAudioMixerOpen: open }),
+  toggleAudioMixer: () => set((state) => ({ isAudioMixerOpen: !state.isAudioMixerOpen })),
 
   isFullscreen: false,
   setIsFullscreen: (fullscreen) => set({ isFullscreen: fullscreen }),

@@ -12,18 +12,16 @@ export default function StatusBar({
   onToggleTerminal: () => void;
   isTerminalOpen: boolean;
 }) {
-  const { isRightPanelOpen } = useAppStore();
+  const { isRightPanelOpen, isDronePlaying, toggleAudioMixer } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [fps, setFps] = useState(60);
   const [latency, setLatency] = useState(14);
-  const [isDroneOn, setIsDroneOn] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     const interval = setInterval(() => {
       setLatency(Math.floor(Math.random() * 8) + 12);
       setFps(Math.floor(Math.random() * 3) + 59);
-      setIsDroneOn(cyberAudio.getIsPlaying());
     }, 2000);
     return () => clearInterval(interval);
   }, []);
@@ -60,20 +58,21 @@ export default function StatusBar({
 
       {/* Right: Quick actions */}
       <div className="flex items-center gap-3">
-        {/* Audio Drone Pill */}
+        {/* Audio Ambient Pill */}
         <button
           onClick={() => {
-            const state = cyberAudio.toggleDrone();
-            setIsDroneOn(state);
+            cyberAudio.play("click");
+            toggleAudioMixer();
           }}
-          className={`flex items-center gap-1 px-2 py-0.5 rounded cursor-pointer transition-colors ${
-            isDroneOn
-              ? "bg-[#BF40FF]/20 text-[#BF40FF] border border-[#BF40FF]/40"
+          className={`flex items-center gap-1.5 px-2 py-0.5 rounded cursor-pointer transition-all ${
+            isDronePlaying
+              ? "bg-[#BF40FF]/20 text-[#BF40FF] border border-[#BF40FF]/40 shadow-[0_0_8px_rgba(191,64,255,0.3)]"
               : "hover:bg-white/5 text-[#9499B3]"
           }`}
+          title="Open Cyber Audio Matrix & Ambient Soundboard"
         >
-          <Headphones size={11} />
-          <span>{isDroneOn ? "DRONE: ON" : "DRONE: OFF"}</span>
+          <Headphones size={11} className={isDronePlaying ? "animate-pulse" : ""} />
+          <span>{isDronePlaying ? "AUDIO: ACTIVE" : "AUDIO: MUTE"}</span>
         </button>
 
         {/* Terminal Toggle Pill */}

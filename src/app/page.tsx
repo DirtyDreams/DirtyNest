@@ -18,6 +18,7 @@ import DevToolsModal from "@/components/modals/DevToolsModal";
 import SettingsModal from "@/components/modals/SettingsModal";
 import DashboardCustomizeModal, { DashboardWidgetConfig } from "@/components/modals/DashboardCustomizeModal";
 import ThemeCustomizerModal from "@/components/modals/ThemeCustomizerModal";
+import AudioMixerModal from "@/components/modals/AudioMixerModal";
 import TerminalDock from "@/components/terminal/TerminalDock";
 import ChatbotView from "@/components/views/ChatbotView";
 import AiAgentsView from "@/components/views/AiAgentsView";
@@ -80,6 +81,8 @@ export default function Home() {
     setIsFullscreen,
     isRightPanelOpen,
     toggleRightPanel,
+    isAudioMixerOpen,
+    setAudioMixerOpen,
     customWidgets,
     setCustomWidgets,
   } = useAppStore();
@@ -224,17 +227,21 @@ export default function Home() {
       }
     };
 
+    const handleOpenAudioMixer = () => setAudioMixerOpen(true);
+
     window.addEventListener("dirtynest-navigate", handleCustomNav);
     window.addEventListener("dirtynest-open-theme-studio", handleOpenThemeStudio);
+    window.addEventListener("dirtynest-open-audio-mixer", handleOpenAudioMixer);
     window.addEventListener("keydown", handleKeyDown);
     
     return () => {
       window.removeEventListener("dirtynest-navigate", handleCustomNav);
       window.removeEventListener("dirtynest-open-theme-studio", handleOpenThemeStudio);
+      window.removeEventListener("dirtynest-open-audio-mixer", handleOpenAudioMixer);
       window.removeEventListener("keydown", handleKeyDown);
       if (leaderTimeout) clearTimeout(leaderTimeout);
     };
-  }, [setThemeModalOpen]);
+  }, [setThemeModalOpen, setAudioMixerOpen]);
 
   const toggleFullscreen = () => {
     cyberAudio.play("click");
@@ -286,6 +293,10 @@ export default function Home() {
       <ThemeCustomizerModal
         isOpen={isThemeModalOpen}
         onClose={() => setThemeModalOpen(false)}
+      />
+      <AudioMixerModal
+        isOpen={isAudioMixerOpen}
+        onClose={() => setAudioMixerOpen(false)}
       />
       <TerminalDock isOpen={isTerminalOpen} onClose={() => setTerminalOpen(false)} />
 
@@ -562,11 +573,14 @@ export default function Home() {
                 <span className="text-xs font-mono hidden lg:inline">CLI</span>
               </button>
 
-              {/* Ambient Focus Audio Drone */}
+              {/* Ambient Focus Audio Soundboard */}
               <button
-                onClick={toggleDrone}
-                title={isDronePlaying ? "Mute Ambient Focus Drone" : "Start Binaural Theta Focus Drone"}
-                aria-label="Toggle Ambient Focus Drone"
+                onClick={() => {
+                  cyberAudio.play("click");
+                  setAudioMixerOpen(true);
+                }}
+                title="Open Cyber Audio Matrix & Ambient Soundboard"
+                aria-label="Toggle Ambient Audio Matrix"
                 className={`p-2 rounded-xl border transition-all cursor-pointer ${
                   isDronePlaying
                     ? "bg-[#BF40FF]/20 text-[#BF40FF] border-[#BF40FF]/40 shadow-[0_0_10px_rgba(191,64,255,0.3)] animate-pulse"

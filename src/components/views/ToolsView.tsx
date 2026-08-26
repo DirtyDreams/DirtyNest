@@ -41,8 +41,18 @@ import {
   Play,
   Cpu,
   Share2,
+  Radio,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import JwtDebugger from "@/components/tools/JwtDebugger";
+import JsonYamlConverter from "@/components/tools/JsonYamlConverter";
+import HashGenerator from "@/components/tools/HashGenerator";
+import RegexTester from "@/components/tools/RegexTester";
+import CronBuilder from "@/components/tools/CronBuilder";
+import ApiWorkbench from "@/components/tools/ApiWorkbench";
+import SnippetVault from "@/components/tools/SnippetVault";
+import EnvEditor from "@/components/tools/EnvEditor";
+import NetworkRadar from "@/components/tools/NetworkRadar";
 
 export interface PluginTool {
   id: string;
@@ -233,7 +243,12 @@ const DEFAULT_PLUGINS: PluginTool[] = [
 export default function ToolsView() {
   const [plugins, setPlugins] = useState<PluginTool[]>(DEFAULT_PLUGINS);
   const [activePluginId, setActivePluginId] = useState<string>("ext.tokens.calculator");
-  const [viewTab, setViewTab] = useState<"workspace" | "registry" | "mcp_schemas">("workspace");
+  const [viewTab, setViewTab] = useState<
+    "utilities" | "workbench" | "snippets" | "env" | "network" | "registry" | "mcp_schemas" | "workspace"
+  >("utilities");
+  const [activeUtilityTab, setActiveUtilityTab] = useState<
+    "jwt" | "json_yaml" | "hashes" | "regex" | "cron"
+  >("jwt");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -590,22 +605,82 @@ export default function ToolsView() {
         </div>
       </div>
 
-      {/* VIEW MODE TABS (WORKSPACE vs REGISTRY vs MCP SCHEMAS) */}
+      {/* VIEW MODE TABS */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 p-1 bg-black/40 rounded-xl border border-white/5 text-xs max-w-full overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1.5 p-1 bg-black/40 rounded-xl border border-white/5 text-xs max-w-full overflow-x-auto scrollbar-none">
           <button
             onClick={() => {
               cyberAudio.play("click");
-              setViewTab("workspace");
+              setViewTab("utilities");
             }}
             className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-              viewTab === "workspace"
+              viewTab === "utilities"
                 ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                 : "text-[#9499B3] hover:text-[#F1F3F9]"
             }`}
           >
-            <Zap size={13} />
-            <span>PLUGIN WORKSPACE</span>
+            <Sparkles size={13} />
+            <span>DEVTOYS UTILITIES</span>
+          </button>
+
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setViewTab("workbench");
+            }}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              viewTab === "workbench"
+                ? "bg-[#00F0FF]/15 text-[#00F0FF] font-bold border border-[#00F0FF]/30 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
+                : "text-[#9499B3] hover:text-[#00F0FF]"
+            }`}
+          >
+            <Globe size={13} />
+            <span>API WORKBENCH</span>
+          </button>
+
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setViewTab("snippets");
+            }}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              viewTab === "snippets"
+                ? "bg-[#BF40FF]/15 text-[#BF40FF] font-bold border border-[#BF40FF]/30 shadow-[0_0_8px_rgba(191,64,255,0.2)]"
+                : "text-[#9499B3] hover:text-[#BF40FF]"
+            }`}
+          >
+            <Code2 size={13} />
+            <span>SNIPPET VAULT</span>
+          </button>
+
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setViewTab("env");
+            }}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              viewTab === "env"
+                ? "bg-[#FFB800]/15 text-[#FFB800] font-bold border border-[#FFB800]/30 shadow-[0_0_8px_rgba(255,184,0,0.2)]"
+                : "text-[#9499B3] hover:text-[#FFB800]"
+            }`}
+          >
+            <Lock size={13} />
+            <span>.ENV VAULT</span>
+          </button>
+
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setViewTab("network");
+            }}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              viewTab === "network"
+                ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                : "text-[#9499B3] hover:text-[#00FF41]"
+            }`}
+          >
+            <Radio size={13} />
+            <span>NETWORK RADAR</span>
           </button>
 
           <button
@@ -620,7 +695,7 @@ export default function ToolsView() {
             }`}
           >
             <Boxes size={13} />
-            <span>PLUGIN REGISTRY ({plugins.length})</span>
+            <span>PLUGINS ({plugins.length})</span>
           </button>
 
           <button
@@ -634,8 +709,8 @@ export default function ToolsView() {
                 : "text-[#9499B3] hover:text-[#BF40FF]"
             }`}
           >
-            <Code2 size={13} />
-            <span>MCP TOOL SCHEMAS</span>
+            <Workflow size={13} />
+            <span>MCP SCHEMAS</span>
           </button>
         </div>
 
@@ -646,13 +721,86 @@ export default function ToolsView() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search plugins, MCP schemas, permissions..."
+            placeholder="Search tools, utilities, schemas..."
             className="w-full pl-9 pr-3 py-1.5 bg-black/40 border border-white/10 rounded-xl text-xs text-[#F1F3F9] placeholder:text-[#4F536E] outline-none focus:border-[#00FF41]/50"
           />
         </div>
       </div>
 
-      {/* TAB 2: PLUGIN REGISTRY GRID */}
+      {/* TAB 1: DEVTOYS SWISS ARMY UTILITIES */}
+      {viewTab === "utilities" && (
+        <div className="cyber-card p-5 flex flex-col gap-4 animate-fade-in">
+          {/* Subtabs Bar */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-black/40 rounded-xl border border-white/5 text-xs max-w-full overflow-x-auto">
+            {[
+              { id: "jwt", label: "JWT INSPECTOR", icon: ShieldCheck },
+              { id: "json_yaml", label: "JSON ⇄ YAML", icon: FileCode },
+              { id: "hashes", label: "HASHES & UUID", icon: Hash },
+              { id: "regex", label: "REGEX LAB", icon: Search },
+              { id: "cron", label: "CRON BUILDER", icon: Clock },
+            ].map((u) => {
+              const Icon = u.icon;
+              const isActive = activeUtilityTab === u.id;
+              return (
+                <button
+                  key={u.id}
+                  onClick={() => {
+                    cyberAudio.play("click");
+                    setActiveUtilityTab(u.id as any);
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                      : "text-[#9499B3] hover:text-[#F1F3F9] border border-transparent"
+                  }`}
+                >
+                  <Icon size={13} />
+                  <span>{u.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Utility Render */}
+          <div className="pt-2">
+            {activeUtilityTab === "jwt" && <JwtDebugger />}
+            {activeUtilityTab === "json_yaml" && <JsonYamlConverter />}
+            {activeUtilityTab === "hashes" && <HashGenerator />}
+            {activeUtilityTab === "regex" && <RegexTester />}
+            {activeUtilityTab === "cron" && <CronBuilder />}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: API WORKBENCH (HTTP CLIENT) */}
+      {viewTab === "workbench" && (
+        <div className="cyber-card p-5 animate-fade-in">
+          <ApiWorkbench />
+        </div>
+      )}
+
+      {/* TAB 3: SNIPPET VAULT */}
+      {viewTab === "snippets" && (
+        <div className="cyber-card p-5 animate-fade-in">
+          <SnippetVault />
+        </div>
+      )}
+
+      {/* TAB 4: .ENV VAULT */}
+      {viewTab === "env" && (
+        <div className="cyber-card p-5 animate-fade-in">
+          <EnvEditor />
+        </div>
+      )}
+
+      {/* TAB 5: NETWORK RADAR */}
+      {viewTab === "network" && (
+        <div className="cyber-card p-5 animate-fade-in">
+          <NetworkRadar />
+        </div>
+      )}
+
+      {/* TAB 6: PLUGIN REGISTRY GRID */}
       {viewTab === "registry" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
           {filteredPlugins.map((plugin) => (
