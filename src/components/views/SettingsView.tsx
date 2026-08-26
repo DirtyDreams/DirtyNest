@@ -160,52 +160,80 @@ export default function SettingsView() {
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4F536E]" />
             <input
               type="text"
+              name="settings_tab_search_query_no_autofill"
+              id="settings_tab_search_query_no_autofill"
+              autoComplete="off"
+              data-lpignore="true"
+              data-1p-ignore="true"
+              data-form-type="other"
               placeholder="Filter tab settings..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 bg-black/60 border border-white/10 focus:border-[#00FF41] rounded-xl text-xs text-[#F1F3F9] outline-none"
+              className="w-full pl-8 pr-7 py-2 bg-black/60 border border-white/10 focus:border-[#00FF41] rounded-xl text-xs text-[#F1F3F9] outline-none"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#4F536E] hover:text-white text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           {/* Grouped Tabs List */}
           <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-1 custom-scrollbar">
-            {groups.map((grp) => {
-              const groupTabs = filteredTabs.filter((t) => t.group === grp);
-              if (groupTabs.length === 0) return null;
+            {filteredTabs.length === 0 ? (
+              <div className="p-4 text-center rounded-xl bg-black/30 border border-white/5 space-y-2">
+                <div className="text-[11px] text-[#9499B3]">No matching tabs found</div>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="px-3 py-1 rounded bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 text-[10px] font-bold cursor-pointer hover:bg-[#00FF41]/20"
+                >
+                  CLEAR SEARCH
+                </button>
+              </div>
+            ) : (
+              groups.map((grp) => {
+                const groupTabs = filteredTabs.filter((t) => t.group === grp);
+                if (groupTabs.length === 0) return null;
 
-              return (
-                <div key={grp} className="space-y-1">
-                  <div className="text-[9px] uppercase font-bold text-[#4F536E] px-2 py-1 tracking-wider">
-                    {grp} ({groupTabs.length})
+                return (
+                  <div key={grp} className="space-y-1">
+                    <div className="text-[9px] uppercase font-bold text-[#4F536E] px-2 py-1 tracking-wider">
+                      {grp} ({groupTabs.length})
+                    </div>
+
+                    {groupTabs.map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
+
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => handleTabChange(tab.id)}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer text-left ${
+                            isActive
+                              ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_10px_rgba(0,255,65,0.15)]"
+                              : "text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/5 border border-transparent"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon size={15} className="shrink-0" />
+                            <span className="truncate">{tab.label}</span>
+                          </div>
+                          <span className="text-[8px] px-1.5 py-0.5 rounded bg-white/5 text-[#4F536E] font-bold uppercase shrink-0">
+                            {tab.tag}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
-
-                  {groupTabs.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.id;
-
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => handleTabChange(tab.id)}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer text-left ${
-                          isActive
-                            ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_10px_rgba(0,255,65,0.15)]"
-                            : "text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/5 border border-transparent"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <Icon size={15} className="shrink-0" />
-                          <span className="truncate">{tab.label}</span>
-                        </div>
-                        <span className="text-[8px] px-1.5 py-0.5 rounded bg-white/5 text-[#4F536E] font-bold uppercase shrink-0">
-                          {tab.tag}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 

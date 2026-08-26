@@ -224,6 +224,12 @@ export default function ApiHealthSettingsTab() {
                 <div className="relative flex-1">
                   <input
                     type={isMasked ? "password" : "text"}
+                    name={`vault_token_${provider.id}`}
+                    id={`vault_token_${provider.id}`}
+                    autoComplete="new-password"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    data-form-type="other"
                     value={keys[provider.id] || ""}
                     onChange={(e) => handleKeyChange(provider.id, e.target.value)}
                     placeholder={provider.placeholder}
