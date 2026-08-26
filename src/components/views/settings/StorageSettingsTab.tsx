@@ -159,8 +159,8 @@ export default function StorageSettingsTab() {
                 </span>
               </div>
 
-              <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-[#F1F3F9] font-mono font-bold">
-                {tbl.rows.toLocaleString()} rows
+              <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-[#F1F3F9] font-mono font-bold" suppressHydrationWarning>
+                {tbl.rows} rows
               </span>
             </div>
           ))}

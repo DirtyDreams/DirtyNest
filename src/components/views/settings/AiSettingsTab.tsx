@@ -160,7 +160,7 @@ export default function AiSettingsTab() {
         <div className="space-y-2 p-4 rounded-xl bg-white/[0.02] border border-white/5">
           <div className="flex items-center justify-between">
             <label className="text-xs text-[#F1F3F9] uppercase font-bold">Max Output Tokens</label>
-            <span className="font-bold text-xs text-[#00FF41]">{parseInt(maxTokens, 10).toLocaleString()}</span>
+            <span className="font-bold text-xs text-[#00FF41]" suppressHydrationWarning>{maxTokens}</span>
           </div>
           <select
             value={maxTokens}

@@ -430,7 +430,7 @@ export default function PluginsSettingsTab() {
 
               <div className="flex items-center gap-3 text-[10px] text-[#4F536E]">
                 <span>Author: <strong className="text-[#9499B3]">{plugin.author}</strong></span>
-                <span>{plugin.executions.toLocaleString()} runs</span>
+                <span suppressHydrationWarning>{plugin.executions} runs</span>
               </div>
             </div>
           </div>

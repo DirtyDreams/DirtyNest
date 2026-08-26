@@ -75,10 +75,10 @@ export default function EbpfKernelHeatWidget() {
               </div>
 
               <div className="flex items-center gap-3 text-[10px]">
-                <span className="text-[#00FF41] font-bold">
-                  {sc.countPerSec.toLocaleString()} /s
+                <span className="text-[#00FF41] font-bold" suppressHydrationWarning>
+                  {sc.countPerSec} /s
                 </span>
-                <span className="text-[#4F536E]">{sc.avgLatencyUs} µs</span>
+                <span className="text-[#4F536E]" suppressHydrationWarning>{sc.avgLatencyUs} µs</span>
               </div>
             </div>
           );
