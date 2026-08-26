@@ -786,7 +786,7 @@ export default function Home() {
                   )}
 
                   {/* Fluid Dynamic Bento / Masonry Tile Stream */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start [grid-auto-flow:dense]">
                     {dashboardLayout
                       .filter((w) => w.enabled)
                       .map((w) => {
