@@ -116,6 +116,9 @@ export default function DashboardCustomizeModal({
     setWidgets(newWidgets);
     try {
       localStorage.setItem("dirtynest_dashboard_layout", JSON.stringify(newWidgets));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("dirtynest-layout-updated"));
+      }
     } catch {
       // ignore
     }

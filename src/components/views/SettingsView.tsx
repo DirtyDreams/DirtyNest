@@ -23,14 +23,16 @@ import {
   Lock,
   Activity,
   Puzzle,
+  LayoutGrid,
 } from "lucide-react";
 import { applyThemePreset, getAllThemes, deleteCustomTheme, type ThemePreset } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 import SystemDiagnosticsTab from "./settings/SystemDiagnosticsTab";
 import PluginsSettingsTab from "./settings/PluginsSettingsTab";
+import WidgetsLayoutSettingsTab from "./settings/WidgetsLayoutSettingsTab";
 
-type SettingsSection = "general" | "ai" | "agents" | "plugins" | "apikeys" | "storage" | "diagnostics";
+type SettingsSection = "general" | "widgets" | "ai" | "agents" | "plugins" | "apikeys" | "storage" | "diagnostics";
 
 export default function SettingsView() {
   const [activeTab, setActiveTab] = useState<SettingsSection>("general");
@@ -230,6 +232,7 @@ export default function SettingsView() {
 
   const tabs = [
     { id: "general", label: "General & HUD", icon: Sliders, tag: "CORE" },
+    { id: "widgets", label: "Widgets & HUD Layout", icon: LayoutGrid, tag: "BENTO" },
     { id: "ai", label: "AI & Chatbot", icon: Bot, tag: "NEURAL" },
     { id: "agents", label: "Agent Swarm", icon: Cpu, tag: "SWARM" },
     { id: "plugins", label: "Plugins & Extensions", icon: Puzzle, tag: "MCP" },
@@ -478,6 +481,9 @@ export default function SettingsView() {
               </div>
             </div>
           )}
+
+          {/* WIDGETS & HUD LAYOUT TAB */}
+          {activeTab === "widgets" && <WidgetsLayoutSettingsTab />}
 
           {/* AI & CHATBOT TAB */}
           {activeTab === "ai" && (

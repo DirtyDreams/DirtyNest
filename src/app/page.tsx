@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar, { NavViewId } from "@/components/layout/Sidebar";
 import RightPanel from "@/components/layout/RightPanel";
 import StatusBar from "@/components/layout/StatusBar";
@@ -43,6 +43,7 @@ import AudioMixerModal from "@/components/modals/AudioMixerModal";
 import TerminalDock from "@/components/terminal/TerminalDock";
 import dynamic from "next/dynamic";
 import ViewLoadingSkeleton from "@/components/common/ViewLoadingSkeleton";
+import { loadWidgetLayout, type WidgetLayoutItem, DEFAULT_LAYOUT } from "@/lib/widgetLayout";
 
 const ChatbotView = dynamic(() => import("@/components/views/ChatbotView"), {
   ssr: false,
@@ -368,10 +369,25 @@ export default function Home() {
     }
   };
 
+  const [dashboardLayout, setDashboardLayout] = useState<WidgetLayoutItem[]>(() => loadWidgetLayout());
+
+  useEffect(() => {
+    const handleSync = () => setDashboardLayout(loadWidgetLayout());
+    window.addEventListener("focus", handleSync);
+    window.addEventListener("storage", handleSync);
+    window.addEventListener("dirtynest-layout-updated", handleSync);
+    return () => {
+      window.removeEventListener("focus", handleSync);
+      window.removeEventListener("storage", handleSync);
+      window.removeEventListener("dirtynest-layout-updated", handleSync);
+    };
+  }, []);
+
   const handleLayoutUpdated = (widgets: DashboardWidgetConfig[]) => {
     const map: Record<string, boolean> = {};
     widgets.forEach((w) => (map[w.id] = w.enabled));
     setCustomWidgets(map);
+    setDashboardLayout(loadWidgetLayout());
   };
 
   return (
@@ -769,135 +785,120 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Fluid 2-Column Bento / Masonry Tile Stream */}
+                  {/* Fluid Dynamic Bento / Masonry Tile Stream */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
-                    {/* LEFT COLUMN STREAM */}
-                    <div className="flex flex-col gap-4 sm:gap-5">
-                      {customWidgets.ai_quota !== false && (
-                        <div id="ai-quota-widget">
-                          <AiAgentQuotaWidget />
-                        </div>
-                      )}
-                      {customWidgets.agent_security_beacon !== false && (
-                        <div id="agent-beacon-widget">
-                          <AgentSecurityBeaconWidget />
-                        </div>
-                      )}
-                      {customWidgets.git_pr_velocity !== false && (
-                        <div id="git-pr-widget">
-                          <GitPrVelocityWidget />
-                        </div>
-                      )}
-                      {customWidgets.github_trending !== false && (
-                        <div id="github-trending-widget">
-                          <GitHubTrendingRepos />
-                        </div>
-                      )}
-                      {customWidgets.cve_radar !== false && (
-                        <div id="cve-radar-widget">
-                          <CveVulnerabilityRadar />
-                        </div>
-                      )}
-                      {customWidgets.quick_actions !== false && (
-                        <div id="quick-actions-widget">
-                          <QuickActionHub />
-                        </div>
-                      )}
-                      {customWidgets.pipeline_queue !== false && (
-                        <div id="pipeline-widget">
-                          <PipelineQueueWidget />
-                        </div>
-                      )}
-                      {customWidgets.github_activity !== false && (
-                        <div id="git-widget">
-                          <GitHubActivity />
-                        </div>
-                      )}
-                      {customWidgets.clipboard_manager !== false && (
-                        <div id="clipboard-widget">
-                          <ClipboardManagerWidget />
-                        </div>
-                      )}
-                      {customWidgets.color_palette !== false && (
-                        <div id="color-palette-widget">
-                          <ColorPaletteGenerator />
-                        </div>
-                      )}
-                      {customWidgets.api_health !== false && (
-                        <div id="api-widget">
-                          <ApiHealth />
-                        </div>
-                      )}
-                    </div>
+                    {dashboardLayout
+                      .filter((w) => w.enabled)
+                      .map((w) => {
+                        let widgetNode: React.ReactNode = null;
+                        switch (w.id) {
+                          case "clock":
+                          case "system":
+                          case "system_stats":
+                            widgetNode = <SystemStats />;
+                            break;
+                          case "api_health":
+                            widgetNode = <ApiHealth />;
+                            break;
+                          case "security":
+                          case "agent_beacon":
+                          case "agent_security_beacon":
+                            widgetNode = <AgentSecurityBeaconWidget />;
+                            break;
+                          case "quick_links":
+                          case "quick_actions":
+                            widgetNode = <QuickActionHub />;
+                            break;
+                          case "tasks":
+                          case "pipeline_queue":
+                            widgetNode = <PipelineQueueWidget />;
+                            break;
+                          case "logs":
+                          case "github_activity":
+                            widgetNode = <GitHubActivity />;
+                            break;
+                          case "docker":
+                          case "service_status":
+                            widgetNode = <ServiceStatusCompact />;
+                            break;
+                          case "ai_quota":
+                            widgetNode = <AiAgentQuotaWidget />;
+                            break;
+                          case "sql_radar":
+                          case "sql_slow_queries":
+                            widgetNode = <SqlSlowQueryRadar />;
+                            break;
+                          case "ebpf_heat":
+                          case "ebpf_kernel_heat":
+                            widgetNode = <EbpfKernelHeatWidget />;
+                            break;
+                          case "cve_radar":
+                            widgetNode = <CveVulnerabilityRadar />;
+                            break;
+                          case "crypto_hash":
+                          case "crypto_hash_verifier":
+                            widgetNode = <CryptoHashVerifier />;
+                            break;
+                          case "aws_burn":
+                          case "aws_cloud_burn":
+                            widgetNode = <AwsCloudBurnWidget />;
+                            break;
+                          case "git_velocity":
+                          case "git_pr_velocity":
+                            widgetNode = <GitPrVelocityWidget />;
+                            break;
+                          case "dns_ssl":
+                          case "global_dns_ssl":
+                            widgetNode = <GlobalDnsSslRadar />;
+                            break;
+                          case "github_trending":
+                            widgetNode = <GitHubTrendingRepos />;
+                            break;
+                          case "clipboard_mgr":
+                          case "clipboard_manager":
+                            widgetNode = <ClipboardManagerWidget />;
+                            break;
+                          case "cyber_soundscape":
+                            widgetNode = <CyberSoundscapeWidget />;
+                            break;
+                          case "palette_gen":
+                          case "color_palette":
+                            widgetNode = <ColorPaletteGenerator />;
+                            break;
+                          case "matrix_zen":
+                          case "matrix_rain":
+                            widgetNode = <MatrixRainZenCanvas />;
+                            break;
+                          case "hydration_streak":
+                          case "dev_hydration":
+                            widgetNode = <DevHydrationStreak />;
+                            break;
+                          case "global_timezones":
+                            widgetNode = <GlobalTimezonesRadar />;
+                            break;
+                          case "rss_feed":
+                            widgetNode = <RssFeed />;
+                            break;
+                          case "calendar":
+                            widgetNode = <CalendarWidget />;
+                            break;
+                          default:
+                            widgetNode = null;
+                        }
 
-                    {/* RIGHT COLUMN STREAM */}
-                    <div className="flex flex-col gap-4 sm:gap-5">
-                      {customWidgets.aws_cloud_burn !== false && (
-                        <div id="aws-burn-widget">
-                          <AwsCloudBurnWidget />
-                        </div>
-                      )}
-                      {customWidgets.sql_slow_queries !== false && (
-                        <div id="sql-slow-queries-widget">
-                          <SqlSlowQueryRadar />
-                        </div>
-                      )}
-                      {customWidgets.ebpf_kernel_heat !== false && (
-                        <div id="ebpf-heat-widget">
-                          <EbpfKernelHeatWidget />
-                        </div>
-                      )}
-                      {customWidgets.global_dns_ssl !== false && (
-                        <div id="global-dns-ssl-widget">
-                          <GlobalDnsSslRadar />
-                        </div>
-                      )}
-                      {customWidgets.crypto_hash_verifier !== false && (
-                        <div id="crypto-hash-widget">
-                          <CryptoHashVerifier />
-                        </div>
-                      )}
-                      {customWidgets.cyber_soundscape !== false && (
-                        <div id="cyber-soundscape-widget">
-                          <CyberSoundscapeWidget />
-                        </div>
-                      )}
-                      {customWidgets.matrix_rain !== false && (
-                        <div id="matrix-rain-widget">
-                          <MatrixRainZenCanvas />
-                        </div>
-                      )}
-                      {customWidgets.dev_hydration !== false && (
-                        <div id="dev-hydration-widget">
-                          <DevHydrationStreak />
-                        </div>
-                      )}
-                      {customWidgets.global_timezones !== false && (
-                        <div id="global-timezones-widget">
-                          <GlobalTimezonesRadar />
-                        </div>
-                      )}
-                      {customWidgets.service_status !== false && (
-                        <div id="service-status-widget">
-                          <ServiceStatusCompact />
-                        </div>
-                      )}
-                      {customWidgets.system_stats !== false && (
-                        <div id="stats-widget">
-                          <SystemStats />
-                        </div>
-                      )}
-                      {customWidgets.rss_feed !== false && (
-                        <div id="rss-widget">
-                          <RssFeed />
-                        </div>
-                      )}
-                      {customWidgets.calendar !== false && (
-                        <div id="calendar-widget">
-                          <CalendarWidget />
-                        </div>
-                      )}
-                    </div>
+                        if (!widgetNode) return null;
+                        const isWide = w.span === "2-col";
+
+                        return (
+                          <div
+                            key={w.id}
+                            id={`${w.id}-widget`}
+                            className={isWide ? "col-span-1 lg:col-span-2" : "col-span-1"}
+                          >
+                            {widgetNode}
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               </ErrorBoundary>
