@@ -13,41 +13,39 @@ export interface WidgetLayoutItem {
 }
 
 export const ALL_WIDGETS_METADATA: WidgetMetadata[] = [
-  // CORE
-  { id: "clock", name: "Cyber Chrono Clock", category: "CORE", description: "POSIX time, Warsaw GMT+1 & UTC-0 clocks", defaultSpan: "1-col" },
-  { id: "system", name: "System Node Metrics", category: "CORE", description: "Node.js v20, Next.js Turbopack & RAM load", defaultSpan: "1-col" },
-  { id: "api_health", name: "Mesh API Latency Radar", category: "CORE", description: "Gemini, HuggingFace, Supabase & AWS health", defaultSpan: "1-col" },
-  { id: "network", name: "Network I/O Telemetry", category: "CORE", description: "Real-time ingress/egress bandwidth", defaultSpan: "1-col" },
-  { id: "security", name: "Zero-Trust SecOps Sentinel", category: "CORE", description: "WAF, TLS 1.3, DDoS shield & audit events", defaultSpan: "1-col" },
-  { id: "quick_links", name: "Quick Access Matrix", category: "CORE", description: "Fast launchers for console & telemetry", defaultSpan: "1-col" },
-  { id: "notes", name: "Encrypted Scratchpad", category: "CORE", description: "Auto-saving persistent developer notes", defaultSpan: "1-col" },
-  { id: "tasks", name: "Tactical Task Matrix", category: "CORE", description: "Priority-ranked backlog and sprint tasks", defaultSpan: "1-col" },
-  { id: "logs", name: "Live Terminal Syslog", category: "CORE", description: "Structured real-time system event telemetry", defaultSpan: "1-col" },
-  { id: "docker", name: "Docker Daemon Fleet", category: "CORE", description: "Containerized service status & resource load", defaultSpan: "1-col" },
-
   // AI & TOKENS
-  { id: "ai_quota", name: "AI Rate Limits & Burndown", category: "AI & TOKENS", description: "Gemini 2.5, Claude 3.7 & GPT-4o TPM/RPM limits", defaultSpan: "1-col" },
-  { id: "agent_beacon", name: "Agent Security Audit", category: "AI & TOKENS", description: "Zero-trust autonomous agent execution monitor", defaultSpan: "1-col" },
-
-  // SECURITY & SRE
-  { id: "sql_radar", name: "SQL Slow Query Radar", category: "SECURITY & SRE", description: "P95/P99 latency percentiles & slow query explain", defaultSpan: "1-col" },
-  { id: "ebpf_heat", name: "eBPF Kernel Heat Probe", category: "SECURITY & SRE", description: "Real-time syscall frequency and kernel CPU load", defaultSpan: "1-col" },
-  { id: "cve_radar", name: "CVE Vulnerability Feed", category: "SECURITY & SRE", description: "Active vulnerability tracker and 1-click patcher", defaultSpan: "1-col" },
-  { id: "crypto_hash", name: "WebCrypto Hash Verifier", category: "SECURITY & SRE", description: "SHA-256 live computation and digest probe", defaultSpan: "1-col" },
+  { id: "ai_quota", name: "AI Model Quotas & Burndown", category: "AI & TOKENS", description: "Multi-LLM rate limits (TPM/RPM) and token cost telemetry", defaultSpan: "1-col" },
+  { id: "agent_security_beacon", name: "Agent Security Beacon & Audit", category: "AI & TOKENS", description: "Zero-trust local audit logging for AI agent shell/file mutations", defaultSpan: "1-col" },
 
   // CLOUD & GIT
-  { id: "aws_burn", name: "Cloud FinOps Burn Rate", category: "CLOUD & GIT", description: "AWS/GCP monthly budget burndown & idle reaper", defaultSpan: "1-col" },
-  { id: "git_velocity", name: "Git PR & CI Velocity", category: "CLOUD & GIT", description: "Active pull requests, CI checks & divergence", defaultSpan: "1-col" },
-  { id: "dns_ssl", name: "Global DNS & SSL Monitor", category: "CLOUD & GIT", description: "TLS 1.3 cert expiration & 4-continent DNS latency", defaultSpan: "1-col" },
-  { id: "github_trending", name: "GitHub Trending Repos", category: "CLOUD & GIT", description: "High-velocity open source repos & star tracker", defaultSpan: "1-col" },
+  { id: "git_pr_velocity", name: "Pull Requests & Velocity", category: "CLOUD & GIT", description: "Active PR reviews, GitHub Actions check status & branch divergence", defaultSpan: "1-col" },
+  { id: "github_trending", name: "GitHub Trending Repos", category: "CLOUD & GIT", description: "High-velocity open source repositories and daily star growth", defaultSpan: "1-col" },
+  { id: "aws_cloud_burn", name: "FinOps Cloud Spend & Burn", category: "CLOUD & GIT", description: "AWS & GCP monthly forecast, circular burn rate & idle termination", defaultSpan: "1-col" },
+  { id: "github_activity", name: "GitHub Repository Activity", category: "CLOUD & GIT", description: "Recent commits, PRs, and branch activities", defaultSpan: "1-col" },
+
+  // SECURITY & SRE
+  { id: "cve_radar", name: "CVE & Zero-Day Radar", category: "SECURITY & SRE", description: "Actionable vulnerability scoring with MTTR and 1-click patch actions", defaultSpan: "1-col" },
+  { id: "sql_slow_queries", name: "SQL & Slow Query Forensics", category: "SECURITY & SRE", description: "P99 latency distribution & lock contention diagnostics", defaultSpan: "1-col" },
+  { id: "ebpf_kernel_heat", name: "eBPF Kernel Observability", category: "SECURITY & SRE", description: "Real-time syscall probes and kernel probe CPU overhead", defaultSpan: "1-col" },
+  { id: "global_dns_ssl", name: "Global DNS & SSL Radar", category: "SECURITY & SRE", description: "Multi-region DNS propagation latency & TLS certificate expiration", defaultSpan: "1-col" },
+  { id: "crypto_hash_verifier", name: "Crypto Hash & Integrity Check", category: "SECURITY & SRE", description: "Live SHA-256 computation and digest verification probe", defaultSpan: "1-col" },
+
+  // CORE
+  { id: "quick_actions", name: "Tactical Action Hub & Quick Dispatch", category: "CORE", description: "1-click triggers for canary deploy, CVE scan, and cache purge", defaultSpan: "1-col" },
+  { id: "pipeline_queue", name: "CI/CD & Swarm Workflow Queue", category: "CORE", description: "Live progress of running builds and background agent jobs", defaultSpan: "1-col" },
+  { id: "api_health", name: "API & Microservice Health Probes", category: "CORE", description: "Status of SQLite-Vec, Auth Proxy, and Redis mesh", defaultSpan: "1-col" },
+  { id: "service_status", name: "Service Radar Status Matrix", category: "CORE", description: "High-density status & latency pills of all 8 core services", defaultSpan: "1-col" },
+  { id: "system_stats", name: "System Telemetry & Resource Monitor", category: "CORE", description: "CPU, Memory, Disk, and eBPF Daemon load metrics", defaultSpan: "1-col" },
+  { id: "rss_feed", name: "Cyber Threat & Intel RSS Feed", category: "CORE", description: "Real-time vulnerability advisories & CVE updates", defaultSpan: "1-col" },
+  { id: "calendar", name: "Operations & Deployment Calendar", category: "CORE", description: "Scheduled cron jobs, maintenance windows, and sprints", defaultSpan: "2-col" },
 
   // UTILITIES & ZEN
-  { id: "clipboard_mgr", name: "Clipboard Scratch Vault", category: "UTILITIES & ZEN", description: "Multi-entry code & token scratchpad with copy", defaultSpan: "1-col" },
-  { id: "cyber_soundscape", name: "Focus Cyber Soundscape", category: "UTILITIES & ZEN", description: "Rain, Server Hum & 432Hz ambient audio generator", defaultSpan: "1-col" },
-  { id: "palette_gen", name: "Cyber Palette Studio", category: "UTILITIES & ZEN", description: "Neon/vapor color generator with CSS variable copy", defaultSpan: "1-col" },
-  { id: "matrix_zen", name: "Matrix Rain Zen Canvas", category: "UTILITIES & ZEN", description: "HTML5 2D green digital rain screensaver", defaultSpan: "1-col" },
-  { id: "hydration_streak", name: "Hydration & Focus Streak", category: "UTILITIES & ZEN", description: "Water vs Espresso intake and Pomodoro streaks", defaultSpan: "1-col" },
-  { id: "global_timezones", name: "Global Chronometer Radar", category: "UTILITIES & ZEN", description: "World clocks across Warsaw, London, SF, Tokyo", defaultSpan: "1-col" },
+  { id: "clipboard_manager", name: "Clipboard Buffer & Snippets", category: "UTILITIES & ZEN", description: "Fast code, token & URL scratchpad with pinning and 1-click copy", defaultSpan: "1-col" },
+  { id: "color_palette", name: "Cyber Palette Generator", category: "UTILITIES & ZEN", description: "Neon and obsidian harmonic palettes with 1-click CSS token export", defaultSpan: "1-col" },
+  { id: "cyber_soundscape", name: "Cyber Focus Soundscape", category: "UTILITIES & ZEN", description: "Focus ambient generators: Cyberpunk Rain, Server Hum, Binaural", defaultSpan: "1-col" },
+  { id: "matrix_rain", name: "Matrix Digital Rain // Zen", category: "UTILITIES & ZEN", description: "Lightweight HTML5 2D canvas falling katakana digital rain", defaultSpan: "1-col" },
+  { id: "dev_hydration", name: "Operator Bio-Rhythm & Streak", category: "UTILITIES & ZEN", description: "Espresso vs water hydration goals and Pomodoro deep work streak", defaultSpan: "1-col" },
+  { id: "global_timezones", name: "Global Command Timezones", category: "UTILITIES & ZEN", description: "Parallel live chronometers across Warsaw, London, SF, NYC, Tokyo", defaultSpan: "1-col" },
 ];
 
 export const DEFAULT_LAYOUT: WidgetLayoutItem[] = ALL_WIDGETS_METADATA.map((w) => ({
@@ -58,28 +56,28 @@ export const DEFAULT_LAYOUT: WidgetLayoutItem[] = ALL_WIDGETS_METADATA.map((w) =
 
 export const LAYOUT_PRESETS: Record<string, { name: string; ids: string[] }> = {
   all: {
-    name: "Full Tactical Workstation (All 26)",
+    name: "Full Tactical Workstation (All 24)",
     ids: ALL_WIDGETS_METADATA.map((w) => w.id),
   },
   sre: {
     name: "SRE & SecOps Operations",
-    ids: ["security", "sql_radar", "ebpf_heat", "cve_radar", "crypto_hash", "dns_ssl", "api_health", "system", "logs", "docker"],
+    ids: ["cve_radar", "sql_slow_queries", "ebpf_kernel_heat", "global_dns_ssl", "crypto_hash_verifier", "api_health", "service_status", "system_stats", "calendar"],
   },
   ai: {
     name: "AI Swarm & Neural Studio",
-    ids: ["ai_quota", "agent_beacon", "system", "api_health", "notes", "tasks", "clipboard_mgr", "global_timezones"],
+    ids: ["ai_quota", "agent_security_beacon", "pipeline_queue", "system_stats", "clipboard_manager", "global_timezones"],
   },
   devops: {
     name: "DevOps & Cloud Fleet",
-    ids: ["docker", "aws_burn", "git_velocity", "github_trending", "dns_ssl", "system", "logs", "tasks"],
+    ids: ["service_status", "aws_cloud_burn", "git_pr_velocity", "github_trending", "global_dns_ssl", "pipeline_queue", "github_activity", "calendar"],
   },
   zen: {
     name: "Ergonomics & Focus Zen",
-    ids: ["cyber_soundscape", "matrix_zen", "hydration_streak", "palette_gen", "clock", "notes", "clipboard_mgr", "global_timezones"],
+    ids: ["cyber_soundscape", "matrix_rain", "dev_hydration", "color_palette", "system_stats", "clipboard_manager", "global_timezones"],
   },
   minimal: {
     name: "Clean Minimalist Core (Top 6)",
-    ids: ["clock", "system", "tasks", "notes", "ai_quota", "quick_links"],
+    ids: ["system_stats", "pipeline_queue", "quick_actions", "ai_quota", "api_health", "calendar"],
   },
 };
 
@@ -92,7 +90,6 @@ export function loadWidgetLayout(): WidgetLayoutItem[] {
     if (raw) {
       const parsed: WidgetLayoutItem[] = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Ensure all registered widgets exist in the loaded layout
         const existingIds = new Set(parsed.map((item) => item.id));
         const missing = ALL_WIDGETS_METADATA.filter((w) => !existingIds.has(w.id)).map((w) => ({
           id: w.id,
@@ -112,7 +109,6 @@ export function saveWidgetLayout(layout: WidgetLayoutItem[]) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(layout));
-    // Also sync with legacy map for backwards compatibility
     const legacyMap: Record<string, boolean> = {};
     layout.forEach((item) => {
       legacyMap[item.id] = item.enabled;

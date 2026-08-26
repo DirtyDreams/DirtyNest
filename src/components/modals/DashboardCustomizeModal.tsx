@@ -116,6 +116,12 @@ export default function DashboardCustomizeModal({
     setWidgets(newWidgets);
     try {
       localStorage.setItem("dirtynest_dashboard_layout", JSON.stringify(newWidgets));
+      const layoutItems = newWidgets.map((w) => ({
+        id: w.id,
+        enabled: w.enabled,
+        span: w.gridSpan === "full" ? ("2-col" as const) : ("1-col" as const),
+      }));
+      localStorage.setItem("dirtynest_widget_layout", JSON.stringify(layoutItems));
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dirtynest-layout-updated"));
       }
