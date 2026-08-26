@@ -14,6 +14,9 @@ export async function POST(request: Request) {
     if (!text || typeof text !== "string" || !text.trim()) {
       return Response.json({ error: "Text is required" }, { status: 400 });
     }
+    if (text.trim().length > 500) {
+      return Response.json({ error: "Text exceeds maximum limit of 500 characters" }, { status: 400 });
+    }
     const maxOrder = db.exec("SELECT COALESCE(MAX(sort_order), -1) + 1 as next_order FROM todos");
     const nextOrder = maxOrder.length > 0 ? (maxOrder[0].values[0][0] as number) : 0;
     db.run("INSERT INTO todos (text, sort_order, priority, due_date) VALUES (?, ?, ?, ?)", [text.trim(), nextOrder, priority, due_date]);

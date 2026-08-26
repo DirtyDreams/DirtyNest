@@ -300,11 +300,29 @@ function offsetDate(base: Date, days: number): string {
   return d.toISOString().split("T")[0];
 }
 
+let isPersisting = false;
+let pendingPersist = false;
+
 export function persistDb() {
   if (!db) return;
-  const data = db.export();
-  const buffer = Buffer.from(data);
-  fs.writeFileSync(getDbPath(), buffer);
+  if (isPersisting) {
+    pendingPersist = true;
+    return;
+  }
+  isPersisting = true;
+  try {
+    const data = db.export();
+    const buffer = Buffer.from(data);
+    fs.writeFileSync(getDbPath(), buffer);
+  } catch (err) {
+    console.error("Error persisting database to disk:", err);
+  } finally {
+    isPersisting = false;
+    if (pendingPersist) {
+      pendingPersist = false;
+      persistDb();
+    }
+  }
 }
 
 // Type definitions

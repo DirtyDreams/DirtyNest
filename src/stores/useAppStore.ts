@@ -51,7 +51,7 @@ export const useAppStore = create<AppState>((set) => ({
   setActiveView: (view) => {
     set({ activeView: view });
     if (typeof window !== "undefined") {
-      window.location.hash = view;
+      window.history.replaceState(null, "", `#${view}`);
     }
   },
 

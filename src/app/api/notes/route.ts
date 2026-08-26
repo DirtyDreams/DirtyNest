@@ -14,6 +14,9 @@ export async function PUT(request: Request) {
     if (typeof content !== "string") {
       return Response.json({ error: "Content string is required" }, { status: 400 });
     }
+    if (content.length > 50000) {
+      return Response.json({ error: "Content exceeds maximum limit of 50,000 characters" }, { status: 400 });
+    }
     const now = new Date().toISOString();
     const existing = queryAll<Note>(db, "SELECT * FROM notes LIMIT 1");
     if (existing.length > 0) {
