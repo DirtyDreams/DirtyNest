@@ -313,10 +313,10 @@ export default function Home() {
         <main className={`flex-1 min-w-0 max-w-full ml-0 md:ml-[68px] ${isRightPanelOpen ? "xl:mr-[340px]" : "xl:mr-[52px]"} px-3 sm:px-5 py-3 sm:py-4 pb-40 flex flex-col transition-all duration-300`}>
           {/* Top Operational Breadcrumb HUD Bar */}
           <header className="flex flex-col gap-2.5 mb-4 pb-3 border-b border-white/5 relative z-30">
-            {/* Row 1: Brand & Node Status (Left) + Quick Action HUD Controls (Right) */}
-            <div className="flex items-center justify-between gap-3 w-full">
+            {/* Row 1: Brand & Node Status (Left) + Compact Non-wrapping HUD Toolbar (Right) */}
+            <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-4 w-full">
               {/* Left: Brand & Mobile Trigger */}
-              <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <button
                   onClick={() => {
                     cyberAudio.play("click");
@@ -326,7 +326,7 @@ export default function Home() {
                   title="Open Tactical Menu"
                   aria-label="Open Navigation Menu"
                 >
-                  <Menu size={18} />
+                  <Menu size={16} />
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -352,8 +352,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Right: Quick Action HUD Controls */}
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Right: Quick Action HUD Controls (Strictly Non-Wrapping) */}
+              <div className="flex flex-nowrap items-center gap-1 sm:gap-1.5 shrink-0">
                 {/* Customize Dashboard Button */}
                 {activeView === "dashboard" && (
                   <button
@@ -361,12 +361,12 @@ export default function Home() {
                       cyberAudio.play("click");
                       setCustomizeOpen(true);
                     }}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/20 transition-all text-xs font-mono font-bold cursor-pointer"
+                    className="p-2 sm:px-2.5 sm:py-2 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/20 transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5"
                     title="Customize Overview Widgets"
                     aria-label="Customize Overview Widgets"
                   >
-                    <Sliders size={13} />
-                    <span className="hidden sm:inline">CUSTOMIZE</span>
+                    <Sliders size={14} />
+                    <span className="hidden 2xl:inline">CUSTOMIZE</span>
                   </button>
                 )}
 
@@ -380,7 +380,7 @@ export default function Home() {
                       setMobileDeckSheetOpen(true);
                     }
                   }}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer ${
+                  className={`p-2 sm:px-2.5 sm:py-2 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
                     isRightPanelOpen
                       ? "bg-[#00F0FF]/15 text-[#00F0FF] border-[#00F0FF]/40 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
                       : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00F0FF] hover:border-[#00F0FF]/40"
@@ -388,21 +388,21 @@ export default function Home() {
                   title="Toggle Tactical Deck Panel (Hotkey: Ctrl + \)"
                   aria-label="Toggle Tactical Deck"
                 >
-                  <Layers size={13} />
-                  <span className="hidden sm:inline">DECK</span>
+                  <Layers size={14} />
+                  <span className="hidden 2xl:inline">DECK</span>
                 </button>
 
                 {/* Command palette search trigger */}
                 <button
                   onClick={triggerCmdPalette}
-                  className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
+                  className="flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
                   title="Open Command Palette (Ctrl+K)"
                   aria-label="Open Command Palette"
                 >
                   <Search size={14} className="group-hover:text-[#00FF41]" />
-                  <span className="text-xs font-mono hidden md:inline">Command Palette</span>
-                  <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] group-hover:text-[#00FF41] hidden sm:inline">
-                    Ctrl + K
+                  <span className="text-xs font-mono hidden 2xl:inline">Palette</span>
+                  <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] group-hover:text-[#00FF41] hidden sm:inline">
+                    ^K
                   </kbd>
                 </button>
 
@@ -411,10 +411,10 @@ export default function Home() {
                   onClick={() => setDevToolsOpen(true)}
                   title="Developer Tools Matrix"
                   aria-label="Open Developer Tools"
-                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer"
+                  className="p-2 sm:px-2.5 sm:py-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer flex items-center gap-1.5"
                 >
                   <Wrench size={14} />
-                  <span className="text-xs font-mono hidden lg:inline">DevTools</span>
+                  <span className="text-xs font-mono hidden 2xl:inline">DevTools</span>
                 </button>
 
                 {/* Terminal CLI Toggle */}
@@ -422,14 +422,14 @@ export default function Home() {
                   onClick={toggleTerminal}
                   title="Toggle Cyber CLI Terminal (Hotkey: `)"
                   aria-label="Toggle Terminal"
-                  className={`flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl border transition-all cursor-pointer ${
+                  className={`p-2 sm:px-2.5 sm:py-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 ${
                     isTerminalOpen
                       ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 font-bold"
                       : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40"
                   }`}
                 >
                   <Terminal size={14} />
-                  <span className="text-xs font-mono hidden lg:inline">CLI</span>
+                  <span className="text-xs font-mono hidden 2xl:inline">CLI</span>
                 </button>
 
                 {/* Ambient Focus Audio Soundboard */}
@@ -440,7 +440,7 @@ export default function Home() {
                   }}
                   title="Open Cyber Audio Matrix & Ambient Soundboard"
                   aria-label="Toggle Ambient Audio Matrix"
-                  className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                  className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
                     isDronePlaying
                       ? "bg-[#BF40FF]/20 text-[#BF40FF] border-[#BF40FF]/40 shadow-[0_0_10px_rgba(191,64,255,0.3)] animate-pulse"
                       : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#BF40FF] hover:border-[#BF40FF]/40"
@@ -457,7 +457,7 @@ export default function Home() {
                   onClick={toggleFullscreen}
                   title="Toggle Fullscreen Deck"
                   aria-label="Toggle Fullscreen"
-                  className="p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
+                  className="p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer flex items-center justify-center"
                 >
                   {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
                 </button>
