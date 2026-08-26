@@ -312,11 +312,11 @@ export default function Home() {
         {/* Central Tactical Workspace */}
         <main className={`flex-1 min-w-0 max-w-full ml-0 md:ml-[68px] ${isRightPanelOpen ? "xl:mr-[340px]" : "xl:mr-[52px]"} px-3 sm:px-5 py-3 sm:py-4 pb-40 flex flex-col transition-all duration-300`}>
           {/* Top Operational Breadcrumb HUD Bar */}
-          <header className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/5 relative z-20">
-            {/* Left: Brand & Mobile Trigger */}
-            <div className="flex items-center justify-between 2xl:justify-start gap-2.5 sm:gap-3 shrink-0">
-              <div className="flex items-center gap-2.5 sm:gap-3">
-                {/* Mobile Drawer Hamburger Trigger */}
+          <header className="flex flex-col gap-2.5 mb-4 pb-3 border-b border-white/5 relative z-30">
+            {/* Row 1: Brand & Node Status (Left) + Quick Action HUD Controls (Right) */}
+            <div className="flex items-center justify-between gap-3 w-full">
+              {/* Left: Brand & Mobile Trigger */}
+              <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
                 <button
                   onClick={() => {
                     cyberAudio.play("click");
@@ -351,21 +351,132 @@ export default function Home() {
                   <UptimeBadge />
                 </div>
               </div>
+
+              {/* Right: Quick Action HUD Controls */}
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                {/* Customize Dashboard Button */}
+                {activeView === "dashboard" && (
+                  <button
+                    onClick={() => {
+                      cyberAudio.play("click");
+                      setCustomizeOpen(true);
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/20 transition-all text-xs font-mono font-bold cursor-pointer"
+                    title="Customize Overview Widgets"
+                    aria-label="Customize Overview Widgets"
+                  >
+                    <Sliders size={13} />
+                    <span className="hidden sm:inline">CUSTOMIZE</span>
+                  </button>
+                )}
+
+                {/* Tactical Deck Toggle Button (Desktop & Mobile) */}
+                <button
+                  onClick={() => {
+                    cyberAudio.play("click");
+                    if (window.innerWidth >= 1280) {
+                      toggleRightPanel();
+                    } else {
+                      setMobileDeckSheetOpen(true);
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer ${
+                    isRightPanelOpen
+                      ? "bg-[#00F0FF]/15 text-[#00F0FF] border-[#00F0FF]/40 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
+                      : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00F0FF] hover:border-[#00F0FF]/40"
+                  }`}
+                  title="Toggle Tactical Deck Panel (Hotkey: Ctrl + \)"
+                  aria-label="Toggle Tactical Deck"
+                >
+                  <Layers size={13} />
+                  <span className="hidden sm:inline">DECK</span>
+                </button>
+
+                {/* Command palette search trigger */}
+                <button
+                  onClick={triggerCmdPalette}
+                  className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
+                  title="Open Command Palette (Ctrl+K)"
+                  aria-label="Open Command Palette"
+                >
+                  <Search size={14} className="group-hover:text-[#00FF41]" />
+                  <span className="text-xs font-mono hidden md:inline">Command Palette</span>
+                  <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] group-hover:text-[#00FF41] hidden sm:inline">
+                    Ctrl + K
+                  </kbd>
+                </button>
+
+                {/* DevTools Matrix modal button */}
+                <button
+                  onClick={() => setDevToolsOpen(true)}
+                  title="Developer Tools Matrix"
+                  aria-label="Open Developer Tools"
+                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer"
+                >
+                  <Wrench size={14} />
+                  <span className="text-xs font-mono hidden lg:inline">DevTools</span>
+                </button>
+
+                {/* Terminal CLI Toggle */}
+                <button
+                  onClick={toggleTerminal}
+                  title="Toggle Cyber CLI Terminal (Hotkey: `)"
+                  aria-label="Toggle Terminal"
+                  className={`flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl border transition-all cursor-pointer ${
+                    isTerminalOpen
+                      ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 font-bold"
+                      : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40"
+                  }`}
+                >
+                  <Terminal size={14} />
+                  <span className="text-xs font-mono hidden lg:inline">CLI</span>
+                </button>
+
+                {/* Ambient Focus Audio Soundboard */}
+                <button
+                  onClick={() => {
+                    cyberAudio.play("click");
+                    setAudioMixerOpen(true);
+                  }}
+                  title="Open Cyber Audio Matrix & Ambient Soundboard"
+                  aria-label="Toggle Ambient Audio Matrix"
+                  className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                    isDronePlaying
+                      ? "bg-[#BF40FF]/20 text-[#BF40FF] border-[#BF40FF]/40 shadow-[0_0_10px_rgba(191,64,255,0.3)] animate-pulse"
+                      : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#BF40FF] hover:border-[#BF40FF]/40"
+                  }`}
+                >
+                  <Headphones size={15} />
+                </button>
+
+                {/* Theme Palette Switcher */}
+                <ThemeMenu onOpenCustomizer={() => setThemeModalOpen(true)} />
+
+                {/* Fullscreen Toggle */}
+                <button
+                  onClick={toggleFullscreen}
+                  title="Toggle Fullscreen Deck"
+                  aria-label="Toggle Fullscreen"
+                  className="p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
+                >
+                  {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                </button>
+              </div>
             </div>
 
-            {/* View Mode Quick Navigation Chips (Scrollable and contained) */}
-            <div className="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/5 font-mono text-xs overflow-x-auto scrollbar-none max-w-full 2xl:max-w-3xl 2xl:mx-2 shrink" role="tablist" aria-label="Deck Views">
+            {/* Row 2: View Mode Quick Navigation Strip (Full width, scrollable, clean) */}
+            <div className="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/5 font-mono text-xs overflow-x-auto scrollbar-none w-full" role="tablist" aria-label="Deck Views">
               <button
                 role="tab"
                 aria-selected={activeView === "dashboard"}
                 onClick={() => handleSelectView("dashboard")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeView === "dashboard"
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#F1F3F9]"
                 }`}
               >
-                <LayoutDashboard size={12} />
+                <LayoutDashboard size={13} />
                 <span>OVERVIEW</span>
               </button>
 
@@ -373,13 +484,13 @@ export default function Home() {
                 role="tab"
                 aria-selected={activeView === "chatbot"}
                 onClick={() => handleSelectView("chatbot")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeView === "chatbot"
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#00FF41]"
                 }`}
               >
-                <Bot size={12} />
+                <Bot size={13} />
                 <span>CHATBOT</span>
               </button>
 
@@ -387,13 +498,13 @@ export default function Home() {
                 role="tab"
                 aria-selected={activeView === "control_room"}
                 onClick={() => handleSelectView("control_room")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeView === "control_room"
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#00FF41]"
                 }`}
               >
-                <Radio size={12} />
+                <Radio size={13} />
                 <span>CONTROL ROOM</span>
               </button>
 
@@ -401,13 +512,13 @@ export default function Home() {
                 role="tab"
                 aria-selected={activeView === "agents"}
                 onClick={() => handleSelectView("agents")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeView === "agents"
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#00FF41]"
                 }`}
               >
-                <Cpu size={12} />
+                <Cpu size={13} />
                 <span>AGENTS</span>
               </button>
 
@@ -415,13 +526,13 @@ export default function Home() {
                 role="tab"
                 aria-selected={activeView === "knowledge"}
                 onClick={() => handleSelectView("knowledge")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeView === "knowledge"
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#00FF41]"
                 }`}
               >
-                <Database size={12} />
+                <Database size={13} />
                 <span>KNOWLEDGE</span>
               </button>
 
@@ -429,13 +540,13 @@ export default function Home() {
                 role="tab"
                 aria-selected={activeView === "docker"}
                 onClick={() => handleSelectView("docker")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeView === "docker"
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#00FF41]"
                 }`}
               >
-                <Container size={12} />
+                <Container size={13} />
                 <span>DOCKER</span>
               </button>
 
@@ -443,13 +554,13 @@ export default function Home() {
                 role="tab"
                 aria-selected={activeView === "tools"}
                 onClick={() => handleSelectView("tools")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeView === "tools"
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#00FF41]"
                 }`}
               >
-                <Wrench size={12} />
+                <Wrench size={13} />
                 <span>TOOLS</span>
               </button>
 
@@ -457,13 +568,13 @@ export default function Home() {
                 role="tab"
                 aria-selected={activeView === "stats"}
                 onClick={() => handleSelectView("stats")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeView === "stats"
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#00FF41]"
                 }`}
               >
-                <Activity size={12} />
+                <Activity size={13} />
                 <span>STATS</span>
               </button>
 
@@ -471,13 +582,13 @@ export default function Home() {
                 role="tab"
                 aria-selected={activeView === "logs"}
                 onClick={() => handleSelectView("logs")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeView === "logs"
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#00FF41]"
                 }`}
               >
-                <ScrollText size={12} />
+                <ScrollText size={13} />
                 <span>LOGS</span>
               </button>
 
@@ -485,125 +596,14 @@ export default function Home() {
                 role="tab"
                 aria-selected={activeView === "settings"}
                 onClick={() => handleSelectView("settings")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   activeView === "settings"
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#00FF41]"
                 }`}
               >
-                <Settings size={12} />
+                <Settings size={13} />
                 <span>SETTINGS</span>
-              </button>
-            </div>
-
-            {/* Quick Action HUD Controls (Always aligned on the right) */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 self-end 2xl:self-auto">
-              {/* Customize Dashboard Button */}
-              {activeView === "dashboard" && (
-                <button
-                  onClick={() => {
-                    cyberAudio.play("click");
-                    setCustomizeOpen(true);
-                  }}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/20 transition-all text-xs font-mono font-bold cursor-pointer"
-                  title="Customize Overview Widgets"
-                  aria-label="Customize Overview Widgets"
-                >
-                  <Sliders size={13} />
-                  <span className="hidden sm:inline">CUSTOMIZE</span>
-                </button>
-              )}
-
-              {/* Tactical Deck Toggle Button (Desktop & Mobile) */}
-              <button
-                onClick={() => {
-                  cyberAudio.play("click");
-                  if (window.innerWidth >= 1280) {
-                    toggleRightPanel();
-                  } else {
-                    setMobileDeckSheetOpen(true);
-                  }
-                }}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer ${
-                  isRightPanelOpen
-                    ? "bg-[#00F0FF]/15 text-[#00F0FF] border-[#00F0FF]/40 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
-                    : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00F0FF] hover:border-[#00F0FF]/40"
-                }`}
-                title="Toggle Tactical Deck Panel (Hotkey: Ctrl + \)"
-                aria-label="Toggle Tactical Deck"
-              >
-                <Layers size={13} />
-                <span className="hidden sm:inline">DECK</span>
-              </button>
-
-              {/* Command palette search trigger */}
-              <button
-                onClick={triggerCmdPalette}
-                className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
-                title="Open Command Palette (Ctrl+K)"
-                aria-label="Open Command Palette"
-              >
-                <Search size={14} className="group-hover:text-[#00FF41]" />
-                <span className="text-xs font-mono hidden md:inline">Command Palette</span>
-                <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] group-hover:text-[#00FF41] hidden sm:inline">
-                  Ctrl + K
-                </kbd>
-              </button>
-
-              {/* DevTools Matrix modal button */}
-              <button
-                onClick={() => setDevToolsOpen(true)}
-                title="Developer Tools Matrix"
-                aria-label="Open Developer Tools"
-                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer"
-              >
-                <Wrench size={14} />
-                <span className="text-xs font-mono hidden lg:inline">DevTools</span>
-              </button>
-
-              {/* Terminal CLI Toggle */}
-              <button
-                onClick={toggleTerminal}
-                title="Toggle Cyber CLI Terminal (Hotkey: `)"
-                aria-label="Toggle Terminal"
-                className={`flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl border transition-all cursor-pointer ${
-                  isTerminalOpen
-                    ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 font-bold"
-                    : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40"
-                }`}
-              >
-                <Terminal size={14} />
-                <span className="text-xs font-mono hidden lg:inline">CLI</span>
-              </button>
-
-              {/* Ambient Focus Audio Soundboard */}
-              <button
-                onClick={() => {
-                  cyberAudio.play("click");
-                  setAudioMixerOpen(true);
-                }}
-                title="Open Cyber Audio Matrix & Ambient Soundboard"
-                aria-label="Toggle Ambient Audio Matrix"
-                className={`p-2 rounded-xl border transition-all cursor-pointer ${
-                  isDronePlaying
-                    ? "bg-[#BF40FF]/20 text-[#BF40FF] border-[#BF40FF]/40 shadow-[0_0_10px_rgba(191,64,255,0.3)] animate-pulse"
-                    : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#BF40FF] hover:border-[#BF40FF]/40"
-                }`}
-              >
-                <Headphones size={15} />
-              </button>
-
-              {/* Theme Palette Switcher */}
-              <ThemeMenu onOpenCustomizer={() => setThemeModalOpen(true)} />
-
-              {/* Fullscreen Toggle */}
-              <button
-                onClick={toggleFullscreen}
-                title="Toggle Fullscreen Deck"
-                aria-label="Toggle Fullscreen"
-                className="hidden sm:flex p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer"
-              >
-                {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
               </button>
             </div>
           </header>
