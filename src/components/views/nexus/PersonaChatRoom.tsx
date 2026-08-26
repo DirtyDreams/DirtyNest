@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   ArrowLeft,
   Send,
@@ -14,15 +14,25 @@ import {
   BookOpen,
   Trash2,
   Volume2,
+  VolumeX,
   StopCircle,
   Copy,
   Cpu,
   Layers,
   Heart,
   Bot,
+  User,
+  GitBranch,
+  Download,
+  Zap,
+  Tag,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { PersonaCharacter } from "./PersonaDetailModal";
+import { UserPersona } from "./UserPersonaModal";
+import { LorebookEntry, DEFAULT_LOREBOOK_ENTRIES } from "./LorebookManagerModal";
+import ChatSessionsDrawer, { ChatSession } from "./ChatSessionsDrawer";
+import TokenContextInspector from "./TokenContextInspector";
 
 interface ChatMessage {
   id: string;
@@ -35,31 +45,68 @@ interface ChatMessage {
 
 interface Props {
   character: PersonaCharacter;
+  activeUserPersona: UserPersona;
+  lorebookEntries: LorebookEntry[];
   onBack: () => void;
+  onOpenUserPersonaModal: () => void;
+  onOpenLorebookModal: () => void;
 }
 
-export default function PersonaChatRoom({ character, onBack }: Props) {
+export default function PersonaChatRoom({
+  character,
+  activeUserPersona,
+  lorebookEntries,
+  onBack,
+  onOpenUserPersonaModal,
+  onOpenLorebookModal,
+}: Props) {
+  const initialGreetings = [
+    character.firstMessage,
+    `*adjusts ocular implants and watches you carefully* Identity verified as ${activeUserPersona.name}. Let's see what you brought to the table.`,
+    `*leans closer under the flickering neon lamps* What brings a ${activeUserPersona.role} to my sub-level terminal? Speak quickly.`,
+  ];
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "msg-0",
       sender: "char",
-      variants: [
-        character.firstMessage,
-        `*adjusts ocular implants and watches you carefully* Access granted. Let's see what you brought to the table.`,
-      ],
+      variants: initialGreetings,
       activeVariantIndex: 0,
       timestamp: "Just now",
     },
   ]);
+
+  const [sessions, setSessions] = useState<ChatSession[]>([
+    {
+      id: "sess-01",
+      name: "Main Timeline Alpha",
+      characterId: character.id,
+      messagesCount: 1,
+      lastMessageSnippet: character.firstMessage.slice(0, 70) + "...",
+      updatedAt: "Just now",
+    },
+  ]);
+  const [activeSessionId, setActiveSessionId] = useState("sess-01");
+
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [showLorebookDrawer, setShowLorebookDrawer] = useState(false);
+  const [showSessionsDrawer, setShowSessionsDrawer] = useState(false);
+
+  // Audio / TTS State
+  const [isPlayingTtsId, setIsPlayingTtsId] = useState<string | null>(null);
+  const [ttsVoiceRate, setTtsVoiceRate] = useState(1.0);
+  const [ttsPitch, setTtsPitch] = useState(1.0);
+
+  // Inference Hyperparameters
   const [authorsNote, setAuthorsNote] = useState(
     `[Tone: Cyberpunk Noir · Setting: Sub-Level 4 Tactical Core · Uncensored]`
   );
   const [temperature, setTemperature] = useState(0.8);
   const [selectedModel, setSelectedModel] = useState("Nous-Hermes-3-70B");
+
+  // Inline Message Editing State
   const [editingText, setEditingText] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -68,6 +115,85 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isGenerating]);
+
+  // Clean up TTS when unmounting
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // Scan recent messages for Keyword-Triggered Lorebook entries
+  const activeTriggeredLoreEntries = useMemo(() => {
+    const combinedChatText = messages
+      .slice(-6)
+      .map((m) => m.variants[m.activeVariantIndex])
+      .join(" ")
+      .toLowerCase();
+
+    return lorebookEntries.filter((entry) => {
+      if (!entry.enabled) return false;
+      if (entry.isConstant) return true;
+      return entry.keys.some((k) => combinedChatText.includes(k.toLowerCase()));
+    });
+  }, [messages, lorebookEntries]);
+
+  // Calculate Tokens for Inspector
+  const tokenBreakdown = useMemo(() => {
+    const charTokens = Math.round(
+      (character.personality.length + character.scenario.length + character.tagline.length) / 3.8
+    );
+    const userTokens = Math.round((activeUserPersona.name.length + activeUserPersona.bio.length) / 3.8);
+    const loreTokens = activeTriggeredLoreEntries.reduce(
+      (acc, e) => acc + Math.round(e.content.length / 3.8),
+      0
+    );
+    const historyTokens = messages.reduce(
+      (acc, m) => acc + Math.round(m.variants[m.activeVariantIndex].length / 3.8),
+      0
+    );
+
+    return { charTokens, userTokens, loreTokens, historyTokens };
+  }, [character, activeUserPersona, activeTriggeredLoreEntries, messages]);
+
+  // Text-To-Speech Playback using Web Speech API
+  const handleToggleTts = (msgId: string, text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      alert("Text-to-Speech is not supported in this browser.");
+      return;
+    }
+
+    if (isPlayingTtsId === msgId) {
+      window.speechSynthesis.cancel();
+      setIsPlayingTtsId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    cyberAudio.play("click");
+
+    // Clean actions enclosed in asterisks for clean speech synthesis
+    const cleanSpeech = text.replace(/\*[^*]+\*/g, "").trim() || text;
+
+    const utterance = new SpeechSynthesisUtterance(cleanSpeech);
+    utterance.rate = ttsVoiceRate;
+    utterance.pitch = ttsPitch;
+
+    // Pick an appropriate voice if available
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      const enVoice = voices.find((v) => v.lang.startsWith("en")) || voices[0];
+      if (enVoice) utterance.voice = enVoice;
+    }
+
+    utterance.onend = () => setIsPlayingTtsId(null);
+    utterance.onerror = () => setIsPlayingTtsId(null);
+
+    window.speechSynthesis.speak(utterance);
+    setIsPlayingTtsId(msgId);
+  };
 
   const handleSend = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -89,13 +215,13 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
     setInput("");
     setIsGenerating(true);
 
-    // Simulate AI response generation with multiple swipable variants
+    // AI Generation with Persona Awareness
     setTimeout(() => {
       setIsGenerating(false);
       cyberAudio.play("chime");
 
-      const responseVariant1 = `*taps the terminal holographic array, reflections shifting across her visor*\n\n"Understood. If you're ready to commit to this run, keep your telemetry masked. The perimeter sentinel won't miss a second spike."`;
-      const responseVariant2 = `*steps closer, her cybernetic arm humming with raw power*\n\n"You talk like you know the risk. Fine. I've pre-loaded the payload into our local isolate sandbox. Give the signal and we execute."`;
+      const responseVariant1 = `*taps the terminal holographic array, reflections shifting across her visor*\n\n"${activeUserPersona.name}, I see where you're heading with this. Keep your telemetry masked. If the perimeter triggers a second spike, NetWatch will deploy ICE."`;
+      const responseVariant2 = `*steps closer, cybernetic arm humming with raw power*\n\n"A ${activeUserPersona.role} like you knows the risks. Fine. I've pre-loaded the payload into our isolate sandbox. Give the command and we breach."`;
 
       const charMsg: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
@@ -105,8 +231,24 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
         timestamp: new Date().toLocaleTimeString("en-US", { hour12: false, minute: "2-digit" }),
       };
 
-      setMessages((prev) => [...prev, charMsg]);
-    }, 1200);
+      setMessages((prev) => {
+        const next = [...prev, charMsg];
+        // Update session snippet
+        setSessions((sList) =>
+          sList.map((s) =>
+            s.id === activeSessionId
+              ? {
+                  ...s,
+                  messagesCount: next.length,
+                  lastMessageSnippet: responseVariant1.slice(0, 60) + "...",
+                  updatedAt: "Just now",
+                }
+              : s
+          )
+        );
+        return next;
+      });
+    }, 1100);
   };
 
   const handleSwipe = (msgId: string, direction: "prev" | "next") => {
@@ -147,6 +289,53 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
     setEditingId(null);
   };
 
+  // Export current chat transcript as Markdown
+  const handleExportTranscript = () => {
+    cyberAudio.play("click");
+    let markdown = `# DirtyNest Persona Nexus Transcript\n\n`;
+    markdown += `**Character**: ${character.name} (@${character.author})\n`;
+    markdown += `**User Persona**: ${activeUserPersona.name} (${activeUserPersona.role})\n`;
+    markdown += `**Export Date**: ${new Date().toISOString()}\n\n---\n\n`;
+
+    messages.forEach((msg) => {
+      const sender = msg.sender === "char" ? character.name : activeUserPersona.name;
+      const text = msg.variants[msg.activeVariantIndex];
+      markdown += `### ${sender} [${msg.timestamp}]\n${text}\n\n`;
+    });
+
+    const blob = new Blob([markdown], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transcript-${character.name.toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Create new timeline branch
+  const handleCreateSession = () => {
+    const newId = `sess-${Date.now().toString(36)}`;
+    const newSession: ChatSession = {
+      id: newId,
+      name: `Timeline ${sessions.length + 1}`,
+      characterId: character.id,
+      messagesCount: 1,
+      lastMessageSnippet: character.firstMessage.slice(0, 60) + "...",
+      updatedAt: "Just now",
+    };
+    setSessions((prev) => [newSession, ...prev]);
+    setActiveSessionId(newId);
+    setMessages([
+      {
+        id: `msg-${Date.now()}`,
+        sender: "char",
+        variants: initialGreetings,
+        activeVariantIndex: 0,
+        timestamp: "Just now",
+      },
+    ]);
+  };
+
   return (
     <div className="flex flex-col gap-4 font-mono select-none animate-fade-in pb-8 h-[calc(100vh-120px)] min-h-[640px]">
       {/* Top Ambient Character Header */}
@@ -182,24 +371,54 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
           </div>
         </div>
 
-        {/* Action Controls */}
+        {/* Action Controls: User Persona Pill, Timelines, Lorebook & Settings */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* User Persona Pill Switcher */}
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              onOpenUserPersonaModal();
+            }}
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#00F0FF]/10 hover:bg-[#00F0FF]/20 border border-[#00F0FF]/30 text-xs text-[#00F0FF] cursor-pointer transition-all"
+            title="Switch User Roleplay Persona"
+          >
+            <span className="text-sm">{activeUserPersona.avatar}</span>
+            <span className="font-bold text-[11px] max-w-[90px] truncate">{activeUserPersona.name}</span>
+          </button>
+
+          {/* Timelines / Sessions Drawer */}
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setShowSessionsDrawer(true);
+            }}
+            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41] border border-white/10 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+            title="Chat Timelines & History Branches"
+          >
+            <GitBranch size={14} />
+            <span className="hidden md:inline">TIMELINES</span>
+          </button>
+
+          {/* Lorebook Trigger Drawer */}
           <button
             onClick={() => {
               cyberAudio.play("click");
               setShowLorebookDrawer(!showLorebookDrawer);
             }}
             className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              showLorebookDrawer
+              showLorebookDrawer || activeTriggeredLoreEntries.length > 0
                 ? "bg-[#BF40FF]/20 text-[#BF40FF] border-[#BF40FF]/50"
                 : "bg-white/5 text-[#9499B3] border-white/10 hover:text-white"
             }`}
-            title="Author's Note / Lorebook Memory"
+            title="Dynamic Lorebook & World Info"
           >
             <BookOpen size={14} />
-            <span className="hidden md:inline">LOREBOOK</span>
+            <span className="hidden md:inline">
+              LORE ({activeTriggeredLoreEntries.length})
+            </span>
           </button>
 
+          {/* Parameters Drawer */}
           <button
             onClick={() => {
               cyberAudio.play("click");
@@ -210,17 +429,17 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
                 ? "bg-[#00F0FF]/20 text-[#00F0FF] border-[#00F0FF]/50"
                 : "bg-white/5 text-[#9499B3] border-white/10 hover:text-white"
             }`}
-            title="LLM Hyperparameters"
+            title="LLM Hyperparameters & Token Inspector"
           >
             <Sliders size={14} />
-            <span className="hidden md:inline">PARAMETERS</span>
+            <span className="hidden md:inline">TUNING</span>
           </button>
         </div>
       </div>
 
-      {/* Main Chat Workspace with Collapsible Drawers */}
+      {/* Main Chat Workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 items-stretch">
-        {/* Messages Stream Container (Full or 8-Cols if Drawer Open) */}
+        {/* Messages Stream Container */}
         <div
           className={`cyber-card bg-[#05060A]/95 border border-white/10 rounded-2xl flex flex-col justify-between overflow-hidden shadow-2xl transition-all ${
             showSettingsDrawer || showLorebookDrawer ? "lg:col-span-8" : "lg:col-span-12"
@@ -228,10 +447,40 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
         >
           {/* Scrollable Messages Stream */}
           <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-4 pr-2">
+            {/* Triggered Lorebook Active Indicator Banner */}
+            {activeTriggeredLoreEntries.length > 0 && (
+              <div className="p-2.5 px-3.5 rounded-xl bg-[#BF40FF]/10 border border-[#BF40FF]/30 flex items-center justify-between gap-2 text-xs text-[#BF40FF]">
+                <div className="flex items-center gap-2">
+                  <Zap size={13} className="animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">
+                    Dynamic Lore Triggered:
+                  </span>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {activeTriggeredLoreEntries.map((l) => (
+                      <span
+                        key={l.id}
+                        className="px-1.5 py-0.2 rounded bg-[#BF40FF]/20 text-[9px] font-bold"
+                      >
+                        {l.title}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={onOpenLorebookModal}
+                  className="text-[10px] underline hover:text-white cursor-pointer shrink-0"
+                >
+                  Manage
+                </button>
+              </div>
+            )}
+
             {messages.map((msg) => {
               const isChar = msg.sender === "char";
               const currentText = msg.variants[msg.activeVariantIndex];
               const isEditing = editingId === msg.id;
+              const isTtsActive = isPlayingTtsId === msg.id;
 
               return (
                 <div
@@ -241,8 +490,18 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
                   }`}
                 >
                   <div className="flex items-center gap-2 px-1 text-[10px] text-[#4F536E]">
-                    <span className="font-bold text-[#F1F3F9]">
-                      {isChar ? character.name : "You"}
+                    <span className="font-bold text-[#F1F3F9] flex items-center gap-1">
+                      {isChar ? (
+                        <>
+                          <span className="text-xs">{character.avatar}</span>
+                          <span>{character.name}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-xs">{activeUserPersona.avatar}</span>
+                          <span>{activeUserPersona.name}</span>
+                        </>
+                      )}
                     </span>
                     <span>· {msg.timestamp}</span>
 
@@ -252,6 +511,7 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
                         <button
                           onClick={() => handleSwipe(msg.id, "prev")}
                           className="hover:text-white cursor-pointer"
+                          title="Previous Variant"
                         >
                           <ChevronLeft size={11} />
                         </button>
@@ -261,6 +521,7 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
                         <button
                           onClick={() => handleSwipe(msg.id, "next")}
                           className="hover:text-white cursor-pointer"
+                          title="Next Variant"
                         >
                           <ChevronRight size={11} />
                         </button>
@@ -314,13 +575,26 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
                       </div>
                     )}
 
-                    {/* Hover Quick Toolbar */}
+                    {/* Hover Quick Action Toolbar with TTS */}
                     {!isEditing && (
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-black/70 p-1 rounded-lg border border-white/10">
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-black/80 p-1 rounded-lg border border-white/10 shadow-lg">
+                        {isChar && (
+                          <button
+                            onClick={() => handleToggleTts(msg.id, currentText)}
+                            className={`p-1 transition-colors cursor-pointer ${
+                              isTtsActive
+                                ? "text-[#00FF41] animate-pulse"
+                                : "text-[#4F536E] hover:text-[#00FF41]"
+                            }`}
+                            title={isTtsActive ? "Stop Voice Playback" : "Synthesize Character Voice (TTS)"}
+                          >
+                            {isTtsActive ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                          </button>
+                        )}
                         <button
                           onClick={() => handleStartEdit(msg)}
                           className="p-1 text-[#4F536E] hover:text-[#00FF41] cursor-pointer"
-                          title="Edit Message"
+                          title="Edit Message Turn"
                         >
                           <Edit2 size={11} />
                         </button>
@@ -359,7 +633,7 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={`Speak with ${character.name} or type *actions in asterisks*...`}
+              placeholder={`Roleplay as ${activeUserPersona.name} with ${character.name}... (*actions in asterisks*)`}
               className="flex-1 px-4 py-2.5 bg-black/60 border border-white/10 focus:border-[#00FF41] rounded-xl text-xs text-[#F1F3F9] placeholder:text-[#4F536E] outline-none font-sans"
             />
             <button
@@ -375,12 +649,12 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
 
         {/* RIGHT DRAWER: LOREBOOK & AUTHOR'S NOTE */}
         {showLorebookDrawer && (
-          <div className="lg:col-span-4 cyber-card p-5 bg-[#080912] border border-[#BF40FF]/30 rounded-2xl flex flex-col gap-4 animate-fade-in shadow-xl">
+          <div className="lg:col-span-4 cyber-card p-5 bg-[#080912] border border-[#BF40FF]/30 rounded-2xl flex flex-col gap-4 animate-fade-in shadow-xl overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <BookOpen size={16} className="text-[#BF40FF]" />
                 <h3 className="text-xs font-black text-[#F1F3F9] uppercase tracking-wider">
-                  AUTHOR&apos;S NOTE // LOREBOOK
+                  DYNAMIC LOREBOOK
                 </h3>
               </div>
               <button
@@ -391,31 +665,69 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
               </button>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-[#4F536E] uppercase font-bold">
+                  Active Triggered Entries ({activeTriggeredLoreEntries.length})
+                </span>
+                <button
+                  onClick={onOpenLorebookModal}
+                  className="text-[10px] text-[#BF40FF] hover:underline cursor-pointer font-bold"
+                >
+                  Manage Matrix
+                </button>
+              </div>
+
+              {activeTriggeredLoreEntries.length > 0 ? (
+                <div className="space-y-2">
+                  {activeTriggeredLoreEntries.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="p-3 rounded-xl bg-black/60 border border-[#BF40FF]/40 text-xs space-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#F1F3F9]">{entry.title}</span>
+                        {entry.isConstant && (
+                          <span className="text-[8px] px-1 rounded bg-amber-500/20 text-amber-300">
+                            CONSTANT
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-[#9499B3] font-sans leading-relaxed">
+                        {entry.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-center text-[#4F536E] text-xs">
+                  No keywords detected in recent turns.
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1 pt-2 border-t border-white/5">
               <label className="text-[10px] text-[#4F536E] uppercase font-bold">
-                Context Injection (Dynamic Memory Modifier)
+                Manual Author&apos;s Note Injection
               </label>
               <textarea
-                rows={6}
+                rows={4}
                 value={authorsNote}
                 onChange={(e) => setAuthorsNote(e.target.value)}
-                className="w-full p-3 bg-black/60 border border-white/10 focus:border-[#BF40FF] rounded-xl text-xs text-[#F1F3F9] font-mono outline-none resize-none leading-relaxed"
+                className="w-full p-2.5 bg-black/60 border border-white/10 focus:border-[#BF40FF] rounded-xl text-xs text-[#F1F3F9] font-mono outline-none resize-none leading-relaxed"
               />
             </div>
-            <p className="text-[10px] text-[#9499B3] font-sans">
-              Injected into every turn&apos;s prompt buffer to anchor situational context, world facts, or pacing rules.
-            </p>
           </div>
         )}
 
-        {/* RIGHT DRAWER: LLM PARAMETERS */}
+        {/* RIGHT DRAWER: LLM PARAMETERS & TOKEN INSPECTOR */}
         {showSettingsDrawer && !showLorebookDrawer && (
-          <div className="lg:col-span-4 cyber-card p-5 bg-[#080912] border border-[#00F0FF]/30 rounded-2xl flex flex-col gap-4 animate-fade-in shadow-xl">
+          <div className="lg:col-span-4 cyber-card p-5 bg-[#080912] border border-[#00F0FF]/30 rounded-2xl flex flex-col gap-4 animate-fade-in shadow-xl overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <Sliders size={16} className="text-[#00F0FF]" />
                 <h3 className="text-xs font-black text-[#F1F3F9] uppercase tracking-wider">
-                  LLM HYPERPARAMETERS
+                  TUNING & TOKEN MATRIX
                 </h3>
               </div>
               <button
@@ -426,7 +738,16 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            {/* Token Budget Inspector Bar */}
+            <TokenContextInspector
+              charTokens={tokenBreakdown.charTokens}
+              userTokens={tokenBreakdown.userTokens}
+              loreTokens={tokenBreakdown.loreTokens}
+              historyTokens={tokenBreakdown.historyTokens}
+              maxTokens={8192}
+            />
+
+            <div className="space-y-3 text-xs pt-2">
               <div className="space-y-1">
                 <label className="text-[10px] text-[#4F536E] uppercase font-bold">Inference Engine</label>
                 <select
@@ -456,10 +777,40 @@ export default function PersonaChatRoom({ character, onBack }: Props) {
                   className="w-full accent-[#00FF41]"
                 />
               </div>
+
+              {/* TTS Voice Speed & Pitch Tuning */}
+              <div className="space-y-1 pt-2 border-t border-white/5">
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-[#4F536E] uppercase font-bold">TTS Voice Speech Rate</span>
+                  <span className="text-[#00F0FF] font-bold">{ttsVoiceRate}x</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.5"
+                  step="0.1"
+                  value={ttsVoiceRate}
+                  onChange={(e) => setTtsVoiceRate(parseFloat(e.target.value))}
+                  className="w-full accent-[#00F0FF]"
+                />
+              </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* CHAT SESSIONS DRAWER */}
+      <ChatSessionsDrawer
+        isOpen={showSessionsDrawer}
+        onClose={() => setShowSessionsDrawer(false)}
+        characterName={character.name}
+        sessions={sessions}
+        activeSessionId={activeSessionId}
+        onSelectSession={(id) => setActiveSessionId(id)}
+        onCreateSession={handleCreateSession}
+        onDeleteSession={(id) => setSessions((prev) => prev.filter((s) => s.id !== id))}
+        onExportCurrentChat={handleExportTranscript}
+      />
     </div>
   );
 }

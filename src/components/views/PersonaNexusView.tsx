@@ -25,6 +25,8 @@ import { PersonaCharacter } from "./nexus/PersonaDetailModal";
 import PersonaDetailModal from "./nexus/PersonaDetailModal";
 import CreatePersonaModal from "./nexus/CreatePersonaModal";
 import PersonaChatRoom from "./nexus/PersonaChatRoom";
+import UserPersonaModal, { UserPersona } from "./nexus/UserPersonaModal";
+import LorebookManagerModal, { LorebookEntry, DEFAULT_LOREBOOK_ENTRIES } from "./nexus/LorebookManagerModal";
 
 const INITIAL_PERSONAS: PersonaCharacter[] = [
   {
@@ -169,6 +171,21 @@ export default function PersonaNexusView() {
   const [inspectingPersona, setInspectingPersona] = useState<PersonaCharacter | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  // User Persona Management
+  const [activeUserPersona, setActiveUserPersona] = useState<UserPersona>({
+    id: "user-01",
+    name: "Operator Nova",
+    avatar: "🕶️",
+    role: "Cyberdeck Specialist & Node Admin",
+    bio: "A seasoned freelance cyberdeck operator running eBPF traces and rogue swarm clusters. Highly technical, pragmatic, and cautious with corporate security perimeters.",
+    isDefault: true,
+  });
+  const [isUserPersonaModalOpen, setIsUserPersonaModalOpen] = useState(false);
+
+  // Dynamic Lorebook State
+  const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>(DEFAULT_LOREBOOK_ENTRIES);
+  const [isLorebookModalOpen, setIsLorebookModalOpen] = useState(false);
+
   const toggleTag = (tag: string) => {
     cyberAudio.play("click");
     setSelectedTags((prev) =>
@@ -223,7 +240,11 @@ export default function PersonaNexusView() {
     return (
       <PersonaChatRoom
         character={activePersonaForChat}
+        activeUserPersona={activeUserPersona}
+        lorebookEntries={lorebookEntries}
         onBack={() => setActivePersonaForChat(null)}
+        onOpenUserPersonaModal={() => setIsUserPersonaModalOpen(true)}
+        onOpenLorebookModal={() => setIsLorebookModalOpen(true)}
       />
     );
   }
@@ -251,14 +272,41 @@ export default function PersonaNexusView() {
           </div>
         </div>
 
-        {/* Create Persona CTA */}
-        <div className="flex items-center gap-2.5">
+        {/* Action Controls: User Persona, Lorebook, Create */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* User Persona Switcher */}
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setIsUserPersonaModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30 hover:bg-[#00F0FF]/25 transition-all cursor-pointer shadow-[0_0_10px_rgba(0,240,255,0.2)]"
+            title="Switch User Roleplay Persona"
+          >
+            <span>{activeUserPersona.avatar}</span>
+            <span>PLAY AS: {activeUserPersona.name}</span>
+          </button>
+
+          {/* Lorebook Trigger Matrix */}
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setIsLorebookModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#BF40FF]/15 text-[#BF40FF] border border-[#BF40FF]/30 hover:bg-[#BF40FF]/25 transition-all cursor-pointer shadow-[0_0_10px_rgba(191,64,255,0.2)]"
+            title="Manage Dynamic World Lorebook Matrix"
+          >
+            <BookOpen size={14} />
+            <span>WORLD LORE ({lorebookEntries.length})</span>
+          </button>
+
+          {/* Create Persona CTA */}
           <button
             onClick={() => {
               cyberAudio.play("click");
               setIsCreateModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/40 hover:bg-[#00FF41]/25 transition-all cursor-pointer shadow-[0_0_15px_rgba(0,255,65,0.2)]"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/40 hover:bg-[#00FF41]/25 transition-all cursor-pointer shadow-[0_0_15px_rgba(0,255,65,0.2)]"
           >
             <Plus size={14} />
             <span>CREATE CHARACTER</span>
@@ -489,6 +537,22 @@ export default function PersonaNexusView() {
         onSaveCharacter={(newChar) => {
           setPersonas((prev) => [newChar, ...prev]);
         }}
+      />
+
+      {/* USER PERSONA MANAGER MODAL */}
+      <UserPersonaModal
+        isOpen={isUserPersonaModalOpen}
+        onClose={() => setIsUserPersonaModalOpen(false)}
+        activePersonaId={activeUserPersona.id}
+        onSelectPersona={(p) => setActiveUserPersona(p)}
+      />
+
+      {/* DYNAMIC LOREBOOK MANAGER MODAL */}
+      <LorebookManagerModal
+        isOpen={isLorebookModalOpen}
+        onClose={() => setIsLorebookModalOpen(false)}
+        entries={lorebookEntries}
+        onSaveEntries={(entries) => setLorebookEntries(entries)}
       />
     </div>
   );
