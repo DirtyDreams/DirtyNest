@@ -29,6 +29,9 @@ import StatsView from "@/components/views/StatsView";
 import LogsView from "@/components/views/LogsView";
 import SettingsView from "@/components/views/SettingsView";
 import KnowledgeView from "@/components/views/KnowledgeView";
+import ApiHealthView from "@/components/views/ApiHealthView";
+import IntelFeedView from "@/components/views/IntelFeedView";
+import ScheduleView from "@/components/views/ScheduleView";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { UptimeBadge } from "@/components/common/UptimeBadge";
 import { useAppStore } from "@/stores/useAppStore";
@@ -58,6 +61,9 @@ import {
   Radio,
   Layers,
   Menu,
+  Wifi,
+  Rss,
+  Calendar,
 } from "lucide-react";
 
 export default function Home() {
@@ -186,26 +192,12 @@ export default function Home() {
     if (typeof window !== "undefined") {
       try {
         window.history.replaceState(null, "", `#${viewId}`);
+        window.scrollTo({ top: 0, behavior: "instant" });
       } catch {
         // ignore
       }
     }
-    if (["api", "rss", "calendar"].includes(viewId)) {
-      setActiveView("dashboard");
-      setTimeout(() => {
-        const el = document.getElementById(`${viewId}-widget`);
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
-    } else {
-      setActiveView(viewId);
-      if (typeof window !== "undefined") {
-        try {
-          window.scrollTo({ top: 0, behavior: "instant" });
-        } catch {
-          // ignore
-        }
-      }
-    }
+    setActiveView(viewId);
   };
 
   // Listen for custom navigation events from CommandPalette
@@ -638,6 +630,48 @@ export default function Home() {
 
               <button
                 role="tab"
+                aria-selected={activeView === "api"}
+                onClick={() => handleSelectView("api")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeView === "api"
+                    ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                    : "text-[#9499B3] hover:text-[#00FF41]"
+                }`}
+              >
+                <Wifi size={13} />
+                <span>API HEALTH</span>
+              </button>
+
+              <button
+                role="tab"
+                aria-selected={activeView === "rss"}
+                onClick={() => handleSelectView("rss")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeView === "rss"
+                    ? "bg-[#00F0FF]/15 text-[#00F0FF] font-bold border border-[#00F0FF]/30 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
+                    : "text-[#9499B3] hover:text-[#00F0FF]"
+                }`}
+              >
+                <Rss size={13} />
+                <span>INTEL FEED</span>
+              </button>
+
+              <button
+                role="tab"
+                aria-selected={activeView === "calendar"}
+                onClick={() => handleSelectView("calendar")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeView === "calendar"
+                    ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                    : "text-[#9499B3] hover:text-[#00FF41]"
+                }`}
+              >
+                <Calendar size={13} />
+                <span>SCHEDULE</span>
+              </button>
+
+              <button
+                role="tab"
                 aria-selected={activeView === "settings"}
                 onClick={() => handleSelectView("settings")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
@@ -739,6 +773,30 @@ export default function Home() {
             <ProtectedAccessGate minClearance={2} viewName="Prometheus Telemetry & Stats">
               <ErrorBoundary fallbackTitle="SYSTEM TELEMETRY MALFUNCTION">
                 <StatsView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
+          )}
+
+          {activeView === "api" && (
+            <ProtectedAccessGate minClearance={1} viewName="API Health & Service Radar">
+              <ErrorBoundary fallbackTitle="API HEALTH RADAR MALFUNCTION">
+                <ApiHealthView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
+          )}
+
+          {activeView === "rss" && (
+            <ProtectedAccessGate minClearance={1} viewName="Cyber Intelligence Feed">
+              <ErrorBoundary fallbackTitle="INTEL FEED MALFUNCTION">
+                <IntelFeedView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
+          )}
+
+          {activeView === "calendar" && (
+            <ProtectedAccessGate minClearance={1} viewName="Mission Schedule Calendar">
+              <ErrorBoundary fallbackTitle="SCHEDULE MATRIX MALFUNCTION">
+                <ScheduleView />
               </ErrorBoundary>
             </ProtectedAccessGate>
           )}

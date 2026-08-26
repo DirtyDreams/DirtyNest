@@ -64,13 +64,6 @@ export default function MobileDrawer({
     } catch {
       // ignore
     }
-
-    if (!item.isPrimaryView && item.target) {
-      setTimeout(() => {
-        const el = document.getElementById(item.target!);
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 200);
-    }
   };
 
   const primaryItems = navItems.filter((i) => i.isPrimaryView);

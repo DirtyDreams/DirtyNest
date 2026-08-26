@@ -24,6 +24,8 @@ import {
   FileText,
   CheckCircle2,
   Lock,
+  Wifi,
+  Rss,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
@@ -113,6 +115,30 @@ export default function CommandPalette() {
       action: () => navigateToDeck("stats"),
       shortcut: "G M",
       icon: <Activity size={14} className="text-[#BF40FF]" />,
+    },
+    {
+      id: "deck_api",
+      label: "Switch Deck: API Health & Service Radar",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("api"),
+      shortcut: "G 1",
+      icon: <Wifi size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "deck_rss",
+      label: "Switch Deck: Cyber Intel Feed & Wire Stream",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("rss"),
+      shortcut: "G 2",
+      icon: <Rss size={14} className="text-[#00F0FF]" />,
+    },
+    {
+      id: "deck_calendar",
+      label: "Switch Deck: Mission Schedule & Cron Calendar",
+      category: "Deck Navigation",
+      action: () => navigateToDeck("calendar"),
+      shortcut: "G 3",
+      icon: <Calendar size={14} className="text-[#00FF41]" />,
     },
     {
       id: "deck_logs",

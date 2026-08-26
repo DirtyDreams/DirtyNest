@@ -49,24 +49,15 @@ export const navItems = [
   { icon: Activity, label: "Stats & Metrics", id: "stats" as NavViewId, tag: "STAT", isPrimaryView: true },
   { icon: ScrollText, label: "System Logs", id: "logs" as NavViewId, tag: "LOGS", isPrimaryView: true },
   { icon: Settings, label: "Settings", id: "settings" as NavViewId, tag: "SYS", isPrimaryView: true },
-  { icon: Wifi, label: "API Health", id: "api" as NavViewId, tag: "01", isPrimaryView: false, target: "api-widget" },
-  { icon: Rss, label: "Intel Feed", id: "rss" as NavViewId, tag: "02", isPrimaryView: false, target: "rss-widget" },
-  { icon: Calendar, label: "Schedule", id: "calendar" as NavViewId, tag: "03", isPrimaryView: false, target: "calendar-widget" },
+  { icon: Wifi, label: "API Health", id: "api" as NavViewId, tag: "01", isPrimaryView: false },
+  { icon: Rss, label: "Intel Feed", id: "rss" as NavViewId, tag: "02", isPrimaryView: false },
+  { icon: Calendar, label: "Schedule", id: "calendar" as NavViewId, tag: "03", isPrimaryView: false },
 ];
 
 export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal }: SidebarProps) {
   const handleNavClick = (item: (typeof navItems)[0]) => {
     cyberAudio.play("click");
     onSelectView(item.id);
-
-    if (!item.isPrimaryView && item.target) {
-      setTimeout(() => {
-        const targetEl = document.getElementById(item.target!);
-        if (targetEl) {
-          targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 100);
-    }
   };
 
   const primaryItems = navItems.filter((i) => i.isPrimaryView);
