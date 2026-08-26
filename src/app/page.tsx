@@ -19,6 +19,22 @@ import AiInsightBrief from "@/components/widgets/AiInsightBrief";
 import QuickActionHub from "@/components/widgets/QuickActionHub";
 import ServiceStatusCompact from "@/components/widgets/ServiceStatusCompact";
 import PipelineQueueWidget from "@/components/widgets/PipelineQueueWidget";
+import AiAgentQuotaWidget from "@/components/widgets/AiAgentQuotaWidget";
+import AwsCloudBurnWidget from "@/components/widgets/AwsCloudBurnWidget";
+import AgentSecurityBeaconWidget from "@/components/widgets/AgentSecurityBeaconWidget";
+import SqlSlowQueryRadar from "@/components/widgets/SqlSlowQueryRadar";
+import EbpfKernelHeatWidget from "@/components/widgets/EbpfKernelHeatWidget";
+import CveVulnerabilityRadar from "@/components/widgets/CveVulnerabilityRadar";
+import CryptoHashVerifier from "@/components/widgets/CryptoHashVerifier";
+import GitPrVelocityWidget from "@/components/widgets/GitPrVelocityWidget";
+import GlobalDnsSslRadar from "@/components/widgets/GlobalDnsSslRadar";
+import ClipboardManagerWidget from "@/components/widgets/ClipboardManagerWidget";
+import CyberSoundscapeWidget from "@/components/widgets/CyberSoundscapeWidget";
+import GitHubTrendingRepos from "@/components/widgets/GitHubTrendingRepos";
+import ColorPaletteGenerator from "@/components/widgets/ColorPaletteGenerator";
+import MatrixRainZenCanvas from "@/components/widgets/MatrixRainZenCanvas";
+import DevHydrationStreak from "@/components/widgets/DevHydrationStreak";
+import GlobalTimezonesRadar from "@/components/widgets/GlobalTimezonesRadar";
 import DevToolsModal from "@/components/modals/DevToolsModal";
 import SettingsModal from "@/components/modals/SettingsModal";
 import DashboardCustomizeModal, { DashboardWidgetConfig } from "@/components/modals/DashboardCustomizeModal";
@@ -757,6 +773,31 @@ export default function Home() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
                     {/* LEFT COLUMN STREAM */}
                     <div className="flex flex-col gap-4 sm:gap-5">
+                      {customWidgets.ai_quota !== false && (
+                        <div id="ai-quota-widget">
+                          <AiAgentQuotaWidget />
+                        </div>
+                      )}
+                      {customWidgets.agent_security_beacon !== false && (
+                        <div id="agent-beacon-widget">
+                          <AgentSecurityBeaconWidget />
+                        </div>
+                      )}
+                      {customWidgets.git_pr_velocity !== false && (
+                        <div id="git-pr-widget">
+                          <GitPrVelocityWidget />
+                        </div>
+                      )}
+                      {customWidgets.github_trending !== false && (
+                        <div id="github-trending-widget">
+                          <GitHubTrendingRepos />
+                        </div>
+                      )}
+                      {customWidgets.cve_radar !== false && (
+                        <div id="cve-radar-widget">
+                          <CveVulnerabilityRadar />
+                        </div>
+                      )}
                       {customWidgets.quick_actions !== false && (
                         <div id="quick-actions-widget">
                           <QuickActionHub />
@@ -772,6 +813,16 @@ export default function Home() {
                           <GitHubActivity />
                         </div>
                       )}
+                      {customWidgets.clipboard_manager !== false && (
+                        <div id="clipboard-widget">
+                          <ClipboardManagerWidget />
+                        </div>
+                      )}
+                      {customWidgets.color_palette !== false && (
+                        <div id="color-palette-widget">
+                          <ColorPaletteGenerator />
+                        </div>
+                      )}
                       {customWidgets.api_health !== false && (
                         <div id="api-widget">
                           <ApiHealth />
@@ -781,6 +832,51 @@ export default function Home() {
 
                     {/* RIGHT COLUMN STREAM */}
                     <div className="flex flex-col gap-4 sm:gap-5">
+                      {customWidgets.aws_cloud_burn !== false && (
+                        <div id="aws-burn-widget">
+                          <AwsCloudBurnWidget />
+                        </div>
+                      )}
+                      {customWidgets.sql_slow_queries !== false && (
+                        <div id="sql-slow-queries-widget">
+                          <SqlSlowQueryRadar />
+                        </div>
+                      )}
+                      {customWidgets.ebpf_kernel_heat !== false && (
+                        <div id="ebpf-heat-widget">
+                          <EbpfKernelHeatWidget />
+                        </div>
+                      )}
+                      {customWidgets.global_dns_ssl !== false && (
+                        <div id="global-dns-ssl-widget">
+                          <GlobalDnsSslRadar />
+                        </div>
+                      )}
+                      {customWidgets.crypto_hash_verifier !== false && (
+                        <div id="crypto-hash-widget">
+                          <CryptoHashVerifier />
+                        </div>
+                      )}
+                      {customWidgets.cyber_soundscape !== false && (
+                        <div id="cyber-soundscape-widget">
+                          <CyberSoundscapeWidget />
+                        </div>
+                      )}
+                      {customWidgets.matrix_rain !== false && (
+                        <div id="matrix-rain-widget">
+                          <MatrixRainZenCanvas />
+                        </div>
+                      )}
+                      {customWidgets.dev_hydration !== false && (
+                        <div id="dev-hydration-widget">
+                          <DevHydrationStreak />
+                        </div>
+                      )}
+                      {customWidgets.global_timezones !== false && (
+                        <div id="global-timezones-widget">
+                          <GlobalTimezonesRadar />
+                        </div>
+                      )}
                       {customWidgets.service_status !== false && (
                         <div id="service-status-widget">
                           <ServiceStatusCompact />
