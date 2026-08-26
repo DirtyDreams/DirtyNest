@@ -28,6 +28,7 @@ import StatsView from "@/components/views/StatsView";
 import SettingsView from "@/components/views/SettingsView";
 import KnowledgeView from "@/components/views/KnowledgeView";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { applyThemePreset } from "@/lib/theme";
 import {
   Terminal,
   Activity,
@@ -93,6 +94,8 @@ export default function Home() {
     }, 1000);
 
     try {
+      const savedTheme = localStorage.getItem("dirtynest_theme") || "matrix";
+      applyThemePreset(savedTheme);
       const saved = localStorage.getItem("dirtynest_dashboard_layout");
       if (saved) {
         const parsed: DashboardWidgetConfig[] = JSON.parse(saved);
