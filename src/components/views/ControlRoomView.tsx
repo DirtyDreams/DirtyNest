@@ -4,39 +4,30 @@ import { useState } from "react";
 import {
   Radio,
   Cpu,
-  Bot,
-  Play,
-  Pause,
-  RotateCw,
   GitBranch,
-  ShieldAlert,
-  ShieldCheck,
-  Zap,
-  Sliders,
-  Terminal,
+  OctagonAlert,
   Activity,
-  AlertCircle,
-  Copy,
-  Check,
-  Sparkles,
-  Layers,
-  Flame,
+  ShieldAlert,
   CheckCircle2,
   XCircle,
+  Sparkles,
+  Zap,
   Clock,
-  ArrowRight,
   Split,
-  Download,
-  Share2,
-  Code2,
-  FileCode,
-  OctagonAlert,
+  Brain,
+  Layers,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import SwarmTopologyGraph from "./control_room/SwarmTopologyGraph";
 import HitlApprovalQueue from "./control_room/HitlApprovalQueue";
+import TokenStreamMonitor from "./control_room/TokenStreamMonitor";
+import ExecutionTimeline from "./control_room/ExecutionTimeline";
+import MultiAgentDiffViewer from "./control_room/MultiAgentDiffViewer";
+import ResourceAllocationGauges from "./control_room/ResourceAllocationGauges";
+import HermesSkillBrowser from "./control_room/HermesSkillBrowser";
+import HermesMemoryInspector from "./control_room/HermesMemoryInspector";
 
-export type HarnessId = "hermes" | "pi" | "codex" | "opencode";
+export type HarnessId = "hermes" | "pi" | "opencode";
 
 interface HarnessMeta {
   id: HarnessId;
@@ -58,7 +49,7 @@ const HARNESSES: HarnessMeta[] = [
     name: "Hermes Agent Core",
     codename: "HERMES-AUTONOMY-V2.5",
     model: "Nous-Hermes-3-Llama-70B",
-    tagline: "General autonomy, complex multi-step reasoning, and tool execution orchestration",
+    tagline: "Primary tactical harness: multi-step reasoning, persistent memory, and self-improving skill creation",
     color: "#00FF41",
     accentHex: "rgba(0, 255, 65, 0.2)",
     contextWindow: "128k Tokens",
@@ -78,19 +69,6 @@ const HARNESSES: HarnessMeta[] = [
     temperature: 0.7,
     runtime: "V8 Isolate",
     defaultPrompt: "You are Pi Reasoner. Analyze the psychological and architectural context of every request. Question edge cases with empathy.",
-  },
-  {
-    id: "codex",
-    name: "Codex Code Synthesis",
-    codename: "CODEX-AST-REFACTOR",
-    model: "GPT-4o-Code-Engine / Claude-3.7-Sonnet",
-    tagline: "High-frequency code synthesis, full repository AST transforms, and strict type safety",
-    color: "#00F0FF",
-    accentHex: "rgba(0, 240, 255, 0.2)",
-    contextWindow: "200k Tokens",
-    temperature: 0.1,
-    runtime: "Cloud Multi-Agent RPC",
-    defaultPrompt: "You are Codex Core. Produce high-performance, strictly typed, zero-regression code with full test matrices.",
   },
   {
     id: "opencode",
@@ -171,28 +149,6 @@ const INITIAL_SESSIONS: AgentSession[] = [
     ],
   },
   {
-    id: "sess-codex-7104",
-    harnessId: "codex",
-    name: "Session #CODEX-7104 // Next.js Component Refactor",
-    status: "STREAMING",
-    currentTokens: 18450,
-    maxTokens: 200000,
-    steps: [
-      {
-        step: 1,
-        title: "Parse AST Tree of ToolsView.tsx",
-        thought: "Verifying that all 12 plugin modules export type-safe manifests.",
-        output: "AST parsed cleanly with zero syntax violations.",
-      },
-      {
-        step: 2,
-        title: "Synthesize Tailwind v4 Neon Tokens",
-        thought: "Injecting luminous #00FF41, #00F0FF, and #BF40FF glassmorphism gradients.",
-        output: "Generated 4 responsive glass cards.",
-      },
-    ],
-  },
-  {
     id: "sess-opencode-4412",
     harnessId: "opencode",
     name: "Session #OPENCODE-4412 // Local Air-Gapped Sandbox",
@@ -210,14 +166,16 @@ const INITIAL_SESSIONS: AgentSession[] = [
   },
 ];
 
+type ControlRoomSubTab = "trace" | "telemetry" | "skills_memory" | "topology";
+
 export default function ControlRoomView() {
   const [selectedHarnessId, setSelectedHarnessId] = useState<HarnessId>("hermes");
   const [sessions, setSessions] = useState<AgentSession[]>(INITIAL_SESSIONS);
   const [activeSessionId, setActiveSessionId] = useState<string>("sess-hermes-8821");
   const [temperature, setTemperature] = useState(0.2);
-  const [copiedStep, setCopiedStep] = useState<number | null>(null);
   const [promptInjection, setPromptInjection] = useState("");
   const [isKillswitchActive, setIsKillswitchActive] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState<ControlRoomSubTab>("trace");
 
   const activeHarness = HARNESSES.find((h) => h.id === selectedHarnessId) || HARNESSES[0];
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0];
@@ -328,7 +286,7 @@ export default function ControlRoomView() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-black tracking-tight text-[#F1F3F9]">
-                  AGENT CONTROL ROOM // <span style={{ color: activeHarness.color }}>MULTI-HARNESS MATRIX</span>
+                  AGENT CONTROL ROOM // <span style={{ color: activeHarness.color }}>HERMES TACTICAL SUITE</span>
                 </h2>
                 <span
                   className="text-[10px] font-bold px-2 py-0.5 rounded border"
@@ -352,6 +310,7 @@ export default function ControlRoomView() {
           <div className="flex items-center gap-2">
             {/* Emergency Swarm Killswitch */}
             <button
+              type="button"
               onClick={() => {
                 cyberAudio.play("error");
                 setIsKillswitchActive(!isKillswitchActive);
@@ -368,6 +327,7 @@ export default function ControlRoomView() {
             </button>
 
             <button
+              type="button"
               onClick={handleForkSession}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-[#F1F3F9] transition-all cursor-pointer"
             >
@@ -377,13 +337,14 @@ export default function ControlRoomView() {
           </div>
         </div>
 
-        {/* 4 HARNESS SELECTOR TABS */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-3.5 border-t border-white/5">
+        {/* 3 HARNESS SELECTOR TABS */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-3.5 border-t border-white/5">
           {HARNESSES.map((h) => {
             const isSelected = selectedHarnessId === h.id;
             return (
               <button
                 key={h.id}
+                type="button"
                 onClick={() => {
                   cyberAudio.play("click");
                   setSelectedHarnessId(h.id);
@@ -400,7 +361,7 @@ export default function ControlRoomView() {
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black" style={{ color: isSelected ? h.color : "#F1F3F9" }}>
-                    {h.name}
+                    {h.name} {h.id === "hermes" && "★ PRIMARY"}
                   </span>
                   <span className="w-2 h-2 rounded-full" style={{ background: h.color }} />
                 </div>
@@ -422,6 +383,7 @@ export default function ControlRoomView() {
             </div>
           </div>
           <button
+            type="button"
             onClick={() => {
               cyberAudio.play("chime");
               setIsKillswitchActive(false);
@@ -433,225 +395,282 @@ export default function ControlRoomView() {
         </div>
       )}
 
-      {/* SWARM LANGGRAPH DAG TOPOLOGY GRAPH */}
-      <SwarmTopologyGraph
-        selectedNodeId={selectedHarnessId}
-        onSelectNode={(nodeId) => setSelectedHarnessId(nodeId as HarnessId)}
-      />
+      {/* CONTROL ROOM SUB-NAVIGATION TABS */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {[
+          { id: "trace" as const, label: "Cognitive Trace & Sessions", icon: Activity },
+          { id: "telemetry" as const, label: "Token Burndown & Hardware Gauges", icon: Zap },
+          { id: "skills_memory" as const, label: "Hermes Skills & Persistent Memory", icon: Brain },
+          { id: "topology" as const, label: "DAG Topology & HITL Approvals", icon: Layers },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeSubTab === tab.id;
 
-      {/* HUMAN-IN-THE-LOOP (HITL) APPROVAL QUEUE */}
-      <HitlApprovalQueue />
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                cyberAudio.play("click");
+                setActiveSubTab(tab.id);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                isActive
+                  ? "bg-[#00FF41] text-black shadow-[0_0_12px_rgba(0,255,65,0.3)]"
+                  : "bg-white/5 text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/10"
+              }`}
+            >
+              <Icon size={14} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      {/* MAIN 2-COLUMN CONTROL WORKSPACE */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* LEFT COLUMN: ACTIVE SESSIONS & HARNESS CONTROLS (4 Cols) */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
-          {/* Active Sessions List */}
-          <div className="cyber-card p-4 flex flex-col gap-3">
-            <span className="text-[10px] text-[#4F536E] uppercase font-bold">Active Sessions ({sessions.length}):</span>
-            <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
-              {sessions.map((sess) => {
-                const isSelected = activeSessionId === sess.id;
-                return (
-                  <div
-                    key={sess.id}
-                    onClick={() => {
-                      cyberAudio.play("click");
-                      setActiveSessionId(sess.id);
-                    }}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
-                      isSelected
-                        ? "bg-[#00FF41]/10 border-[#00FF41]/50 shadow-[0_0_10px_rgba(0,255,65,0.15)]"
-                        : "bg-black/40 border-white/5 hover:border-white/20"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#F1F3F9] truncate">{sess.name}</span>
-                      <span
-                        className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
-                          sess.status === "AWAITING_CLEARANCE"
-                            ? "bg-[#FFB800]/20 text-[#FFB800] border-[#FFB800]/40 animate-pulse"
-                            : sess.status === "STREAMING"
-                            ? "bg-[#00F0FF]/20 text-[#00F0FF] border-[#00F0FF]/40"
-                            : "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/40"
+      {/* TAB 1: COGNITIVE TRACE & SESSIONS */}
+      {activeSubTab === "trace" && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          {/* Main 2-Column Workspace */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* Left Sessions & Parameters (4 cols) */}
+            <div className="lg:col-span-4 flex flex-col gap-4">
+              {/* Active Sessions List */}
+              <div className="cyber-card p-4 flex flex-col gap-3">
+                <span className="text-[10px] text-[#4F536E] uppercase font-bold">Active Sessions ({sessions.length}):</span>
+                <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
+                  {sessions.map((sess) => {
+                    const isSelected = activeSessionId === sess.id;
+                    return (
+                      <div
+                        key={sess.id}
+                        onClick={() => {
+                          cyberAudio.play("click");
+                          setActiveSessionId(sess.id);
+                        }}
+                        className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
+                          isSelected
+                            ? "bg-[#00FF41]/10 border-[#00FF41]/50 shadow-[0_0_10px_rgba(0,255,65,0.15)]"
+                            : "bg-black/40 border-white/5 hover:border-white/20"
                         }`}
                       >
-                        {sess.status}
-                      </span>
-                    </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-[#F1F3F9] truncate">{sess.name}</span>
+                          <span
+                            className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
+                              sess.status === "AWAITING_CLEARANCE"
+                                ? "bg-[#FFB800]/20 text-[#FFB800] border-[#FFB800]/40 animate-pulse"
+                                : sess.status === "STREAMING"
+                                ? "bg-[#00F0FF]/20 text-[#00F0FF] border-[#00F0FF]/40"
+                                : "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/40"
+                            }`}
+                          >
+                            {sess.status}
+                          </span>
+                        </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-[#4F536E]">
-                      <span>{sess.steps.length} Reasoning Steps</span>
-                      <span>
-                        {Math.round((sess.currentTokens / sess.maxTokens) * 100)}% Context Used
-                      </span>
-                    </div>
+                        <div className="flex items-center justify-between text-[10px] text-[#4F536E]">
+                          <span>{sess.steps.length} Reasoning Steps</span>
+                          <span>
+                            {Math.round((sess.currentTokens / sess.maxTokens) * 100)}% Context
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Harness Runtime Dials */}
+              <div className="cyber-card p-4 flex flex-col gap-3.5">
+                <span className="text-[10px] text-[#4F536E] uppercase font-bold">Harness Parameters:</span>
+
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#9499B3]">Context Window:</span>
+                    <span className="text-[#00FF41] font-bold">{activeSession.currentTokens.toLocaleString()} / {activeSession.maxTokens.toLocaleString()} tok</span>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Harness Runtime Dials */}
-          <div className="cyber-card p-4 flex flex-col gap-3.5">
-            <span className="text-[10px] text-[#4F536E] uppercase font-bold">Harness Parameters:</span>
-
-            {/* Context Window Meter */}
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#9499B3]">Context Window:</span>
-                <span className="text-[#00FF41] font-bold">{activeSession.currentTokens.toLocaleString()} / {activeSession.maxTokens.toLocaleString()} tok</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-black/60 border border-white/10 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-[#00FF41] to-[#00F0FF] rounded-full transition-all"
-                  style={{ width: `${(activeSession.currentTokens / activeSession.maxTokens) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Temperature Slider */}
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#9499B3]">Temperature:</span>
-                <span className="text-[#00F0FF] font-bold">{temperature.toFixed(2)}</span>
-              </div>
-              <input
-                type="range"
-                min="0.0"
-                max="1.0"
-                step="0.05"
-                value={temperature}
-                onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                className="w-full accent-[#00F0FF] cursor-pointer"
-              />
-            </div>
-
-            {/* System Prompt Override */}
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-[#9499B3]">System Prompt Override:</span>
-              <textarea
-                rows={3}
-                defaultValue={activeHarness.defaultPrompt}
-                className="w-full p-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-[#F1F3F9] font-mono outline-none resize-none leading-relaxed"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: STEP-BY-STEP REASONING & TOOL INTERCEPTOR (8 Cols) */}
-        <div className="lg:col-span-8 cyber-card p-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <div className="flex items-center gap-2">
-              <Activity size={18} style={{ color: activeHarness.color }} />
-              <h3 className="text-sm font-black text-[#F1F3F9]">COGNITIVE TRACE & REASONING SCRATCHPAD</h3>
-            </div>
-            <span className="text-xs font-bold" style={{ color: activeHarness.color }}>
-              SESSION: {activeSession.id.toUpperCase()}
-            </span>
-          </div>
-
-          {/* Reasoning Steps Stream */}
-          <div className="flex flex-col gap-3 max-h-[460px] overflow-y-auto pr-1">
-            {activeSession.steps.map((step, idx) => (
-              <div key={idx} className="p-4 rounded-xl bg-black/50 border border-white/10 flex flex-col gap-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-white/10 text-xs font-bold text-[#00FF41] flex items-center justify-center">
-                      {step.step}
-                    </span>
-                    <h4 className="text-xs font-bold text-[#F1F3F9]">{step.title}</h4>
+                  <div className="w-full h-2 rounded-full bg-black/60 border border-white/10 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#00FF41] to-[#00F0FF] rounded-full transition-all"
+                      style={{ width: `${(activeSession.currentTokens / activeSession.maxTokens) * 100}%` }}
+                    />
                   </div>
-                  <span className="text-[10px] text-[#4F536E] font-mono">TRACE_OK</span>
                 </div>
 
-                {/* Thought String */}
-                <p className="text-xs text-[#9499B3] leading-relaxed italic bg-black/30 p-2.5 rounded-lg border border-white/5">
-                  &quot;{step.thought}&quot;
-                </p>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#9499B3]">Temperature:</span>
+                    <span className="text-[#00F0FF] font-bold">{temperature.toFixed(2)}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.0"
+                    max="1.0"
+                    step="0.05"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                    className="w-full accent-[#00F0FF] cursor-pointer"
+                  />
+                </div>
 
-                {/* Tool Call Interceptor Gate */}
-                {step.toolCall && (
-                  <div
-                    className={`p-3 rounded-xl border flex flex-col gap-2 ${
-                      step.toolCall.status === "pending"
-                        ? "bg-[#FFB800]/10 border-[#FFB800]/40 shadow-[0_0_12px_rgba(255,184,0,0.15)]"
-                        : step.toolCall.status === "approved"
-                        ? "bg-[#00FF41]/10 border-[#00FF41]/30"
-                        : "bg-[#FF2A6D]/10 border-[#FF2A6D]/30"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <ShieldAlert size={14} className={step.toolCall.status === "pending" ? "text-[#FFB800]" : "text-[#00FF41]"} />
-                        <span className="font-black text-[#F1F3F9]">TOOL INVOCATION: {step.toolCall.name}</span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-[#9499B3]">System Prompt Directive:</span>
+                  <textarea
+                    rows={3}
+                    defaultValue={activeHarness.defaultPrompt}
+                    className="w-full p-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-[#F1F3F9] font-mono outline-none resize-none leading-relaxed"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Right Cognitive Trace & Injection (8 cols) */}
+            <div className="lg:col-span-8 cyber-card p-5 flex flex-col gap-4">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Activity size={18} style={{ color: activeHarness.color }} />
+                  <h3 className="text-sm font-black text-[#F1F3F9]">COGNITIVE TRACE & REASONING SCRATCHPAD</h3>
+                </div>
+                <span className="text-xs font-bold" style={{ color: activeHarness.color }}>
+                  SESSION: {activeSession.id.toUpperCase()}
+                </span>
+              </div>
+
+              {/* Reasoning Steps Stream */}
+              <div className="flex flex-col gap-3 max-h-[460px] overflow-y-auto pr-1">
+                {activeSession.steps.map((step, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-black/50 border border-white/10 flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-white/10 text-xs font-bold text-[#00FF41] flex items-center justify-center">
+                          {step.step}
+                        </span>
+                        <h4 className="text-xs font-bold text-[#F1F3F9]">{step.title}</h4>
                       </div>
-                      <span
-                        className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-bold ${
-                          step.toolCall.status === "pending"
-                            ? "bg-[#FFB800]/20 text-[#FFB800]"
-                            : step.toolCall.status === "approved"
-                            ? "bg-[#00FF41]/20 text-[#00FF41]"
-                            : "bg-[#FF2A6D]/20 text-[#FF2A6D]"
-                        }`}
-                      >
-                        {step.toolCall.status.toUpperCase()}
-                      </span>
+                      <span className="text-[10px] text-[#4F536E] font-mono">TRACE_OK</span>
                     </div>
 
-                    <code className="p-2 rounded bg-black/80 text-[#00F0FF] text-[11px] font-mono break-all">
-                      {step.toolCall.args}
-                    </code>
+                    <p className="text-xs text-[#9499B3] leading-relaxed italic bg-black/30 p-2.5 rounded-lg border border-white/5">
+                      &quot;{step.thought}&quot;
+                    </p>
 
-                    {step.toolCall.status === "pending" && (
-                      <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
-                        <button
-                          onClick={() => handleDenyTool(idx)}
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-[#FF2A6D]/15 border border-[#FF2A6D]/40 text-[#FF2A6D] hover:bg-[#FF2A6D]/25 text-xs font-bold cursor-pointer"
-                        >
-                          <XCircle size={12} />
-                          <span>DENY INVOCATION</span>
-                        </button>
-                        <button
-                          onClick={() => handleApproveTool(idx)}
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-4 py-1.5 rounded-lg bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 text-xs font-bold shadow-[0_0_8px_rgba(0,255,65,0.2)] cursor-pointer"
-                        >
-                          <CheckCircle2 size={12} />
-                          <span>APPROVE & DISPATCH</span>
-                        </button>
+                    {step.toolCall && (
+                      <div
+                        className={`p-3 rounded-xl border flex flex-col gap-2 ${
+                          step.toolCall.status === "pending"
+                            ? "bg-[#FFB800]/10 border-[#FFB800]/40 shadow-[0_0_12px_rgba(255,184,0,0.15)]"
+                            : step.toolCall.status === "approved"
+                            ? "bg-[#00FF41]/10 border-[#00FF41]/30"
+                            : "bg-[#FF2A6D]/10 border-[#FF2A6D]/30"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <ShieldAlert size={14} className={step.toolCall.status === "pending" ? "text-[#FFB800]" : "text-[#00FF41]"} />
+                            <span className="font-black text-[#F1F3F9]">TOOL INVOCATION: {step.toolCall.name}</span>
+                          </div>
+                          <span
+                            className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-bold ${
+                              step.toolCall.status === "pending"
+                                ? "bg-[#FFB800]/20 text-[#FFB800]"
+                                : step.toolCall.status === "approved"
+                                ? "bg-[#00FF41]/20 text-[#00FF41]"
+                                : "bg-[#FF2A6D]/20 text-[#FF2A6D]"
+                            }`}
+                          >
+                            {step.toolCall.status.toUpperCase()}
+                          </span>
+                        </div>
+
+                        <code className="p-2 rounded bg-black/80 text-[#00F0FF] text-[11px] font-mono break-all">
+                          {step.toolCall.args}
+                        </code>
+
+                        {step.toolCall.status === "pending" && (
+                          <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => handleDenyTool(idx)}
+                              className="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-[#FF2A6D]/15 border border-[#FF2A6D]/40 text-[#FF2A6D] hover:bg-[#FF2A6D]/25 text-xs font-bold cursor-pointer"
+                            >
+                              <XCircle size={12} />
+                              <span>DENY INVOCATION</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleApproveTool(idx)}
+                              className="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-4 py-1.5 rounded-lg bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 text-xs font-bold shadow-[0_0_8px_rgba(0,255,65,0.2)] cursor-pointer"
+                            >
+                              <CheckCircle2 size={12} />
+                              <span>APPROVE & DISPATCH</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {step.output && (
+                      <div className="p-2.5 rounded-lg bg-black/60 border border-white/5 text-xs text-[#00FF41] font-mono leading-relaxed">
+                        {step.output}
                       </div>
                     )}
                   </div>
-                )}
-
-                {/* Output String */}
-                {step.output && (
-                  <div className="p-2.5 rounded-lg bg-black/60 border border-white/5 text-xs text-[#00FF41] font-mono leading-relaxed">
-                    {step.output}
-                  </div>
-                )}
+                ))}
               </div>
-            ))}
+
+              {/* Direct Prompt Injection */}
+              <form onSubmit={handleInjectPrompt} className="flex gap-2 mt-2 pt-3 border-t border-white/10">
+                <input
+                  type="text"
+                  value={promptInjection}
+                  onChange={(e) => setPromptInjection(e.target.value)}
+                  placeholder={`Inject live directive into ${activeHarness.name}...`}
+                  className="flex-1 px-3 py-2 bg-black/50 border border-white/10 rounded-xl text-xs text-[#F1F3F9] font-mono outline-none focus:border-[#00FF41]/50"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 text-xs font-bold transition-all shadow-[0_0_10px_rgba(0,255,65,0.2)] cursor-pointer"
+                >
+                  TRANSMIT
+                </button>
+              </form>
+            </div>
           </div>
 
-          {/* Operator Direct Prompt Injection */}
-          <form onSubmit={handleInjectPrompt} className="flex gap-2 mt-2 pt-3 border-t border-white/10">
-            <input
-              type="text"
-              value={promptInjection}
-              onChange={(e) => setPromptInjection(e.target.value)}
-              placeholder={`Inject live directive into ${activeHarness.name}...`}
-              className="flex-1 px-3 py-2 bg-black/50 border border-white/10 rounded-xl text-xs text-[#F1F3F9] font-mono outline-none focus:border-[#00FF41]/50"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-xl bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 text-xs font-bold transition-all shadow-[0_0_10px_rgba(0,255,65,0.2)] cursor-pointer"
-            >
-              TRANSMIT
-            </button>
-          </form>
+          {/* Execution Chronological Timeline */}
+          <ExecutionTimeline />
+
+          {/* Multi-Agent Diff Comparator */}
+          <MultiAgentDiffViewer />
         </div>
-      </div>
+      )}
+
+      {/* TAB 2: TOKEN BURNDOWN & HARDWARE GAUGES */}
+      {activeSubTab === "telemetry" && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          <TokenStreamMonitor />
+          <ResourceAllocationGauges />
+        </div>
+      )}
+
+      {/* TAB 3: HERMES SKILLS & PERSISTENT MEMORY */}
+      {activeSubTab === "skills_memory" && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          <HermesSkillBrowser />
+          <HermesMemoryInspector />
+        </div>
+      )}
+
+      {/* TAB 4: DAG TOPOLOGY & HITL QUEUE */}
+      {activeSubTab === "topology" && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          <SwarmTopologyGraph
+            selectedNodeId={selectedHarnessId}
+            onSelectNode={(nodeId) => setSelectedHarnessId(nodeId as HarnessId)}
+          />
+          <HitlApprovalQueue />
+        </div>
+      )}
     </div>
   );
 }

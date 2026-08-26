@@ -13,7 +13,6 @@ import {
   Zap,
   Activity,
   CheckCircle2,
-  AlertTriangle,
   Clock,
   Layers,
   Database,
@@ -23,10 +22,17 @@ import {
   BarChart3,
   Server,
   Sparkles,
+  Trophy,
+  GitMerge,
+  ShieldCheck,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import AgentMemoryInspector from "./agents/AgentMemoryInspector";
 import CreateAgentModal from "./agents/CreateAgentModal";
+import AgentBlueprintDesigner from "./agents/AgentBlueprintDesigner";
+import SwarmOrchestrationTimeline from "./agents/SwarmOrchestrationTimeline";
+import AgentPerformanceLeaderboard from "./agents/AgentPerformanceLeaderboard";
+import ToolPermissionMatrix from "./agents/ToolPermissionMatrix";
 
 interface Agent {
   id: string;
@@ -138,6 +144,8 @@ interface LogEntry {
   message: string;
 }
 
+type AgentsSubTab = "fleet" | "blueprint" | "orchestration" | "permissions";
+
 export default function AiAgentsView() {
   const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
   const [isSwarmActive, setIsSwarmActive] = useState(true);
@@ -145,11 +153,12 @@ export default function AiAgentsView() {
   const [missionInput, setMissionInput] = useState("");
   const [inspectingAgent, setInspectingAgent] = useState<Agent | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState<AgentsSubTab>("fleet");
   const [logs, setLogs] = useState<LogEntry[]>([
-    { id: "l-1", time: "04:56:10", agent: "SENTINEL-01", level: "PASS", message: "Port 3000 boundary isolation verified. Zero open vulnerabilities." },
-    { id: "l-2", time: "04:56:15", agent: "SCRAPER-INTEL", level: "INFO", message: "Fetched 12 new articles from Next.js 16 Edge Stream." },
-    { id: "l-3", time: "04:56:22", agent: "CODE-AUDITOR", level: "EXEC", message: "Running AST sanitizer on React 19 Client Components." },
-    { id: "l-4", time: "04:56:28", agent: "LATENCY-PINGER", level: "INFO", message: "Mesh nodes ping: 13ms p50, 22ms p99 across all regions." },
+    { id: "l-1", time: "23:40:10", agent: "SENTINEL-01", level: "PASS", message: "Port 3000 boundary isolation verified. Zero open vulnerabilities." },
+    { id: "l-2", time: "23:40:15", agent: "SCRAPER-INTEL", level: "INFO", message: "Fetched 12 new articles from Next.js 16 Edge Stream." },
+    { id: "l-3", time: "23:40:22", agent: "CODE-AUDITOR", level: "EXEC", message: "Running AST sanitizer on React 19 Client Components." },
+    { id: "l-4", time: "23:40:28", agent: "LATENCY-PINGER", level: "INFO", message: "Mesh nodes ping: 13ms p50, 22ms p99 across all regions." },
   ]);
 
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -159,7 +168,6 @@ export default function AiAgentsView() {
     if (!isSwarmActive) return;
 
     const interval = setInterval(() => {
-      // Pick random agent to update
       setAgents((prev) =>
         prev.map((ag) => {
           if (ag.status === "paused") return ag;
@@ -173,7 +181,6 @@ export default function AiAgentsView() {
         })
       );
 
-      // Add a simulated log occasionally
       if (Math.random() > 0.4) {
         const randomAgent = INITIAL_AGENTS[Math.floor(Math.random() * INITIAL_AGENTS.length)];
         const timeNow = new Date().toLocaleTimeString("en-US", { hour12: false });
@@ -235,7 +242,7 @@ export default function AiAgentsView() {
       {
         id: `m-${Date.now()}`,
         time: timeNow,
-        agent: "SWARM-DISPATCH",
+        agent: "HERMES-SWARM",
         level: "EXEC",
         message: `MISSION TRIGGERED: "${missionInput}" -> Assigned to 6 Autonomous Agents`,
       },
@@ -248,269 +255,249 @@ export default function AiAgentsView() {
   const activeCount = agents.filter((a) => a.status !== "paused").length;
 
   return (
-    <div className="flex flex-col gap-5 font-mono animate-fade-in pb-10">
-      {/* Top Swarm Header & Telemetry Summary Cards */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-5 cyber-card bg-[#07070B]/90 border border-white/10 rounded-2xl">
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 flex items-center justify-center text-[#00FF41] relative shadow-[0_0_15px_rgba(0,255,65,0.3)]">
-            <Cpu size={22} className="animate-pulse" />
-            <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#00FF41]" />
+    <div className="flex flex-col gap-5 pb-8 animate-fade-in font-mono select-none">
+      {/* Top Banner */}
+      <div className="cyber-card p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 flex items-center justify-center text-[#00FF41] shadow-[0_0_15px_rgba(0,255,65,0.2)]">
+            <Bot size={20} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-black tracking-wider text-[#F1F3F9] uppercase">
-                Autonomous Agent Swarm Fleet
-              </h1>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30">
-                {isSwarmActive ? "SWARM ONLINE" : "SWARM PAUSED"}
+              <h2 className="text-lg font-black tracking-tight text-[#F1F3F9]">
+                HERMES SWARM FLEET // <span className="text-[#00FF41]">AUTONOMOUS MESH</span>
+              </h2>
+              <span className="text-[10px] font-bold text-[#00FF41] px-2 py-0.5 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
+                NOUS-HERMES-3
               </span>
             </div>
-            <p className="text-[11px] text-[#4F536E]">
-              AGENTIC COGNITION // DECENTRALIZED MULTI-AGENT ORCHESTRATION
+            <p className="text-xs text-[#9499B3]">
+              Multi-agent persistent memory orchestration, cognitive trace dispatch & self-created skills
             </p>
           </div>
         </div>
 
-        {/* Global Action Controls */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              cyberAudio.play("click");
-              setIsCreateModalOpen(true);
-            }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/40 hover:bg-[#00FF41]/25 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,255,65,0.2)]"
-          >
-            <Plus size={14} />
-            <span>SYNTHESIZE AGENT</span>
-          </button>
-
-          <button
+            type="button"
             onClick={toggleSwarm}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
               isSwarmActive
-                ? "bg-[#FF2A6D]/15 text-[#FF2A6D] border-[#FF2A6D]/40 hover:bg-[#FF2A6D]/25"
-                : "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 hover:bg-[#00FF41]/25"
+                ? "bg-[#00FF41]/20 border-[#00FF41]/40 text-[#00FF41] shadow-[0_0_12px_rgba(0,255,65,0.2)]"
+                : "bg-red-500/20 border-red-500/40 text-red-400"
             }`}
           >
             {isSwarmActive ? <Pause size={14} /> : <Play size={14} />}
-            <span>{isSwarmActive ? "PAUSE SWARM" : "RESUME SWARM"}</span>
+            <span>{isSwarmActive ? "SWARM ACTIVE" : "SWARM PAUSED"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("blueprint")}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#00FF41] text-black font-black text-xs hover:bg-[#00cc34] transition-all cursor-pointer shadow-[0_0_15px_rgba(0,255,65,0.3)]"
+          >
+            <Plus size={14} />
+            <span>FORGE AGENT</span>
           </button>
         </div>
       </div>
 
-      {/* Swarm Vital Metrics HUD */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-        <div className="p-4 rounded-xl bg-[#090A10] border border-white/10 flex flex-col gap-1">
-          <span className="text-[10px] text-[#4F536E] uppercase font-bold flex items-center justify-between">
-            <span>ACTIVE AGENTS</span>
-            <Bot size={13} className="text-[#00FF41]" />
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-[#00FF41]">{activeCount}</span>
-            <span className="text-xs text-[#9499B3]">/ {agents.length} Nodes</span>
-          </div>
+      {/* Quick Metrics Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="cyber-card p-3 flex flex-col gap-1">
+          <span className="text-[10px] text-[#4F536E] uppercase font-bold">Active Agents</span>
+          <span className="text-lg font-black text-[#00FF41]">{activeCount} / {agents.length}</span>
         </div>
-
-        <div className="p-4 rounded-xl bg-[#090A10] border border-white/10 flex flex-col gap-1">
-          <span className="text-[10px] text-[#4F536E] uppercase font-bold flex items-center justify-between">
-            <span>FLEET CPU LOAD</span>
-            <Activity size={13} className="text-[#00F0FF]" />
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-[#00F0FF]">{avgCpu}%</span>
-            <span className="text-xs text-[#9499B3]">8 Threads Active</span>
-          </div>
+        <div className="cyber-card p-3 flex flex-col gap-1">
+          <span className="text-[10px] text-[#4F536E] uppercase font-bold">Avg Swarm Load</span>
+          <span className="text-lg font-black text-[#00F0FF]">{avgCpu}% CPU</span>
         </div>
-
-        <div className="p-4 rounded-xl bg-[#090A10] border border-white/10 flex flex-col gap-1">
-          <span className="text-[10px] text-[#4F536E] uppercase font-bold flex items-center justify-between">
-            <span>TOTAL DISPATCHED</span>
-            <Zap size={13} className="text-[#BF40FF]" />
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-[#BF40FF]">{totalTasks}</span>
-            <span className="text-xs text-[#9499B3]">Missions</span>
-          </div>
+        <div className="cyber-card p-3 flex flex-col gap-1">
+          <span className="text-[10px] text-[#4F536E] uppercase font-bold">Completed Tasks</span>
+          <span className="text-lg font-black text-[#BF40FF]">{totalTasks.toLocaleString()}</span>
         </div>
-
-        <div className="p-4 rounded-xl bg-[#090A10] border border-white/10 flex flex-col gap-1">
-          <span className="text-[10px] text-[#4F536E] uppercase font-bold flex items-center justify-between">
-            <span>ACCURACY SLA</span>
-            <CheckCircle2 size={13} className="text-[#00FF41]" />
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-[#00FF41]">99.8%</span>
-            <span className="text-xs text-[#9499B3]">Zero Failures</span>
-          </div>
+        <div className="cyber-card p-3 flex flex-col gap-1">
+          <span className="text-[10px] text-[#4F536E] uppercase font-bold">Swarm Success Rate</span>
+          <span className="text-lg font-black text-[#FFB800]">99.7%</span>
         </div>
       </div>
 
-      {/* Agents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {agents.map((agent) => {
-          const isPaused = agent.status === "paused";
+      {/* SUB-NAVIGATION TABS */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {[
+          { id: "fleet" as const, label: "Swarm Fleet & Live Telemetry", icon: Bot },
+          { id: "blueprint" as const, label: "Hermes Blueprint Forge", icon: Sparkles },
+          { id: "orchestration" as const, label: "Gantt Timeline & Leaderboard", icon: GitMerge },
+          { id: "permissions" as const, label: "Zero-Trust Tool Permissions", icon: ShieldCheck },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeSubTab === tab.id;
+
           return (
-            <div
-              key={agent.id}
-              className={`p-4 rounded-2xl cyber-card bg-[#0A0C14] border transition-all relative overflow-hidden flex flex-col justify-between gap-3.5 group ${
-                isPaused
-                  ? "border-white/5 opacity-60"
-                  : "border-white/10 hover:border-[#00FF41]/40 shadow-lg hover:shadow-[0_0_20px_rgba(0,255,65,0.1)]"
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                cyberAudio.play("click");
+                setActiveSubTab(tab.id);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                isActive
+                  ? "bg-[#00FF41] text-black shadow-[0_0_12px_rgba(0,255,65,0.3)]"
+                  : "bg-white/5 text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/10"
               }`}
             >
-              {/* Card Header */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs"
-                    style={{
-                      backgroundColor: `${agent.color}15`,
-                      color: agent.color,
-                      border: `1px solid ${agent.color}40`,
-                    }}
-                  >
-                    <Bot size={16} />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-[#F1F3F9] group-hover:text-[#00FF41] transition-colors">
-                      {agent.name}
-                    </h3>
-                    <span className="text-[10px] text-[#4F536E]">{agent.type}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => {
-                      cyberAudio.play("click");
-                      setInspectingAgent(agent);
-                    }}
-                    title="Inspect & Edit Agent Context Memory"
-                    className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] text-[#9499B3] hover:text-[#00F0FF] hover:border-[#00F0FF]/40 transition-all cursor-pointer flex items-center gap-1"
-                  >
-                    <Database size={12} />
-                    <span className="hidden sm:inline">MEMORY</span>
-                  </button>
-
-                  <button
-                    onClick={() => toggleAgentStatus(agent.id)}
-                    title={isPaused ? "Resume Agent" : "Pause Agent"}
-                    className={`p-1.5 rounded-lg border text-[10px] transition-all cursor-pointer ${
-                      isPaused
-                        ? "bg-white/5 text-[#9499B3] border-white/10 hover:text-[#00FF41]"
-                        : "bg-[#00FF41]/10 text-[#00FF41] border-[#00FF41]/30 hover:bg-[#FF2A6D]/10 hover:text-[#FF2A6D]"
-                    }`}
-                  >
-                    {isPaused ? <Play size={12} /> : <Pause size={12} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Role description */}
-              <p className="text-[11px] text-[#9499B3] line-clamp-1">{agent.role}</p>
-
-              {/* Live Action Snippet */}
-              <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-[10px] text-[#00F0FF] flex items-center gap-2">
-                <Radio size={12} className="text-[#00FF41] shrink-0 animate-pulse" />
-                <span className="truncate">{agent.lastAction}</span>
-              </div>
-
-              {/* Gauges & Tags */}
-              <div className="space-y-2 pt-2 border-t border-white/5 text-[10px]">
-                <div className="flex items-center justify-between text-[#9499B3]">
-                  <span>CPU: {agent.cpuUsage}%</span>
-                  <span>RAM: {agent.memoryMb} MB</span>
-                  <span className="text-[#00FF41]">{agent.tasksCompleted} OK</span>
-                </div>
-                <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${agent.cpuUsage}%`,
-                      backgroundColor: agent.color,
-                      boxShadow: `0 0 8px ${agent.color}`,
-                    }}
-                  />
-                </div>
-
-                <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                  {agent.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-1.5 py-0.5 rounded text-[9px] bg-white/5 text-[#4F536E] border border-white/5"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+              <Icon size={14} />
+              <span>{tab.label}</span>
+            </button>
           );
         })}
       </div>
 
-      {/* Real-time Swarm Log & Mission Dispatch Console */}
-      <div className="cyber-card bg-[#07070B] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-        {/* Terminal Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-black/40">
-          <div className="flex items-center gap-2">
-            <Terminal size={15} className="text-[#00FF41]" />
-            <span className="text-xs font-bold text-[#F1F3F9] tracking-wider uppercase">
-              Swarm Execution Stream // Real-time IPC Bus
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] text-[#4F536E]">
-            <span className="w-2 h-2 rounded-full bg-[#00FF41] animate-ping" />
-            <span>STREAM: LIVE</span>
-          </div>
-        </div>
+      {/* TAB 1: FLEET & LIVE TELEMETRY */}
+      {activeSubTab === "fleet" && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          {/* Mission Dispatch Bar */}
+          <form onSubmit={dispatchMission} className="cyber-card p-3 flex gap-2">
+            <input
+              type="text"
+              placeholder="Dispatch collective swarm directive (e.g. 'Audit /api/auth endpoints for CVE-2026-9811 and run PR review')..."
+              value={missionInput}
+              onChange={(e) => setMissionInput(e.target.value)}
+              className="flex-1 bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F1F3F9] font-mono outline-none focus:border-[#00FF41]"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-xl bg-[#00FF41] text-black font-black text-xs hover:bg-[#00cc34] transition-all cursor-pointer shadow-[0_0_10px_rgba(0,255,65,0.3)]"
+            >
+              DISPATCH
+            </button>
+          </form>
 
-        {/* Terminal Log Output */}
-        <div className="p-4 h-48 overflow-y-auto font-mono text-xs space-y-2 bg-[#040406]">
-          {logs.map((log) => {
-            let color = "#00FF41";
-            if (log.level === "WARN") color = "#FFB800";
-            if (log.level === "EXEC") color = "#00F0FF";
-            return (
-              <div key={log.id} className="flex items-start gap-2.5 leading-relaxed">
-                <span className="text-[#4F536E] shrink-0">[{log.time}]</span>
-                <span
-                  className="px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0"
-                  style={{
-                    backgroundColor: `${color}15`,
-                    color: color,
-                    border: `1px solid ${color}30`,
-                  }}
-                >
-                  {log.agent}
-                </span>
-                <span className="text-[#E1E4EE]">{log.message}</span>
+          {/* Agents Card Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {agents.map((agent) => (
+              <div
+                key={agent.id}
+                className="cyber-card p-4 flex flex-col justify-between gap-3 hover:border-white/20 transition-all"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: agent.color }} />
+                      <h4 className="text-xs font-black text-[#F1F3F9]">{agent.name}</h4>
+                    </div>
+
+                    <span
+                      className={`text-[9px] font-mono px-2 py-0.5 rounded uppercase font-bold ${
+                        agent.status === "active" || agent.status === "executing"
+                          ? "bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30"
+                          : "bg-white/5 text-[#4F536E] border border-white/10"
+                      }`}
+                    >
+                      {agent.status}
+                    </span>
+                  </div>
+
+                  <span className="text-[10px] text-[#4F536E] block mt-0.5">{agent.role}</span>
+
+                  <p className="text-[11px] text-[#9499B3] mt-2 p-2 rounded bg-black/40 border border-white/5 line-clamp-2">
+                    {agent.lastAction}
+                  </p>
+                </div>
+
+                <div>
+                  {/* Stats Strip */}
+                  <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] py-2 border-y border-white/5 my-2">
+                    <div>
+                      <span className="text-[#4F536E] block">CPU</span>
+                      <span className="font-bold text-[#00FF41]">{agent.cpuUsage}%</span>
+                    </div>
+                    <div>
+                      <span className="text-[#4F536E] block">RAM</span>
+                      <span className="font-bold text-[#00F0FF]">{agent.memoryMb}MB</span>
+                    </div>
+                    <div>
+                      <span className="text-[#4F536E] block">SUCCESS</span>
+                      <span className="font-bold text-[#BF40FF]">{agent.successRate}%</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setInspectingAgent(agent)}
+                      className="text-[10px] text-[#00F0FF] hover:underline cursor-pointer flex items-center gap-1 font-bold"
+                    >
+                      <Database size={11} />
+                      <span>INSPECT MEMORY</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => toggleAgentStatus(agent.id)}
+                      className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-[10px] text-[#F1F3F9] font-bold cursor-pointer"
+                    >
+                      {agent.status === "paused" ? "RESUME" : "PAUSE"}
+                    </button>
+                  </div>
+                </div>
               </div>
-            );
-          })}
-          <div ref={logEndRef} />
+            ))}
+          </div>
+
+          {/* Live Swarm Terminal Log */}
+          <div className="cyber-card p-4 flex flex-col gap-2">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <Terminal size={14} className="text-[#00FF41]" />
+                <span className="text-xs font-black text-[#F1F3F9]">LIVE SWARM TELEMETRY LOG</span>
+              </div>
+              <span className="text-[10px] text-[#4F536E]">STREAMING · NOUS-HERMES-3</span>
+            </div>
+
+            <div className="h-44 overflow-y-auto space-y-1.5 pr-1 font-mono text-[11px]">
+              {logs.map((log) => (
+                <div key={log.id} className="flex items-start gap-2">
+                  <span className="text-[#4F536E] shrink-0">[{log.time}]</span>
+                  <span className="text-[#00F0FF] shrink-0 font-bold">{log.agent}:</span>
+                  <span className="text-[#F1F3F9]">{log.message}</span>
+                </div>
+              ))}
+              <div ref={logEndRef} />
+            </div>
+          </div>
         </div>
+      )}
 
-        {/* Mission Dispatch Bar */}
-        <form onSubmit={dispatchMission} className="p-3 border-t border-white/10 bg-[#0A0C14] flex items-center gap-2">
-          <input
-            type="text"
-            value={missionInput}
-            onChange={(e) => setMissionInput(e.target.value)}
-            placeholder="Issue autonomous mission to swarm (e.g. 'Audit GraphQL endpoint security', 'Run load test')..."
-            className="flex-1 bg-[#040406] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-[#F1F3F9] placeholder:text-[#4F536E] outline-none focus:border-[#00FF41]"
+      {/* TAB 2: HERMES BLUEPRINT FORGE */}
+      {activeSubTab === "blueprint" && (
+        <div className="animate-fade-in">
+          <AgentBlueprintDesigner
+            onAgentCreated={() => {
+              setActiveSubTab("fleet");
+            }}
           />
-          <button
-            type="submit"
-            className="px-4 py-2.5 rounded-xl font-bold text-xs bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25 transition-all cursor-pointer flex items-center gap-1.5"
-          >
-            <Sparkles size={13} />
-            <span>DISPATCH MISSION</span>
-          </button>
-        </form>
-      </div>
+        </div>
+      )}
 
-      {/* AGENT MEMORY INSPECTOR MODAL */}
+      {/* TAB 3: GANTT TIMELINE & LEADERBOARD */}
+      {activeSubTab === "orchestration" && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          <SwarmOrchestrationTimeline />
+          <AgentPerformanceLeaderboard />
+        </div>
+      )}
+
+      {/* TAB 4: ZERO-TRUST TOOL PERMISSIONS */}
+      {activeSubTab === "permissions" && (
+        <div className="animate-fade-in">
+          <ToolPermissionMatrix />
+        </div>
+      )}
+
+      {/* Memory Inspector Modal */}
       {inspectingAgent && (
         <AgentMemoryInspector
           agentName={inspectingAgent.name}
@@ -519,14 +506,14 @@ export default function AiAgentsView() {
         />
       )}
 
-      {/* CREATE CUSTOM AGENT WIZARD MODAL */}
-      <CreateAgentModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onAddAgent={(newAgent) => {
-          setAgents((prev) => [newAgent, ...prev]);
-        }}
-      />
+      {/* Create Agent Modal */}
+      {isCreateModalOpen && (
+        <CreateAgentModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onAddAgent={() => setIsCreateModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
