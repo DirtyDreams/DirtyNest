@@ -35,6 +35,10 @@ import { useAppStore } from "@/stores/useAppStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
 import { ToastProvider } from "@/components/common/ToastProvider";
+import AuthLockScreen from "@/components/auth/AuthLockScreen";
+import UserStatusPill from "@/components/auth/UserStatusPill";
+import ProtectedAccessGate from "@/components/auth/ProtectedAccessGate";
+import { useAuthStore } from "@/stores/useAuthStore";
 import {
   Terminal,
   Activity,
@@ -87,6 +91,8 @@ export default function Home() {
     setCustomWidgets,
   } = useAppStore();
 
+  const { isAuthenticated, isLocked, recordActivity, lockSession } = useAuthStore();
+
   useEffect(() => {
     // Sync initial view from URL hash if provided
     if (typeof window !== "undefined" && window.location.hash) {
@@ -123,7 +129,35 @@ export default function Home() {
     };
   }, [setActiveView, setCustomWidgets]);
 
-  // Global hotkeys (Terminal ` and Right Panel Ctrl+\)
+  // Activity listeners & Auto-Lock timer
+  useEffect(() => {
+    const handleActivity = () => {
+      recordActivity();
+    };
+
+    window.addEventListener("mousemove", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+    window.addEventListener("click", handleActivity);
+
+    const autoLockInterval = setInterval(() => {
+      const state = useAuthStore.getState();
+      if (state.isAuthenticated && !state.isLocked && state.autoLockMinutes > 0) {
+        const elapsedMs = Date.now() - state.lastActiveTimestamp;
+        if (elapsedMs >= state.autoLockMinutes * 60 * 1000) {
+          state.lockSession();
+        }
+      }
+    }, 20000);
+
+    return () => {
+      window.removeEventListener("mousemove", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+      window.removeEventListener("click", handleActivity);
+      clearInterval(autoLockInterval);
+    };
+  }, [recordActivity]);
+
+  // Global hotkeys (Terminal `, Right Panel Ctrl+\, Lock Session Ctrl+L)
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const isInput = ["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName);
     if (e.key === "`" && !isInput) {
@@ -134,7 +168,11 @@ export default function Home() {
       e.preventDefault();
       toggleRightPanel();
     }
-  }, [toggleTerminal, toggleRightPanel]);
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "l" && !isInput) {
+      e.preventDefault();
+      lockSession();
+    }
+  }, [toggleTerminal, toggleRightPanel, lockSession]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -282,6 +320,9 @@ export default function Home() {
 
   return (
     <ToastProvider>
+      {/* Cyber Security Lock Screen Gateway */}
+      {(!isAuthenticated || isLocked) && <AuthLockScreen />}
+
       <CommandPalette />
       <DevToolsModal isOpen={isDevToolsOpen} onClose={() => setDevToolsOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
@@ -313,7 +354,7 @@ export default function Home() {
         <main className={`flex-1 min-w-0 max-w-full ml-0 md:ml-[68px] ${isRightPanelOpen ? "xl:mr-[340px]" : "xl:mr-[52px]"} px-3 sm:px-5 py-3 sm:py-4 pb-40 flex flex-col transition-all duration-300`}>
           {/* Top Operational Breadcrumb HUD Bar */}
           <header className="flex flex-col gap-2.5 mb-4 pb-3 border-b border-white/5 relative z-30">
-            {/* Row 1: Brand & Node Status (Left) + Compact Non-wrapping HUD Toolbar (Right) */}
+            {/* Row 1: Brand & Node Status (Left) + Identity + Compact Non-wrapping HUD Toolbar (Right) */}
             <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-4 w-full h-10 shrink-0">
               {/* Left: Brand & Mobile Trigger */}
               <div className="flex items-center gap-2 sm:gap-3 shrink-0 h-9">
@@ -350,6 +391,9 @@ export default function Home() {
                   <span>•</span>
                   <UptimeBadge />
                 </div>
+
+                {/* Operator Identity & Clearance Dropdown */}
+                <UserStatusPill />
               </div>
 
               {/* Right: Quick Action HUD Controls (Strictly Non-Wrapping, Locked Height) */}
@@ -608,91 +652,111 @@ export default function Home() {
             </div>
           </header>
 
-          {/* ACTIVE VIEW RENDERING WITH ERROR BOUNDARIES */}
+          {/* ACTIVE VIEW RENDERING WITH ERROR BOUNDARIES & PROTECTED ACCESS GATES */}
           {activeView === "dashboard" && (
-            <ErrorBoundary fallbackTitle="DASHBOARD WIDGET GRID ERROR">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 pb-6 animate-fade-in items-start">
-                {customWidgets.system_stats !== false && (
-                  <div id="stats-widget">
-                    <SystemStats />
-                  </div>
-                )}
-                {customWidgets.github_activity !== false && (
-                  <div id="git-widget">
-                    <GitHubActivity />
-                  </div>
-                )}
-                {customWidgets.rss_feed !== false && (
-                  <div id="rss-widget">
-                    <RssFeed />
-                  </div>
-                )}
-                {customWidgets.api_health !== false && (
-                  <div id="api-widget">
-                    <ApiHealth />
-                  </div>
-                )}
-                {customWidgets.calendar !== false && (
-                  <div id="calendar-widget" className="lg:col-span-2">
-                    <CalendarWidget />
-                  </div>
-                )}
-              </div>
-            </ErrorBoundary>
+            <ProtectedAccessGate minClearance={1} viewName="Overview Dashboard">
+              <ErrorBoundary fallbackTitle="DASHBOARD WIDGET GRID ERROR">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 pb-6 animate-fade-in items-start">
+                  {customWidgets.system_stats !== false && (
+                    <div id="stats-widget">
+                      <SystemStats />
+                    </div>
+                  )}
+                  {customWidgets.github_activity !== false && (
+                    <div id="git-widget">
+                      <GitHubActivity />
+                    </div>
+                  )}
+                  {customWidgets.rss_feed !== false && (
+                    <div id="rss-widget">
+                      <RssFeed />
+                    </div>
+                  )}
+                  {customWidgets.api_health !== false && (
+                    <div id="api-widget">
+                      <ApiHealth />
+                    </div>
+                  )}
+                  {customWidgets.calendar !== false && (
+                    <div id="calendar-widget" className="lg:col-span-2">
+                      <CalendarWidget />
+                    </div>
+                  )}
+                </div>
+              </ErrorBoundary>
+            </ProtectedAccessGate>
           )}
 
           {activeView === "chatbot" && (
-            <ErrorBoundary fallbackTitle="NEURAL CHATBOT MALFUNCTION">
-              <ChatbotView />
-            </ErrorBoundary>
+            <ProtectedAccessGate minClearance={2} viewName="Neural Chatbot Matrix">
+              <ErrorBoundary fallbackTitle="NEURAL CHATBOT MALFUNCTION">
+                <ChatbotView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
           )}
 
           {activeView === "control_room" && (
-            <ErrorBoundary fallbackTitle="CONTROL ROOM MALFUNCTION">
-              <ControlRoomView />
-            </ErrorBoundary>
+            <ProtectedAccessGate minClearance={2} viewName="Agent Control Room">
+              <ErrorBoundary fallbackTitle="CONTROL ROOM MALFUNCTION">
+                <ControlRoomView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
           )}
 
           {activeView === "agents" && (
-            <ErrorBoundary fallbackTitle="AI AGENT SWARM MALFUNCTION">
-              <AiAgentsView />
-            </ErrorBoundary>
+            <ProtectedAccessGate minClearance={3} viewName="Autonomous AI Agents">
+              <ErrorBoundary fallbackTitle="AI AGENT SWARM MALFUNCTION">
+                <AiAgentsView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
           )}
 
           {activeView === "knowledge" && (
-            <ErrorBoundary fallbackTitle="KNOWLEDGE VAULT MALFUNCTION">
-              <KnowledgeView />
-            </ErrorBoundary>
+            <ProtectedAccessGate minClearance={2} viewName="Knowledge Vault Matrix">
+              <ErrorBoundary fallbackTitle="KNOWLEDGE VAULT MALFUNCTION">
+                <KnowledgeView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
           )}
 
           {activeView === "docker" && (
-            <ErrorBoundary fallbackTitle="DOCKER MANAGER MALFUNCTION">
-              <DockerView />
-            </ErrorBoundary>
+            <ProtectedAccessGate minClearance={3} viewName="Docker Hub & Containers">
+              <ErrorBoundary fallbackTitle="DOCKER MANAGER MALFUNCTION">
+                <DockerView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
           )}
 
           {activeView === "tools" && (
-            <ErrorBoundary fallbackTitle="TACTICAL TOOLS MALFUNCTION">
-              <ToolsView />
-            </ErrorBoundary>
+            <ProtectedAccessGate minClearance={3} viewName="Tactical DevTools Matrix">
+              <ErrorBoundary fallbackTitle="TACTICAL TOOLS MALFUNCTION">
+                <ToolsView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
           )}
 
           {activeView === "stats" && (
-            <ErrorBoundary fallbackTitle="SYSTEM TELEMETRY MALFUNCTION">
-              <StatsView />
-            </ErrorBoundary>
+            <ProtectedAccessGate minClearance={2} viewName="Prometheus Telemetry & Stats">
+              <ErrorBoundary fallbackTitle="SYSTEM TELEMETRY MALFUNCTION">
+                <StatsView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
           )}
 
           {activeView === "logs" && (
-            <ErrorBoundary fallbackTitle="OPERATIONS LOG MALFUNCTION">
-              <LogsView />
-            </ErrorBoundary>
+            <ProtectedAccessGate minClearance={2} viewName="Security & Event Logs">
+              <ErrorBoundary fallbackTitle="OPERATIONS LOG MALFUNCTION">
+                <LogsView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
           )}
 
           {activeView === "settings" && (
-            <ErrorBoundary fallbackTitle="CONFIGURATION MALFUNCTION">
-              <SettingsView />
-            </ErrorBoundary>
+            <ProtectedAccessGate minClearance={3} viewName="System Configuration">
+              <ErrorBoundary fallbackTitle="CONFIGURATION MALFUNCTION">
+                <SettingsView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
           )}
         </main>
 

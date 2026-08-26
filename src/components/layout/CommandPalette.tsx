@@ -23,6 +23,7 @@ import {
   ScrollText,
   FileText,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
@@ -248,6 +249,67 @@ export default function CommandPalette() {
       category: "Colorways",
       action: () => applyThemePreset("amber"),
       icon: <Palette size={14} className="text-[#FFB000]" />,
+    },
+    {
+      id: "auth_lock",
+      label: "Security: Lock Terminal & Session",
+      category: "Security & Access",
+      action: () => {
+        const { useAuthStore } = require("@/stores/useAuthStore");
+        useAuthStore.getState().lockSession();
+      },
+      shortcut: "Ctrl+L",
+      icon: <Lock size={14} className="text-amber-400" />,
+    },
+    {
+      id: "auth_switch_root",
+      label: "Security: Switch to Root Operator (Cipher Zero - Lvl 5)",
+      category: "Security & Access",
+      action: () => {
+        const { useAuthStore } = require("@/stores/useAuthStore");
+        useAuthStore.getState().switchPersona("root_operator");
+      },
+      icon: <CheckCircle2 size={14} className="text-[#00FF41]" />,
+    },
+    {
+      id: "auth_switch_netrunner",
+      label: "Security: Switch to Netrunner DevOps (Hex Blade - Lvl 3)",
+      category: "Security & Access",
+      action: () => {
+        const { useAuthStore } = require("@/stores/useAuthStore");
+        useAuthStore.getState().switchPersona("netrunner_devops");
+      },
+      icon: <CheckCircle2 size={14} className="text-[#00F0FF]" />,
+    },
+    {
+      id: "auth_switch_analyst",
+      label: "Security: Switch to Data Analyst (Oracle Eye - Lvl 2)",
+      category: "Security & Access",
+      action: () => {
+        const { useAuthStore } = require("@/stores/useAuthStore");
+        useAuthStore.getState().switchPersona("data_analyst");
+      },
+      icon: <CheckCircle2 size={14} className="text-[#BF40FF]" />,
+    },
+    {
+      id: "auth_switch_guest",
+      label: "Security: Switch to Guest Visitor (Ghost Drifter - Lvl 1)",
+      category: "Security & Access",
+      action: () => {
+        const { useAuthStore } = require("@/stores/useAuthStore");
+        useAuthStore.getState().switchPersona("guest_drifter");
+      },
+      icon: <CheckCircle2 size={14} className="text-[#9499B3]" />,
+    },
+    {
+      id: "auth_logout",
+      label: "Security: Terminate Active Session (Logout)",
+      category: "Security & Access",
+      action: () => {
+        const { useAuthStore } = require("@/stores/useAuthStore");
+        useAuthStore.getState().logout();
+      },
+      icon: <Terminal size={14} className="text-red-400" />,
     },
     {
       id: "scanlines",
