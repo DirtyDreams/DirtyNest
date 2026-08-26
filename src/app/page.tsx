@@ -710,60 +710,55 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* 2-Column Grid: Action Hub & Service Status */}
+                  {/* Fluid 2-Column Bento / Masonry Tile Stream */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
-                    {customWidgets.quick_actions !== false && (
-                      <div id="quick-actions-widget">
-                        <QuickActionHub />
-                      </div>
-                    )}
-                    {customWidgets.service_status !== false && (
-                      <div id="service-status-widget">
-                        <ServiceStatusCompact />
-                      </div>
-                    )}
-                  </div>
+                    {/* LEFT COLUMN STREAM */}
+                    <div className="flex flex-col gap-4 sm:gap-5">
+                      {customWidgets.quick_actions !== false && (
+                        <div id="quick-actions-widget">
+                          <QuickActionHub />
+                        </div>
+                      )}
+                      {customWidgets.pipeline_queue !== false && (
+                        <div id="pipeline-widget">
+                          <PipelineQueueWidget />
+                        </div>
+                      )}
+                      {customWidgets.github_activity !== false && (
+                        <div id="git-widget">
+                          <GitHubActivity />
+                        </div>
+                      )}
+                      {customWidgets.api_health !== false && (
+                        <div id="api-widget">
+                          <ApiHealth />
+                        </div>
+                      )}
+                    </div>
 
-                  {/* 2-Column Grid: Pipeline Queue & System Telemetry */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
-                    {customWidgets.pipeline_queue !== false && (
-                      <div id="pipeline-widget">
-                        <PipelineQueueWidget />
-                      </div>
-                    )}
-                    {customWidgets.system_stats !== false && (
-                      <div id="stats-widget">
-                        <SystemStats />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 2-Column Grid: GitHub Activity & RSS Intel Feed */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
-                    {customWidgets.github_activity !== false && (
-                      <div id="git-widget">
-                        <GitHubActivity />
-                      </div>
-                    )}
-                    {customWidgets.rss_feed !== false && (
-                      <div id="rss-widget">
-                        <RssFeed />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 2-Column Grid: API Health Probes & Operations Calendar */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
-                    {customWidgets.api_health !== false && (
-                      <div id="api-widget">
-                        <ApiHealth />
-                      </div>
-                    )}
-                    {customWidgets.calendar !== false && (
-                      <div id="calendar-widget">
-                        <CalendarWidget />
-                      </div>
-                    )}
+                    {/* RIGHT COLUMN STREAM */}
+                    <div className="flex flex-col gap-4 sm:gap-5">
+                      {customWidgets.service_status !== false && (
+                        <div id="service-status-widget">
+                          <ServiceStatusCompact />
+                        </div>
+                      )}
+                      {customWidgets.system_stats !== false && (
+                        <div id="stats-widget">
+                          <SystemStats />
+                        </div>
+                      )}
+                      {customWidgets.rss_feed !== false && (
+                        <div id="rss-widget">
+                          <RssFeed />
+                        </div>
+                      )}
+                      {customWidgets.calendar !== false && (
+                        <div id="calendar-widget">
+                          <CalendarWidget />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </ErrorBoundary>
