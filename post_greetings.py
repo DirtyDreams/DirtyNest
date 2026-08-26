@@ -31,8 +31,9 @@ GREETINGS = [
 def post(pid, sub, text):
     try:
         r = subprocess.run(
-            ["opencli", "reddit", "comment", pid, text, "-f", "json"],
-            capture_output=True, text=True, timeout=90
+            ["opencli.cmd", "reddit", "comment", pid, text, "-f", "json"],
+            capture_output=True, text=True, timeout=90,
+            shell=False
         )
         ok = '"success"' in r.stdout or r.returncode == 0
         print(f"[{'OK ' if ok else 'FAIL'}] r/{sub} {pid}: {r.stdout.strip()[:120]} {r.stderr.strip()[:100]}")

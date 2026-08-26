@@ -1,8 +1,9 @@
 "use client";
 
+import { memo } from "react";
 import { Rocket, Clock, ShieldAlert, RefreshCw, CheckCircle2, TrendingUp } from "lucide-react";
 
-export default function DoraMetricsBar() {
+function DoraMetricsBar() {
   const metrics = [
     {
       label: "Deployment Frequency",
@@ -87,3 +88,5 @@ export default function DoraMetricsBar() {
     </div>
   );
 }
+
+export default memo(DoraMetricsBar);

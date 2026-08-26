@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CheckSquare, Plus, Trash2, Check, Sparkles } from "lucide-react";
+import { CheckSquare, Plus, Trash2, Check } from "lucide-react";
 
 interface Todo {
   id: number;
@@ -131,7 +131,7 @@ export default function TodoList() {
         <div className="flex gap-2 text-xs">
           <select 
             value={newPriority}
-            onChange={(e) => setNewPriority(e.target.value as any)}
+            onChange={(e) => setNewPriority(e.target.value as "low" | "normal" | "high")}
             className="bg-[#07070B] border border-white/10 rounded-lg px-2 py-1 text-[#9499B3] focus:border-[#00FF41] outline-none"
           >
             <option value="low">Low Priority</option>
@@ -150,13 +150,13 @@ export default function TodoList() {
       {/* Filter Tabs */}
       <div className="flex items-center gap-1 mb-2 bg-white/5 rounded-lg p-0.5 border border-white/5 text-[9px] font-mono">
         {[
-          { key: "all", label: `ALL (${todos.length})` },
-          { key: "active", label: `ACTIVE (${remainingCount})` },
-          { key: "done", label: `DONE (${todos.length - remainingCount})` },
+          { key: "all" as const, label: `ALL (${todos.length})` },
+          { key: "active" as const, label: `ACTIVE (${remainingCount})` },
+          { key: "done" as const, label: `DONE (${todos.length - remainingCount})` },
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setFilter(tab.key as any)}
+            onClick={() => setFilter(tab.key)}
             className={`flex-1 py-1 rounded transition-colors text-center ${
               filter === tab.key
                 ? "bg-[#00FF41]/20 text-[#00FF41] font-bold"

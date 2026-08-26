@@ -12,9 +12,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!messages || !Array.isArray(messages)) {
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
-        { error: "Invalid request payload. 'messages' array is required." },
+        { error: "Invalid request payload. Non-empty 'messages' array is required." },
+        { status: 400 }
+      );
+    }
+
+    if (messages.length > 100) {
+      return NextResponse.json(
+        { error: "Conversation history exceeds maximum bound of 100 messages." },
+        { status: 400 }
+      );
+    }
+
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || typeof lastMessage.text !== "string" || !lastMessage.text.trim()) {
+      return NextResponse.json(
+        { error: "Prompt message text is required." },
+        { status: 400 }
+      );
+    }
+
+    if (lastMessage.text.length > 50000) {
+      return NextResponse.json(
+        { error: "Prompt text exceeds maximum limit of 50,000 characters." },
         { status: 400 }
       );
     }
@@ -28,8 +50,6 @@ export async function POST(req: NextRequest) {
       parts: [{ text: msg.text }],
     }));
 
-    const lastMessage = messages[messages.length - 1];
-    
     // System instruction is set depending on mode (optional for now, can be expanded)
     let systemInstruction = "You are DirtyNest Cyber-Intelligence Core, a high-performance terminal AI with full system observability, devtool mastery, and defensive cybersecurity capabilities.";
     if (mode === "reasoning") {

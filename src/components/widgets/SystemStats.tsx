@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Cpu, HardDrive, Wifi, MemoryStick, Activity, RefreshCw } from "lucide-react";
+import { useState, useEffect, useRef, memo } from "react";
+import { Cpu, HardDrive, Wifi, MemoryStick, Activity } from "lucide-react";
 
 interface StatData {
   id: string;
@@ -112,7 +112,7 @@ function SparklineArea({
   );
 }
 
-export default function SystemStats() {
+function SystemStats() {
   const [stats, setStats] = useState<StatData[]>([
     {
       id: "cpu",
@@ -273,3 +273,5 @@ export default function SystemStats() {
     </div>
   );
 }
+
+export default memo(SystemStats);

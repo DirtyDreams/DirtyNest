@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Server, Wifi, CheckCircle2, ArrowRight } from "lucide-react";
+import { memo } from "react";
+import { Server, ArrowRight } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface ServiceItem {
@@ -23,8 +23,7 @@ const SERVICES: ServiceItem[] = [
   { id: "ws", name: "Telemetry WS", category: "Net", latency: 4, status: "OK" },
 ];
 
-export default function ServiceStatusCompact() {
-  const [services, setServices] = useState(SERVICES);
+function ServiceStatusCompact() {
 
   const handleNavigateToApi = () => {
     cyberAudio.play("click");
@@ -51,7 +50,7 @@ export default function ServiceStatusCompact() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {services.map((svc) => (
+        {SERVICES.map((svc) => (
           <div
             key={svc.id}
             className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col justify-between gap-1.5 hover:border-white/15 transition-all"
@@ -73,3 +72,5 @@ export default function ServiceStatusCompact() {
     </div>
   );
 }
+
+export default memo(ServiceStatusCompact);
