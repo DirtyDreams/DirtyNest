@@ -82,21 +82,26 @@ export default function ThemeMenu({ onOpenCustomizer }: ThemeMenuProps) {
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 w-64 cyber-card p-2.5 z-50 animate-fade-in shadow-[0_12px_36px_rgba(0,0,0,0.9)] border border-[#00FF41]/30 max-h-[80vh] flex flex-col font-mono"
-          style={{ background: "rgba(11, 12, 20, 0.98)" }}
+          className="absolute right-0 top-full mt-2 w-64 p-3 z-50 animate-fade-in rounded-2xl flex flex-col font-mono border border-[#00FF41]/40"
+          style={{
+            background: "rgba(10, 11, 20, 0.98)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            boxShadow: "0 16px 40px -8px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 255, 65, 0.15)",
+          }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-2 py-1 mb-1.5 border-b border-white/5">
+          {/* Header - Fixed & Always Visible */}
+          <div className="flex items-center justify-between px-1.5 pb-2 mb-2 border-b border-white/10 shrink-0">
             <span className="text-[10px] text-[#4F536E] uppercase font-bold tracking-wider">
               Cyber Colorways
             </span>
-            <span className="text-[9px] text-[#00FF41] font-bold">
+            <span className="text-[9px] text-[#00FF41] font-bold px-1.5 py-0.5 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
               {themes.length} Presets
             </span>
           </div>
 
           {/* Preset list */}
-          <div className="space-y-1 overflow-y-auto max-h-60 pr-0.5 scrollbar-none">
+          <div className="space-y-1 overflow-y-auto max-h-60 pr-0.5 scrollbar-none flex-1">
             {themes.map((preset) => {
               const isSelected = currentTheme === preset.id;
               return (
@@ -140,14 +145,14 @@ export default function ThemeMenu({ onOpenCustomizer }: ThemeMenuProps) {
 
           {/* Customizer Modal Trigger */}
           {onOpenCustomizer && (
-            <div className="pt-2 mt-1.5 border-t border-white/10 shrink-0">
+            <div className="pt-2 mt-2 border-t border-white/10 shrink-0">
               <button
                 type="button"
                 onClick={() => {
                   setOpen(false);
                   onOpenCustomizer();
                 }}
-                className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#00FF41]/10 hover:bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/30 text-xs font-bold transition-all cursor-pointer shadow-[0_0_8px_rgba(0,255,65,0.15)]"
+                className="w-full flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg bg-[#00FF41]/10 hover:bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/30 text-xs font-bold transition-all cursor-pointer shadow-[0_0_8px_rgba(0,255,65,0.15)]"
               >
                 <SlidersHorizontal size={12} />
                 <span>Theme Studio & Editor</span>
