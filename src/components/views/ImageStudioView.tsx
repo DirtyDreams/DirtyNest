@@ -170,6 +170,13 @@ export default function ImageStudioView() {
           <GeneratedAssetsGallery
             onSelectAsset={(asset) => {
               setActiveAsset(asset);
+            }}
+            onLoadInMatrix={(asset) => {
+              setActiveAsset(asset);
+              setActiveSubTab("generator");
+            }}
+            onEditInCanvas={(asset) => {
+              setActiveAsset(asset);
               setActiveSubTab("editor");
             }}
             selectedAssetId={activeAsset.id}
