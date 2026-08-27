@@ -539,6 +539,8 @@ export default function Home() {
                   <span>NODE://ROOT/MAIN</span>
                   <span>•</span>
                   <UptimeBadge />
+                  <span>•</span>
+                  <HermesMasterStatusBadge onOpenCommandDrawer={() => setIsHermesCommandModalOpen(true)} />
                 </div>
               </div>
 
@@ -599,9 +601,6 @@ export default function Home() {
                   <Layers size={14} />
                   <span className="hidden 2xl:inline">DECK</span>
                 </button>
-
-                {/* Hermes Master Brain Status HUD Badge */}
-                <HermesMasterStatusBadge onOpenCommandDrawer={() => setIsHermesCommandModalOpen(true)} />
 
                 {/* Command palette search trigger */}
                 <button
