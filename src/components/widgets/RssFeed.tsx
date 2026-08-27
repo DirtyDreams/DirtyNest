@@ -3,13 +3,11 @@
 import { useState } from "react";
 import {
   Rss,
-  ExternalLink,
   Terminal,
   Cpu,
   Brain,
   Clock,
   RotateCcw,
-  Globe,
   ArrowUpRight,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
@@ -117,24 +115,30 @@ const mockFeedItems: FeedArticle[] = [
   },
 ];
 
-// Wyraźne, zróżnicowane i kontrastujące kolory dla każdego działu
+// Wyraźne, zróżnicowane tła i kolory dla każdego działu
 const DEPARTMENT_SPECS = {
   AI: {
     label: "AI CORE",
-    color: "#BF40FF", // Wyrazisty Neon Fiolet
-    lightColor: "#E9D5FF",
+    color: "#BF40FF",
+    cardBg: "bg-gradient-to-br from-[#24103B]/85 via-[#160A25]/90 to-[#0B0514]/95",
+    borderClass: "border-purple-500/35 hover:border-purple-400 hover:shadow-[0_0_30px_rgba(191,64,255,0.25)]",
+    glowLight: "rgba(191, 64, 255, 0.16)",
     icon: Brain,
   },
   DEV: {
     label: "DEV RUNTIME",
-    color: "#00FF41", // Wyrazista Neon Matrix Green
-    lightColor: "#A7F3D0",
+    color: "#00FF41",
+    cardBg: "bg-gradient-to-br from-[#0B2E18]/85 via-[#061C0E]/90 to-[#030E07]/95",
+    borderClass: "border-emerald-500/35 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(0,255,65,0.25)]",
+    glowLight: "rgba(0, 255, 65, 0.16)",
     icon: Terminal,
   },
   SYS: {
     label: "SYSTEM & SEC",
-    color: "#00F0FF", // Wyrazisty Neon Cyjan
-    lightColor: "#BAE6FD",
+    color: "#00F0FF",
+    cardBg: "bg-gradient-to-br from-[#0A293D]/85 via-[#061824]/90 to-[#030C12]/95",
+    borderClass: "border-cyan-500/35 hover:border-cyan-400 hover:shadow-[0_0_30px_rgba(0,240,255,0.25)]",
+    glowLight: "rgba(0, 240, 255, 0.16)",
     icon: Cpu,
   },
 };
@@ -193,7 +197,7 @@ export default function RssFeed() {
               </span>
             </div>
             <p className="text-[11px] text-[#9499B3] mt-0.5">
-              Wyraźnie zróżnicowana telemetria: Fiolet (AI), Matrix Green (Dev), Cyber Cyan (Systems).
+              Wizualnie zróżnicowana telemetria z dedykowanymi tłami działów: Fiolet (AI), Szmaragd (Dev), Błękit Cyjan (Systemy).
             </p>
           </div>
         </div>
@@ -253,7 +257,7 @@ export default function RssFeed() {
         </div>
       </div>
 
-      {/* 2-Column Responsive Feed Grid with Distinct Department Colors */}
+      {/* 2-Column Responsive Feed Grid with Distinct Department Backgrounds */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 overflow-y-auto pr-1 -mr-1">
         {filtered.map((item) => {
           const dept = DEPARTMENT_SPECS[item.category];
@@ -264,10 +268,11 @@ export default function RssFeed() {
             <article
               key={item.id}
               onClick={() => toggleRead(item.id, item.url)}
-              className="p-4 rounded-2xl cursor-pointer transition-all duration-200 group relative flex flex-col justify-between gap-3 bg-[#0A0D1A]/90 hover:bg-[#10142A] border border-white/10 hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 animate-slide-up-fade shadow-md"
+              className={`p-4 rounded-2xl cursor-pointer transition-all duration-200 group relative flex flex-col justify-between gap-3 ${dept.cardBg} border ${dept.borderClass} hover:-translate-y-0.5 active:translate-y-0 animate-slide-up-fade shadow-lg overflow-hidden`}
               style={{
                 borderLeftWidth: "4px",
                 borderLeftColor: color,
+                backgroundImage: `radial-gradient(circle at 10% 20%, ${dept.glowLight} 0%, transparent 60%)`,
               }}
             >
               {/* Unread Glow Pulse Dot in Department Color */}
@@ -289,22 +294,22 @@ export default function RssFeed() {
                 </div>
               )}
 
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-10">
                 {/* Meta Header */}
                 <div className="flex items-center gap-2 font-mono text-xs">
                   <span
                     className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md uppercase flex items-center gap-1.5 shadow-sm"
                     style={{
                       color: color,
-                      backgroundColor: `${color}20`,
-                      border: `1px solid ${color}50`,
+                      backgroundColor: `${color}25`,
+                      border: `1px solid ${color}55`,
                     }}
                   >
                     <CategoryIcon size={12} />
                     <span>{item.category}</span>
                   </span>
 
-                  <span className="text-[11px] text-[#E2E8F0] font-semibold">
+                  <span className="text-[11px] text-[#F1F5F9] font-bold">
                     {item.source}
                   </span>
 
@@ -315,7 +320,7 @@ export default function RssFeed() {
 
                 {/* Article Title in Crisp High-Contrast White */}
                 <h4
-                  className="text-sm font-bold text-slate-100 transition-colors leading-snug tracking-tight group-hover:text-white"
+                  className="text-sm font-bold text-white transition-colors leading-snug tracking-tight group-hover:text-white"
                 >
                   {item.title}
                 </h4>
@@ -327,9 +332,9 @@ export default function RssFeed() {
               </div>
 
               {/* Bottom Quick Link Info & Reading Time */}
-              <div className="flex items-center justify-between pt-2.5 border-t border-white/10 text-[11px] font-mono text-[#9499B3] group-hover:text-[#E2E8F0] transition-colors">
+              <div className="flex items-center justify-between pt-2.5 border-t border-white/10 text-[11px] font-mono text-[#94A3B8] group-hover:text-[#F1F5F9] transition-colors relative z-10">
                 <div className="flex items-center gap-1.5">
-                  <Clock size={11} className="text-[#9499B3]" />
+                  <Clock size={11} className="text-[#94A3B8]" />
                   <span>{item.readTime}</span>
                 </div>
 
@@ -350,19 +355,19 @@ export default function RssFeed() {
       </div>
 
       {/* Feed Status Summary Strip with Distinct Legend */}
-      <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-[#9499B3]">
+      <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-[#94A3B8]">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#BF40FF] shadow-[0_0_8px_#BF40FF]" />
-            <span className="text-[11px] text-[#BF40FF] font-bold">AI Core (Purple)</span>
+            <span className="text-[11px] text-[#BF40FF] font-bold">AI Core (Purple Tint)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#00FF41] shadow-[0_0_8px_#00FF41]" />
-            <span className="text-[11px] text-[#00FF41] font-bold">Dev Runtime (Green)</span>
+            <span className="text-[11px] text-[#00FF41] font-bold">Dev Runtime (Green Tint)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#00F0FF] shadow-[0_0_8px_#00F0FF]" />
-            <span className="text-[11px] text-[#00F0FF] font-bold">System & Sec (Cyan)</span>
+            <span className="text-[11px] text-[#00F0FF] font-bold">System & Sec (Cyan Tint)</span>
           </div>
         </div>
 
