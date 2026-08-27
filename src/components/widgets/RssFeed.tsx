@@ -4,13 +4,11 @@ import { useState } from "react";
 import {
   Rss,
   ExternalLink,
-  Sparkles,
   Terminal,
   Cpu,
   Brain,
   Clock,
   RotateCcw,
-  CheckCircle2,
   Globe,
   ArrowUpRight,
 } from "lucide-react";
@@ -119,46 +117,22 @@ const mockFeedItems: FeedArticle[] = [
   },
 ];
 
-// Harmonious Analogous Palette: Teal (AI) · Emerald (DEV) · Cyan (SYS)
-const CATEGORY_PALETTES = {
+// 1 Dedykowany Odcień na Dział / Department
+const DEPARTMENT_SPECS = {
   AI: {
-    name: "AI & Neural Core",
-    cardBg: "bg-gradient-to-br from-[#0B1A24]/90 via-[#07131B]/90 to-[#050C12]/95",
-    border: "border-teal-500/20",
-    hoverBorder: "hover:border-teal-400/50 hover:shadow-[0_0_20px_rgba(45,212,191,0.15)]",
-    badgeBg: "bg-teal-500/10",
-    badgeText: "text-[#5EEAD4]",
-    badgeBorder: "border-teal-500/30",
-    glowColor: "#2DD4BF",
-    titleHover: "group-hover:text-teal-300",
+    label: "AI CORE",
+    color: "#2DD4BF", // Teal
     icon: Brain,
-    accentGlow: "rgba(45,212,191,0.3)",
   },
   DEV: {
-    name: "Dev & Frameworks",
-    cardBg: "bg-gradient-to-br from-[#0B1E19]/90 via-[#071612]/90 to-[#050E0C]/95",
-    border: "border-emerald-500/20",
-    hoverBorder: "hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]",
-    badgeBg: "bg-emerald-500/10",
-    badgeText: "text-[#6EE7B7]",
-    badgeBorder: "border-emerald-500/30",
-    glowColor: "#10B981",
-    titleHover: "group-hover:text-emerald-300",
+    label: "DEV RUNTIME",
+    color: "#10B981", // Emerald
     icon: Terminal,
-    accentGlow: "rgba(16,185,129,0.3)",
   },
   SYS: {
-    name: "Systems & Security",
-    cardBg: "bg-gradient-to-br from-[#0A1A22]/90 via-[#06141B]/90 to-[#040C12]/95",
-    border: "border-cyan-500/20",
-    hoverBorder: "hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]",
-    badgeBg: "bg-cyan-500/10",
-    badgeText: "text-[#67E8F9]",
-    badgeBorder: "border-cyan-500/30",
-    glowColor: "#06B6D4",
-    titleHover: "group-hover:text-cyan-300",
+    label: "SYSTEM & SEC",
+    color: "#06B6D4", // Cyan
     icon: Cpu,
-    accentGlow: "rgba(6,182,212,0.3)",
   },
 };
 
@@ -200,10 +174,10 @@ export default function RssFeed() {
       <div className="hud-corner hud-corner-bl" />
       <div className="hud-corner hud-corner-br" />
 
-      {/* Widget Header with Harmonious Category Filter Pills */}
+      {/* Widget Header with Consistent Category Filter Pills */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3.5 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-[#2DD4BF] shadow-[0_0_15px_rgba(45,212,191,0.25)]">
+          <div className="w-8 h-8 rounded-xl bg-[#2DD4BF]/15 border border-[#2DD4BF]/30 flex items-center justify-center text-[#2DD4BF] shadow-[0_0_15px_rgba(45,212,191,0.25)]">
             <Rss size={15} />
           </div>
           <div>
@@ -211,12 +185,12 @@ export default function RssFeed() {
               <h3 className="text-sm font-black tracking-tight text-white uppercase font-mono">
                 INTELLIGENCE STREAM
               </h3>
-              <span className="text-[10px] font-bold text-[#2DD4BF] px-2 py-0.5 rounded-md bg-teal-500/10 border border-teal-500/30 font-mono">
+              <span className="text-[10px] font-bold text-[#2DD4BF] px-2 py-0.5 rounded-md bg-[#2DD4BF]/10 border border-[#2DD4BF]/30 font-mono">
                 LIVE RSS
               </span>
             </div>
             <p className="text-[11px] text-[#9499B3] mt-0.5">
-              Harmonious curated telemetry across AI models, modern web engines, and system architecture.
+              Jednolita telemetria z dedykowanym odcieniem dla każdego działu technicznego.
             </p>
           </div>
         </div>
@@ -228,9 +202,9 @@ export default function RssFeed() {
               const isActive = selectedCat === cat;
               const count = countFor(cat);
 
-              let activeCatClass = "bg-teal-500/20 text-[#5EEAD4] border border-teal-500/40 shadow-[0_0_12px_rgba(45,212,191,0.2)]";
-              if (cat === "DEV") activeCatClass = "bg-emerald-500/20 text-[#6EE7B7] border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.2)]";
-              if (cat === "SYS") activeCatClass = "bg-cyan-500/20 text-[#67E8F9] border border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.2)]";
+              let activeColor = "#2DD4BF";
+              if (cat === "DEV") activeColor = "#10B981";
+              if (cat === "SYS") activeColor = "#06B6D4";
 
               return (
                 <button
@@ -240,15 +214,21 @@ export default function RssFeed() {
                     cyberAudio.play("click");
                     setSelectedCat(cat);
                   }}
-                  className={`px-3 py-1 rounded-lg transition-all duration-150 cursor-pointer flex items-center gap-1.5 font-bold text-[11px] ${
-                    isActive ? activeCatClass : "text-[#9499B3] hover:text-white hover:bg-white/5"
-                  }`}
+                  className="px-3 py-1 rounded-lg transition-all duration-150 cursor-pointer flex items-center gap-1.5 font-bold text-[11px]"
+                  style={{
+                    background: isActive ? `${activeColor}20` : "transparent",
+                    color: isActive ? activeColor : "#9499B3",
+                    border: isActive ? `1px solid ${activeColor}50` : "1px solid transparent",
+                    boxShadow: isActive ? `0 0 12px ${activeColor}30` : "none",
+                  }}
                 >
                   <span>{cat}</span>
                   <span
-                    className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono ${
-                      isActive ? "bg-white/20 text-white" : "bg-white/10 text-[#717798]"
-                    }`}
+                    className="text-[9px] px-1.5 py-0.2 rounded-full font-mono"
+                    style={{
+                      background: isActive ? `${activeColor}35` : "rgba(255,255,255,0.08)",
+                      color: isActive ? "#FFFFFF" : "#717798",
+                    }}
                   >
                     {count}
                   </span>
@@ -270,33 +250,37 @@ export default function RssFeed() {
         </div>
       </div>
 
-      {/* 2-Column Harmonious Responsive Feed Grid */}
+      {/* 2-Column Consistent Single-Shade-Per-Department Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 overflow-y-auto pr-1 -mr-1">
         {filtered.map((item) => {
-          const palette = CATEGORY_PALETTES[item.category];
-          const CategoryIcon = palette.icon;
+          const dept = DEPARTMENT_SPECS[item.category];
+          const CategoryIcon = dept.icon;
+          const color = dept.color;
 
           return (
             <article
               key={item.id}
               onClick={() => toggleRead(item.id, item.url)}
-              className={`p-4 rounded-2xl cursor-pointer transition-all duration-200 group relative flex flex-col justify-between gap-3 ${palette.cardBg} border ${palette.border} ${palette.hoverBorder} hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 animate-slide-up-fade shadow-md`}
+              className="p-4 rounded-2xl cursor-pointer transition-all duration-200 group relative flex flex-col justify-between gap-3 bg-[#090C18]/90 hover:bg-[#0E1326] border border-white/10 hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 animate-slide-up-fade shadow-md"
               style={{
                 borderLeftWidth: "3.5px",
-                borderLeftColor: palette.glowColor,
+                borderLeftColor: color,
               }}
             >
               {/* Unread Glow Pulse Dot */}
               {item.unread && (
                 <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5">
-                  <span className="text-[9px] font-mono font-bold tracking-wider hidden group-hover:inline-block animate-fade-in text-white/90">
+                  <span
+                    className="text-[9px] font-mono font-bold tracking-wider hidden group-hover:inline-block animate-fade-in"
+                    style={{ color: color }}
+                  >
                     NEW
                   </span>
                   <span
                     className="w-2.5 h-2.5 rounded-full animate-neural-pulse"
                     style={{
-                      backgroundColor: palette.glowColor,
-                      boxShadow: `0 0 10px ${palette.glowColor}`,
+                      backgroundColor: color,
+                      boxShadow: `0 0 10px ${color}`,
                     }}
                   />
                 </div>
@@ -306,7 +290,12 @@ export default function RssFeed() {
                 {/* Meta Header */}
                 <div className="flex items-center gap-2 font-mono text-xs">
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase flex items-center gap-1.5 shadow-sm ${palette.badgeBg} ${palette.badgeText} border ${palette.badgeBorder}`}
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase flex items-center gap-1.5 shadow-sm"
+                    style={{
+                      color: color,
+                      backgroundColor: `${color}18`,
+                      border: `1px solid ${color}35`,
+                    }}
                   >
                     <CategoryIcon size={11} />
                     <span>{item.category}</span>
@@ -321,9 +310,9 @@ export default function RssFeed() {
                   </span>
                 </div>
 
-                {/* Article Title in Crisp High-Contrast White with Harmonious Hover Glow */}
+                {/* Article Title in Crisp High-Contrast White with Department Color on Hover */}
                 <h4
-                  className={`text-sm font-bold text-slate-100 ${palette.titleHover} transition-colors leading-snug tracking-tight`}
+                  className="text-sm font-bold text-slate-100 transition-colors leading-snug tracking-tight group-hover:text-white"
                 >
                   {item.title}
                 </h4>
@@ -342,7 +331,8 @@ export default function RssFeed() {
                 </div>
 
                 <span
-                  className={`flex items-center gap-1 font-bold ${palette.badgeText} group-hover:brightness-125 transition-all`}
+                  className="flex items-center gap-1 font-bold transition-all group-hover:brightness-125"
+                  style={{ color: color }}
                 >
                   <span>READ ARTICLE</span>
                   <ArrowUpRight
@@ -356,26 +346,26 @@ export default function RssFeed() {
         })}
       </div>
 
-      {/* Feed Status Summary Strip with Harmonious Legend */}
+      {/* Feed Status Summary Strip with Department Legend */}
       <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-[#94A3B8]">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#2DD4BF]" />
-            <span className="text-[11px] text-[#5EEAD4]">AI Research (Teal)</span>
+            <span className="text-[11px] text-[#2DD4BF]">AI (Teal)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            <span className="text-[11px] text-[#6EE7B7]">Dev Runtimes (Emerald)</span>
+            <span className="text-[11px] text-[#10B981]">DEV (Emerald)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#06B6D4]" />
-            <span className="text-[11px] text-[#67E8F9]">Systems (Cyan)</span>
+            <span className="text-[11px] text-[#06B6D4]">SYS (Cyan)</span>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 text-[#2DD4BF] shrink-0 ml-auto font-bold text-[11px]">
           <span className="w-2 h-2 rounded-full bg-[#2DD4BF] animate-neural-pulse" />
-          <span>HARMONIOUS FEED ACTIVE</span>
+          <span>SINGLE-SHADE DEPARTMENTS ACTIVE</span>
         </div>
       </div>
     </div>
