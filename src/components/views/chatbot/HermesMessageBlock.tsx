@@ -24,6 +24,10 @@ import {
   Edit2,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { ReasoningAccordion } from "@/components/ui/assistant/ReasoningAccordion";
+import { ToolCallCard } from "@/components/ui/assistant/ToolCallCard";
+import { GlassBadge } from "@/components/ui/glass/GlassBadge";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   content: string;
@@ -466,84 +470,29 @@ export default function HermesMessageBlock({
         <div className="space-y-3 w-full">
           {segments.map((seg, idx) => {
             if (seg.type === "thought") {
-              return (
-                <div
-                  key={idx}
-                  className="rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300 overflow-hidden w-full shadow-sm"
-                >
-                  <div
-                    onClick={() => {
-                      cyberAudio.play("click");
-                      setThoughtExpanded(!thoughtExpanded);
-                    }}
-                    className="flex items-center justify-between p-2.5 px-3.5 cursor-pointer select-none group"
-                  >
-                    <div className="flex items-center gap-2 text-[#A1A7C4] text-[11px] font-bold group-hover:text-white transition-colors">
-                      <Sparkles size={12} className="text-[#00FF41] animate-pulse" />
-                      <span>Thinking Process & Cognitive Reasoning</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[10px] text-[#4F536E] group-hover:text-[#9499B3] transition-colors">
-                      <span>{thoughtExpanded ? "Collapse" : "Show details"}</span>
-                      <ChevronDown
-                        size={13}
-                        className={`transition-transform duration-300 ease-out ${
-                          thoughtExpanded ? "rotate-180 text-[#00FF41]" : "text-[#4F536E]"
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  <div
-                    className={`transition-all duration-300 ease-in-out overflow-hidden font-sans whitespace-pre-wrap bg-black/40 ${
-                      thoughtExpanded
-                        ? "max-h-[900px] opacity-100 p-3.5 pt-2 border-t border-white/5 text-[11px] text-[#A1A7C4] leading-relaxed"
-                        : "max-h-0 opacity-0 p-0 border-t-0"
-                    }`}
-                  >
-                    {seg.content}
-                  </div>
-                </div>
-              );
+              return <ReasoningAccordion key={idx} thinking={seg.content} />;
             }
 
             if (seg.type === "tool_call") {
               return (
-                <div
+                <ToolCallCard
                   key={idx}
-                  className="rounded-xl border border-white/10 bg-[#070913] p-3 space-y-1.5 font-mono w-full shadow-sm"
-                >
-                  <div className="flex items-center justify-between text-xs pb-1 border-b border-white/5">
-                    <div className="flex items-center gap-1.5 text-[#00F0FF] text-[10px] font-bold">
-                      <Terminal size={12} />
-                      <span>FUNCTION INVOCATION // TOOL_CALL</span>
-                    </div>
-                  </div>
-
-                  <pre className="p-2.5 rounded-lg bg-black/60 text-[10px] text-[#00FF41] overflow-x-auto">
-                    <code>{seg.content}</code>
-                  </pre>
-                </div>
+                  toolName="FUNCTION INVOCATION"
+                  args={seg.content}
+                  status="running"
+                />
               );
             }
 
             if (seg.type === "tool_response") {
               return (
-                <div
+                <ToolCallCard
                   key={idx}
-                  className="rounded-xl border border-white/10 bg-[#070913] p-3 space-y-1.5 font-mono w-full shadow-sm"
-                >
-                  <div className="flex items-center justify-between text-xs pb-1 border-b border-white/5">
-                    <div className="flex items-center gap-1.5 text-[#00FF41] text-[10px] font-bold">
-                      <CheckCircle2 size={12} />
-                      <span>TOOL RESPONSE TELEMETRY</span>
-                    </div>
-                    <span className="text-[8px] text-[#4F536E]">STATUS: OK</span>
-                  </div>
-
-                  <pre className="p-2.5 rounded-lg bg-black/60 text-[10px] text-slate-300 overflow-x-auto">
-                    <code>{seg.content}</code>
-                  </pre>
-                </div>
+                  toolName="TOOL RESPONSE"
+                  args=""
+                  result={seg.content}
+                  status="success"
+                />
               );
             }
 

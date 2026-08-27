@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Terminal, Shield, Activity, Radio, Cpu, Headphones, Keyboard } from "lucide-react";
+import { Terminal, Shield, Activity, Radio, Cpu, Headphones, Keyboard, Sparkles } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
+import { Marquee } from "@/components/magicui/Marquee";
 
 export default function StatusBar({
   onToggleTerminal,
@@ -54,6 +55,24 @@ export default function StatusBar({
             RENDER: <span className="text-[#00FF41]">{fps} FPS</span>
           </span>
         </div>
+      </div>
+
+      {/* Center: Live Telemetry Marquee */}
+      <div className="hidden xl:flex items-center flex-1 max-w-md mx-4 overflow-hidden border-x border-white/5 px-2">
+        <Marquee duration={35} pauseOnHover className="py-0 text-[10px] text-[#4F536E]">
+          <span className="flex items-center gap-2 mr-6 text-[#9499B3]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
+            HERMES AI CORE: <strong className="text-[#00FF41]">ONLINE</strong>
+          </span>
+          <span className="flex items-center gap-2 mr-6 text-[#9499B3]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00F0FF]" />
+            TURBOPACK v2: <strong className="text-[#00F0FF]">ACTIVE</strong>
+          </span>
+          <span className="flex items-center gap-2 mr-6 text-[#9499B3]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#BF40FF]" />
+            VECTOR RAG VAULT: <strong className="text-[#BF40FF]">SYNCED</strong>
+          </span>
+        </Marquee>
       </div>
 
       {/* Right: Quick actions */}

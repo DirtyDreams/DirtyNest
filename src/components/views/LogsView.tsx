@@ -39,6 +39,9 @@ import { cyberAudio } from "@/lib/cyberAudio";
 import { SystemLog, LogLevel, LogCategory } from "@/db";
 import LogAiExplainModal from "./logs/LogAiExplainModal";
 import LogHistogramBarChart from "./logs/LogHistogramBarChart";
+import { DataTable, ColumnDef } from "@/components/ui/data-table/DataTable";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 type SubTab = "stream" | "analytics" | "traces" | "security";
 type ViewMode = "table" | "raw";
