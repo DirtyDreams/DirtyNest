@@ -54,6 +54,8 @@ import { useAppStore } from "@/stores/useAppStore";
 import { useToast } from "@/components/common/ToastProvider";
 import ArtifactsCanvas from "./chatbot/ArtifactsCanvas";
 import HermesMessageBlock from "./chatbot/HermesMessageBlock";
+import ChatbotSessionsDrawer, { HermesChatSession } from "./chatbot/ChatbotSessionsDrawer";
+import PersonaStudioModal, { AgentPersona, AGENT_PERSONAS } from "./chatbot/PersonaStudioModal";
 
 export type ChatMode = "standard" | "reasoning" | "deep_research" | "code_interpreter";
 
@@ -142,6 +144,25 @@ export default function ChatbotView() {
     language: string;
     title: string;
   } | null>(null);
+
+  // Sessions History & Persona Studio States
+  const [sessions, setSessions] = useState<HermesChatSession[]>([
+    {
+      id: "session-root",
+      title: "DirtyNest Master Neural Orchestration",
+      personaId: "hermes-master",
+      personaName: "Hermes Master",
+      model: "Nous-Hermes-3-70B",
+      messageCount: 2,
+      lastMessageSnippet: "Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator...",
+      updatedAt: "Just now",
+      isPinned: true,
+    },
+  ]);
+  const [activeSessionId, setActiveSessionId] = useState<string>("session-root");
+  const [showSessionsDrawer, setShowSessionsDrawer] = useState<boolean>(false);
+  const [activePersona, setActivePersona] = useState<AgentPersona>(AGENT_PERSONAS[0]);
+  const [showPersonaModal, setShowPersonaModal] = useState<boolean>(false);
 
   const [attachments, setAttachments] = useState<{ id: string; name: string; type: "image" | "video" | "file"; size: string }[]>([
     { id: "att-1", name: "system_architecture.png", type: "image", size: "2.4 MB" },
@@ -521,6 +542,77 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
     ]);
   };
 
+  const handleSelectSession = (id: string) => {
+    setActiveSessionId(id);
+    setShowSessionsDrawer(false);
+  };
+
+  const handleCreateSession = () => {
+    const newId = `session-${Date.now()}`;
+    const newSession: HermesChatSession = {
+      id: newId,
+      title: `Neural Thread #${sessions.length + 1}`,
+      personaId: activePersona.id,
+      personaName: activePersona.name.split(" ")[0],
+      model: selectedModel,
+      messageCount: 1,
+      lastMessageSnippet: "Session initialized. Ready for operational directives.",
+      updatedAt: "Just now",
+    };
+    setSessions([newSession, ...sessions]);
+    setActiveSessionId(newId);
+    setMessages([
+      {
+        id: `sys-${Date.now()}`,
+        sender: "system",
+        text: `NEW NEURAL SESSION INITIALIZED // PERSONA: ${activePersona.name.toUpperCase()} // READY`,
+        timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
+      },
+    ]);
+  };
+
+  const handleBranchSession = (sourceSessionId: string) => {
+    const source = sessions.find((s) => s.id === sourceSessionId);
+    const newId = `session-branch-${Date.now()}`;
+    const branched: HermesChatSession = {
+      id: newId,
+      title: `Branch: ${source?.title || "Conversation"}`,
+      personaId: activePersona.id,
+      personaName: activePersona.name.split(" ")[0],
+      model: selectedModel,
+      messageCount: messages.length,
+      lastMessageSnippet: messages[messages.length - 1]?.text.substring(0, 60) || "Branched timeline.",
+      updatedAt: "Just now",
+    };
+    setSessions([branched, ...sessions]);
+    setActiveSessionId(newId);
+  };
+
+  const handleDeleteSession = (id: string) => {
+    if (sessions.length <= 1) return;
+    const filtered = sessions.filter((s) => s.id !== id);
+    setSessions(filtered);
+    if (activeSessionId === id) setActiveSessionId(filtered[0].id);
+  };
+
+  const handleRenameSession = (id: string, newTitle: string) => {
+    setSessions(sessions.map((s) => (s.id === id ? { ...s, title: newTitle } : s)));
+  };
+
+  const handleExportSessionMarkdown = (id: string) => {
+    const currentSess = sessions.find((s) => s.id === id);
+    const mdContent = `# ${currentSess?.title || "DirtyNest AI Chat Session"}\n\n**Persona:** ${activePersona.name}\n**Model:** ${selectedModel}\n**Date:** ${new Date().toISOString()}\n\n---\n\n` +
+      messages.map((m) => `### ${m.sender.toUpperCase()} [${m.timestamp}]\n\n${m.text}\n\n`).join("---\n\n");
+    
+    const blob = new Blob([mdContent], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `dirtynest-chat-${id}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex flex-col gap-4 pb-8 animate-fade-in font-mono select-none">
       {/* TOP DEEP RESEARCH & CHATBOT HUD */}
@@ -558,6 +650,33 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
 
           {/* Top Actions */}
           <div className="flex items-center gap-2">
+            {/* Sessions & History Drawer Trigger */}
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setShowSessionsDrawer(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-[#00FF41] hover:bg-[#00FF41]/15 transition-all cursor-pointer shadow-[0_0_10px_rgba(0,255,65,0.15)]"
+              title="Open Chat Sessions & Threads History"
+            >
+              <GitBranch size={13} />
+              <span>SESSIONS ({sessions.length})</span>
+            </button>
+
+            {/* Persona Studio Trigger */}
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setShowPersonaModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold hover:bg-white/10 transition-all cursor-pointer"
+              style={{ color: activePersona.color }}
+              title="Configure Agent Persona & Directives"
+            >
+              <Bot size={13} />
+              <span>{activePersona.name.split(" ")[0].toUpperCase()}</span>
+            </button>
+
             {/* Branching Thread Selector */}
             <button
               onClick={() => {
@@ -1258,6 +1377,28 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           </div>
         )}
       </div>
+
+      {/* Sessions History Drawer */}
+      <ChatbotSessionsDrawer
+        isOpen={showSessionsDrawer}
+        onClose={() => setShowSessionsDrawer(false)}
+        sessions={sessions}
+        activeSessionId={activeSessionId}
+        onSelectSession={handleSelectSession}
+        onCreateSession={handleCreateSession}
+        onBranchSession={handleBranchSession}
+        onDeleteSession={handleDeleteSession}
+        onRenameSession={handleRenameSession}
+        onExportSessionMarkdown={handleExportSessionMarkdown}
+      />
+
+      {/* Persona Studio Modal */}
+      <PersonaStudioModal
+        isOpen={showPersonaModal}
+        onClose={() => setShowPersonaModal(false)}
+        activePersona={activePersona}
+        onSavePersona={(updated) => setActivePersona(updated)}
+      />
     </div>
   );
 }
