@@ -181,7 +181,7 @@ function SystemStats() {
   }, []);
 
   return (
-    <div className="cyber-card p-5 relative flex flex-col gap-3.5">
+    <div className="cyber-card p-5 relative flex flex-col justify-between gap-3.5 h-full min-h-[330px]">
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
       <div className="hud-corner hud-corner-bl" />
