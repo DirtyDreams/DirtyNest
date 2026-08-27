@@ -375,7 +375,7 @@ export default function ChatbotSidebar({
   const uncategorizedSessions = processedSessions.filter((s) => !s.folderId && !s.isPinned);
 
   return (
-    <div className="w-80 sm:w-96 lg:w-[380px] xl:w-[410px] shrink-0 cyber-card p-3.5 flex flex-col justify-between h-[720px] font-mono select-none overflow-hidden transition-all border border-white/10 shadow-2xl relative">
+    <div className="w-80 sm:w-96 lg:w-[380px] xl:w-[410px] shrink-0 cyber-card p-3.5 flex flex-col justify-between h-[calc(100vh-6rem)] min-h-[640px] max-h-[920px] font-mono select-none overflow-hidden transition-all border border-white/10 shadow-2xl relative">
       {/* Top Section */}
       <div className="flex flex-col gap-2.5">
         {/* Header */}

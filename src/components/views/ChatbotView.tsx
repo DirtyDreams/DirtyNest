@@ -994,7 +994,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
       <div className="flex flex-col lg:flex-row gap-4 items-start w-full relative">
         {/* LEFT CHAT THREADS & PERSONA SIDEBAR (STICKY ON SCROLL) */}
         {isSidebarOpen && (
-          <div className="w-full lg:w-auto shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] z-20 animate-fade-in">
+          <div className="w-full lg:w-auto shrink-0 sticky top-4 self-start z-20 animate-fade-in">
             <ChatbotSidebar
               sessions={sessions}
               activeSessionId={activeSessionId}
