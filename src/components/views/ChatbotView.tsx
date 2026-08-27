@@ -1062,8 +1062,8 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           </div>
 
           {/* Floating Sticky Bottom Composer Dock */}
-          <div className="sticky bottom-3 z-30 pt-3 pb-1 w-full bg-gradient-to-t from-[#05060A] via-[#05060A]/95 to-transparent backdrop-blur-md">
-            <div className="flex flex-col gap-2 w-full max-w-[88%] 2xl:max-w-[80%] mx-auto">
+          <div className="sticky bottom-6 lg:bottom-8 z-30 pb-4 w-full pointer-events-none">
+            <div className="flex flex-col gap-2 w-full max-w-[88%] 2xl:max-w-[80%] mx-auto pointer-events-auto">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-[#4F536E] uppercase font-bold tracking-wider">
                   Deep Research Prompt Starters:
@@ -1075,7 +1075,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                     key={tpl.label}
                     onClick={() => handleSend(tpl.prompt)}
                     disabled={isGenerating}
-                    className="px-3.5 py-1.5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] text-[11px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40 shadow-sm hover:bg-white/[0.05]"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#0A0C18]/90 border border-white/15 hover:border-[#00FF41]/50 text-[#9499B3] hover:text-[#00FF41] text-[11px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40 shadow-lg hover:bg-[#0E1222]"
                   >
                     {tpl.label}
                   </button>
@@ -1083,7 +1083,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
               </div>
 
               {/* Interactive Compositor */}
-              <div className="relative mt-1 bg-[#080A16]/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.85)] focus-within:border-[#00FF41]/50 focus-within:shadow-[0_0_30px_rgba(0,255,65,0.15)] transition-all flex flex-col w-full">
+              <div className="relative mt-1 bg-[#080A16]/98 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.95)] focus-within:border-[#00FF41]/60 focus-within:shadow-[0_0_35px_rgba(0,255,65,0.2)] transition-all flex flex-col w-full">
               
               {/* Slash Command Popover */}
               {showSlashMenu && (
