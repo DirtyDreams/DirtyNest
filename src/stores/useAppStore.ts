@@ -2,6 +2,14 @@ import { create } from "zustand";
 import { NavViewId } from "@/components/layout/Sidebar";
 import { cyberAudio } from "@/lib/cyberAudio";
 
+export interface FxConfig {
+  backgroundFx: "particles" | "none";
+  particleCount: number;
+  particleSpeed: number;
+  particleInteraction: "repulse" | "attract" | "none";
+  particleColorMode: "adaptive" | "green" | "cyan" | "purple";
+}
+
 interface AppState {
   // Navigation
   activeView: NavViewId;
@@ -23,6 +31,11 @@ interface AppState {
   setMobileDrawerOpen: (open: boolean) => void;
   isMobileDeckSheetOpen: boolean;
   setMobileDeckSheetOpen: (open: boolean) => void;
+
+  // FX Canvas & Background State
+  fxConfig: FxConfig;
+  setFxConfig: (config: Partial<FxConfig>) => void;
+  toggleBackgroundFx: () => void;
 
   // Global Audio / Drone / Soundboard
   isDronePlaying: boolean;
@@ -76,6 +89,25 @@ export const useAppStore = create<AppState>((set) => ({
 
   isMobileDeckSheetOpen: false,
   setMobileDeckSheetOpen: (open) => set({ isMobileDeckSheetOpen: open }),
+
+  fxConfig: {
+    backgroundFx: "particles",
+    particleCount: 65,
+    particleSpeed: 1.0,
+    particleInteraction: "repulse",
+    particleColorMode: "adaptive",
+  },
+  setFxConfig: (config) =>
+    set((state) => ({
+      fxConfig: { ...state.fxConfig, ...config },
+    })),
+  toggleBackgroundFx: () =>
+    set((state) => ({
+      fxConfig: {
+        ...state.fxConfig,
+        backgroundFx: state.fxConfig.backgroundFx === "particles" ? "none" : "particles",
+      },
+    })),
 
   isDronePlaying: false,
   setDronePlaying: (playing) => set({ isDronePlaying: playing }),

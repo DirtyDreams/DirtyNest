@@ -19,6 +19,7 @@ import {
   Zap,
   Sliders,
   Sparkles,
+  Atom,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +38,7 @@ export type RightPanelTab = "all" | "focus" | "tasks" | "notes" | "warp";
 export default function RightPanel() {
   const [deckMode, setDeckMode] = useState<"context" | "classic">("context");
   const [activeTab, setActiveTab] = useState<RightPanelTab>("all");
-  const { isRightPanelOpen, toggleRightPanel, setRightPanelOpen, activeView } = useAppStore();
+  const { isRightPanelOpen, toggleRightPanel, setRightPanelOpen, activeView, fxConfig, toggleBackgroundFx } = useAppStore();
 
   const tabs = [
     { id: "all", label: "DECK", icon: Layers, tooltip: "All Tactical Widgets" },
@@ -198,6 +199,31 @@ export default function RightPanel() {
             <span>CLASSIC</span>
           </button>
         </div>
+
+        {/* Quick FX Canvas Toggle Button */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                cyberAudio.play("toggle");
+                toggleBackgroundFx();
+              }}
+              className={cn(
+                "h-8 w-8 rounded-xl border transition-all shrink-0",
+                fxConfig.backgroundFx === "particles"
+                  ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                  : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-white"
+              )}
+            >
+              <Atom size={14} className={fxConfig.backgroundFx === "particles" ? "animate-spin" : ""} style={{ animationDuration: "6s" }} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="bg-[#090B14] border-white/10 text-xs font-mono text-[#F1F3F9]">
+            {fxConfig.backgroundFx === "particles" ? "Disable Background Particles FX" : "Enable Background Particles FX"}
+          </TooltipContent>
+        </Tooltip>
 
         {/* Collapse Button */}
         <Button

@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Terminal, Shield, Activity, Radio, Cpu, Headphones, Keyboard, Sparkles } from "lucide-react";
+import { Terminal, Shield, Activity, Radio, Cpu, Headphones, Keyboard, Sparkles, Sliders, Atom } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
-import { Marquee } from "@/components/magicui/Marquee";
+import { Marquee } from "@/components/ui/animated/marquee";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 
 export default function StatusBar({
   onToggleTerminal,
@@ -13,10 +17,11 @@ export default function StatusBar({
   onToggleTerminal: () => void;
   isTerminalOpen: boolean;
 }) {
-  const { isRightPanelOpen, isDronePlaying, toggleAudioMixer } = useAppStore();
+  const { isRightPanelOpen, isDronePlaying, toggleAudioMixer, fxConfig, setFxConfig, toggleBackgroundFx } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [fps, setFps] = useState(60);
   const [latency, setLatency] = useState(14);
+  const [isFxPopoverOpen, setIsFxPopoverOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -77,6 +82,141 @@ export default function StatusBar({
 
       {/* Right: Quick actions */}
       <div className="flex items-center gap-3">
+        {/* FX Canvas Controller Popover */}
+        <Popover open={isFxPopoverOpen} onOpenChange={setIsFxPopoverOpen}>
+          <PopoverTrigger asChild>
+            <button
+              onClick={() => cyberAudio.play("click")}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded cursor-pointer transition-all ${
+                fxConfig.backgroundFx !== "none"
+                  ? "bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)] font-bold"
+                  : "hover:bg-white/5 text-[#9499B3]"
+              }`}
+              title="Interactive Canvas FX & Particle Mesh Controller"
+            >
+              <Atom size={11} className={fxConfig.backgroundFx !== "none" ? "animate-spin text-[#00FF41]" : ""} style={{ animationDuration: "8s" }} />
+              <span>FX: {fxConfig.backgroundFx === "none" ? "OFF" : "PARTICLES"}</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="top" align="end" className="w-72 bg-[#090A14] border-white/10 p-3 shadow-2xl backdrop-blur-2xl">
+            <div className="flex flex-col gap-3 font-mono">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#F1F3F9]">
+                  <Atom size={13} className="text-[#00FF41]" />
+                  <span>PARTICLE MESH FX</span>
+                </div>
+                <Badge
+                  variant={fxConfig.backgroundFx === "particles" ? "default" : "secondary"}
+                  className={fxConfig.backgroundFx === "particles" ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/30" : ""}
+                >
+                  {fxConfig.backgroundFx === "particles" ? "ACTIVE" : "DISABLED"}
+                </Badge>
+              </div>
+
+              {/* Master FX Toggle */}
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-[#9499B3]">Background Canvas</span>
+                <Switch
+                  checked={fxConfig.backgroundFx === "particles"}
+                  onCheckedChange={() => {
+                    cyberAudio.play("toggle");
+                    toggleBackgroundFx();
+                  }}
+                />
+              </div>
+
+              {/* Color Mode Selector */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] text-[#4F536E] font-bold uppercase">Color Spectrum</span>
+                <div className="grid grid-cols-4 gap-1">
+                  {[
+                    { id: "adaptive", label: "Auto", color: "text-[#00FF41]" },
+                    { id: "green", label: "Green", color: "text-[#00FF41]" },
+                    { id: "cyan", label: "Cyan", color: "text-[#00F0FF]" },
+                    { id: "purple", label: "Purple", color: "text-[#BF40FF]" },
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        cyberAudio.play("click");
+                        setFxConfig({ particleColorMode: m.id as any });
+                      }}
+                      className={`px-1.5 py-1 rounded text-[9px] font-bold border transition-all cursor-pointer ${
+                        fxConfig.particleColorMode === m.id
+                          ? "bg-white/10 border-[#00FF41] text-white"
+                          : "bg-black/40 border-white/5 text-[#9499B3] hover:text-white"
+                      }`}
+                    >
+                      <span className={m.color}>{m.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Interaction Mode */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] text-[#4F536E] font-bold uppercase">Mouse Interaction</span>
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { id: "repulse", label: "Repulse" },
+                    { id: "attract", label: "Attract" },
+                    { id: "none", label: "Off" },
+                  ].map((im) => (
+                    <button
+                      key={im.id}
+                      onClick={() => {
+                        cyberAudio.play("click");
+                        setFxConfig({ particleInteraction: im.id as any });
+                      }}
+                      className={`px-1.5 py-1 rounded text-[9px] font-bold border transition-all cursor-pointer ${
+                        fxConfig.particleInteraction === im.id
+                          ? "bg-[#00FF41]/20 border-[#00FF41] text-[#00FF41]"
+                          : "bg-black/40 border-white/5 text-[#9499B3] hover:text-white"
+                      }`}
+                    >
+                      {im.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Particle Count Slider */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-[#9499B3]">Particle Count</span>
+                  <span className="text-[#00FF41] font-bold">{fxConfig.particleCount}</span>
+                </div>
+                <input
+                  type="range"
+                  min={25}
+                  max={120}
+                  step={5}
+                  value={fxConfig.particleCount}
+                  onChange={(e) => setFxConfig({ particleCount: Number(e.target.value) })}
+                  className="accent-[#00FF41] cursor-pointer h-1.5 bg-black rounded-lg"
+                />
+              </div>
+
+              {/* Speed Slider */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-[#9499B3]">Drift Speed</span>
+                  <span className="text-[#00F0FF] font-bold">{fxConfig.particleSpeed}x</span>
+                </div>
+                <input
+                  type="range"
+                  min={0.3}
+                  max={2.0}
+                  step={0.1}
+                  value={fxConfig.particleSpeed}
+                  onChange={(e) => setFxConfig({ particleSpeed: Number(e.target.value) })}
+                  className="accent-[#00F0FF] cursor-pointer h-1.5 bg-black rounded-lg"
+                />
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
         {/* Audio Ambient Pill */}
         <button
           onClick={() => {

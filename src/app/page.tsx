@@ -47,6 +47,7 @@ import HeaderSubsystemsHud from "@/components/common/HeaderSubsystemsHud";
 import TerminalDock from "@/components/terminal/TerminalDock";
 import CyberWindowManager from "@/components/desktop/CyberWindowManager";
 import KeyboardHotkeyStudioModal from "@/components/views/tools/KeyboardHotkeyStudioModal";
+import { ParticleMeshBackground } from "@/components/ui/animated/ParticleMeshBackground";
 import dynamic from "next/dynamic";
 import ViewLoadingSkeleton from "@/components/common/ViewLoadingSkeleton";
 import { loadWidgetLayout, saveWidgetLayout, type WidgetLayoutItem, DEFAULT_LAYOUT, LAYOUT_PRESETS, ALL_WIDGETS_METADATA } from "@/lib/widgetLayout";
@@ -499,7 +500,10 @@ export default function Home() {
       <TerminalDock isOpen={isTerminalOpen} onClose={() => setTerminalOpen(false)} />
 
       {/* Main Responsive Grid Layout */}
-      <div className="h-[100dvh] md:h-auto md:min-h-screen bg-[#07070B] text-[#F1F3F9] font-sans antialiased selection:bg-[#00FF41]/20 selection:text-[#00FF41] flex flex-col md:block overflow-hidden md:overflow-visible">
+      <div className="h-[100dvh] md:h-auto md:min-h-screen bg-[#07070B] text-[#F1F3F9] font-sans antialiased selection:bg-[#00FF41]/20 selection:text-[#00FF41] flex flex-col md:block overflow-hidden md:overflow-visible relative">
+        {/* Interactive Cyber Particle Mesh Canvas Background */}
+        <ParticleMeshBackground />
+
         {/* Top Operational Breadcrumb HUD Bar (Persistent Global Header) */}
         <header
           className={`sticky md:fixed top-0 left-0 right-0 md:left-[68px] ${isRightPanelOpen ? "xl:right-[340px]" : "xl:right-[52px]"} z-40 shrink-0 flex flex-col gap-2 px-3 sm:px-5 pt-safe pt-2 sm:pt-3 pb-2 bg-[#07070B]/98 backdrop-blur-2xl border-b border-white/10 shadow-[0_4px_25px_rgba(0,0,0,0.85)] transition-all duration-300`}
