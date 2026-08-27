@@ -55,7 +55,7 @@ import { useToast } from "@/components/common/ToastProvider";
 import ArtifactsCanvas from "./chatbot/ArtifactsCanvas";
 import HermesMessageBlock from "./chatbot/HermesMessageBlock";
 import ChatbotSessionsDrawer, { HermesChatSession } from "./chatbot/ChatbotSessionsDrawer";
-import ChatbotSidebar from "./chatbot/ChatbotSidebar";
+import ChatbotSidebar, { ChatFolder } from "./chatbot/ChatbotSidebar";
 import PersonaStudioModal, { AgentPersona, AGENT_PERSONAS } from "./chatbot/PersonaStudioModal";
 
 export type ChatMode = "standard" | "reasoning" | "deep_research" | "code_interpreter";
@@ -146,7 +146,15 @@ export default function ChatbotView() {
     title: string;
   } | null>(null);
 
+  const INITIAL_FOLDERS: ChatFolder[] = [
+    { id: "f-dev", name: "Dev & Architecture", color: "#00F0FF" },
+    { id: "f-research", name: "Deep Research & arXiv", color: "#BF40FF" },
+    { id: "f-security", name: "SecOps & Audits", color: "#FF0055" },
+    { id: "f-general", name: "General Operations", color: "#00FF41" },
+  ];
+
   // Sessions History & Persona Studio States
+  const [folders, setFolders] = useState<ChatFolder[]>(INITIAL_FOLDERS);
   const [sessions, setSessions] = useState<HermesChatSession[]>([
     {
       id: "session-root",
@@ -158,6 +166,29 @@ export default function ChatbotView() {
       lastMessageSnippet: "Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator...",
       updatedAt: "Just now",
       isPinned: true,
+      folderId: "f-dev",
+    },
+    {
+      id: "session-sec",
+      title: "eBPF Zero-Trust Kernel Audit",
+      personaId: "secops-sentinel",
+      personaName: "SecOps",
+      model: "Nous-Hermes-3-70B",
+      messageCount: 4,
+      lastMessageSnippet: "Audit completed. Zero privilege escalations detected.",
+      updatedAt: "10m ago",
+      folderId: "f-security",
+    },
+    {
+      id: "session-res",
+      title: "Karpathy BPE Tokenizer Analysis",
+      personaId: "research-scientist",
+      personaName: "Researcher",
+      model: "Gemini-2.5-Pro",
+      messageCount: 8,
+      lastMessageSnippet: "arXiv synthesis completed with mathematical proofs.",
+      updatedAt: "1h ago",
+      folderId: "f-research",
     },
   ]);
   const [activeSessionId, setActiveSessionId] = useState<string>("session-root");
@@ -549,7 +580,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
     setShowSessionsDrawer(false);
   };
 
-  const handleCreateSession = () => {
+  const handleCreateSession = (folderId?: string) => {
     const newId = `session-${Date.now()}`;
     const newSession: HermesChatSession = {
       id: newId,
@@ -560,6 +591,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
       messageCount: 1,
       lastMessageSnippet: "Session initialized. Ready for operational directives.",
       updatedAt: "Just now",
+      folderId,
     };
     setSessions([newSession, ...sessions]);
     setActiveSessionId(newId);
@@ -571,6 +603,37 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
         timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
       },
     ]);
+  };
+
+  const handleTogglePinSession = (id: string) => {
+    setSessions(sessions.map((s) => (s.id === id ? { ...s, isPinned: !s.isPinned } : s)));
+  };
+
+  const handleMoveSessionToFolder = (sessionId: string, folderId?: string) => {
+    cyberAudio.play("click");
+    setSessions(sessions.map((s) => (s.id === sessionId ? { ...s, folderId } : s)));
+  };
+
+  const handleCreateFolder = (name: string, color: string) => {
+    const newFolder: ChatFolder = {
+      id: `f-${Date.now()}`,
+      name,
+      color,
+    };
+    setFolders([...folders, newFolder]);
+  };
+
+  const handleRenameFolder = (id: string, newName: string) => {
+    setFolders(folders.map((f) => (f.id === id ? { ...f, name: newName } : f)));
+  };
+
+  const handleDeleteFolder = (id: string) => {
+    setFolders(folders.filter((f) => f.id !== id));
+    setSessions(sessions.map((s) => (s.folderId === id ? { ...s, folderId: undefined } : s)));
+  };
+
+  const handleToggleFolderCollapse = (id: string) => {
+    setFolders(folders.map((f) => (f.id === id ? { ...f, isCollapsed: !f.isCollapsed } : f)));
   };
 
   const handleBranchSession = (sourceSessionId: string) => {
@@ -940,7 +1003,14 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
               onBranchSession={handleBranchSession}
               onDeleteSession={handleDeleteSession}
               onRenameSession={handleRenameSession}
+              onTogglePinSession={handleTogglePinSession}
+              onMoveSessionToFolder={handleMoveSessionToFolder}
               onExportSessionMarkdown={handleExportSessionMarkdown}
+              folders={folders}
+              onCreateFolder={handleCreateFolder}
+              onRenameFolder={handleRenameFolder}
+              onDeleteFolder={handleDeleteFolder}
+              onToggleFolderCollapse={handleToggleFolderCollapse}
               activePersona={activePersona}
               onOpenPersonaStudio={() => setShowPersonaModal(true)}
             />

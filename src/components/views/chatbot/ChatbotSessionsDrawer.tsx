@@ -30,6 +30,7 @@ export interface HermesChatSession {
   lastMessageSnippet: string;
   updatedAt: string;
   isPinned?: boolean;
+  folderId?: string;
 }
 
 interface Props {
