@@ -939,171 +939,24 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           )}
 
           {/* Scrollable Messages Stream */}
-          <div className="flex flex-col gap-4 overflow-y-auto flex-1 min-h-[320px] max-h-[580px] pr-2">
+          <div className="flex flex-col gap-3 overflow-y-auto flex-1 min-h-[380px] max-h-[620px] pr-2 max-w-4xl mx-auto w-full">
             {messages.map((msg) => {
-              const isUser = msg.sender === "user";
-              const isSystem = msg.sender === "system";
-
-              if (isSystem) {
+              if (msg.sender === "system") {
                 return (
-                  <div key={msg.id} className="p-2.5 rounded-xl bg-black/50 border border-white/5 text-center text-[11px] text-[#4F536E] font-mono tracking-wider">
+                  <div key={msg.id} className="p-2 rounded-full bg-white/[0.02] border border-white/10 text-center text-[10px] text-[#9499B3] font-mono tracking-wider mx-auto max-w-lg my-1">
                     {msg.text}
                   </div>
                 );
               }
 
-              if (!isUser && (msg.text.includes("<thought>") || msg.text.includes("<tool_call>") || msg.text.includes("<tool_response>"))) {
-                return (
-                  <div key={msg.id} className="w-full">
-                    <HermesMessageBlock
-                      content={msg.text}
-                      sender="bot"
-                      timestamp={msg.timestamp}
-                      model={msg.model}
-                    />
-                  </div>
-                );
-              }
-
               return (
-                <div key={msg.id} className={`flex flex-col gap-2 ${isUser ? "items-end" : "items-start"}`}>
-                  {/* Sender Header */}
-                  <div className="flex items-center gap-2 text-[10px] text-[#4F536E]">
-                    <span>{isUser ? "OPERATOR // DIRECTIVE" : msg.model || "HERMES AI"}</span>
-                    <span>•</span>
-                    <span>{msg.timestamp}</span>
-                    {msg.tokens && (
-                      <span className="px-1.5 py-0.2 rounded bg-white/5 text-[#00FF41]">
-                        {msg.tokens} tok
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Message Bubble */}
-                  <div
-                    className={`p-4 rounded-2xl max-w-3xl leading-relaxed text-xs ${
-                      isUser
-                        ? "bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#F1F3F9] shadow-[0_0_15px_rgba(0,255,65,0.08)]"
-                        : "bg-black/60 border border-white/10 text-[#F1F3F9] shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
-                    }`}
-                  >
-                    {/* Collapsible Extended Thinking Trace */}
-                    {msg.thinkingTrace && (
-                      <div className="mb-3 pb-3 border-b border-white/10 flex flex-col gap-1.5">
-                        <button
-                          onClick={() => toggleThinkingExpand(msg.id)}
-                          className="flex items-center justify-between w-full text-[11px] text-[#BF40FF] font-bold cursor-pointer hover:underline"
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <BrainCircuitIcon size={13} className="text-[#BF40FF]" />
-                            <span>
-                              {expandedThinkingIds[msg.id] ? "Hide Thinking Process" : `Thought for ${msg.thinkingTimeSec || 4.2}s`}
-                            </span>
-                          </div>
-                          {expandedThinkingIds[msg.id] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        </button>
-
-                        {expandedThinkingIds[msg.id] && (
-                          <pre className="p-3 bg-black/80 rounded-xl text-[11px] text-[#9499B3] font-mono whitespace-pre-wrap leading-relaxed border border-white/5 animate-fade-in">
-                            {msg.thinkingTrace}
-                          </pre>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Live Deep Research Multi-Phase Progress Tree */}
-                    {msg.researchData && (
-                      <div className="mb-4 p-3.5 rounded-xl bg-black/70 border border-[#00FF41]/30 flex flex-col gap-3">
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-2">
-                            <Search size={14} className="text-[#00FF41]" />
-                            <span className="font-black text-[#F1F3F9]">DEEP RESEARCH EXECUTION PIPELINE</span>
-                          </div>
-                          <span
-                            className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
-                              msg.researchData.status === "completed"
-                                ? "bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/40"
-                                : "bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/40 animate-pulse"
-                            }`}
-                          >
-                            {msg.researchData.status.toUpperCase()}
-                          </span>
-                        </div>
-
-                        {/* Current Active Step */}
-                        <div className="p-2.5 rounded-lg bg-black/90 border border-white/5 flex items-center gap-2 text-xs text-[#00FF41]">
-                          <span className="w-2 h-2 rounded-full bg-[#00FF41] animate-ping" />
-                          <span>{msg.researchData.activeStepText}</span>
-                        </div>
-
-                        {/* Sub-Queries Planned */}
-                        {msg.researchData.subQueries.length > 0 && (
-                          <div className="flex flex-col gap-1 text-[11px]">
-                            <span className="text-[10px] text-[#4F536E] uppercase font-bold">Generated Sub-Query Axes:</span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                              {msg.researchData.subQueries.map((q, idx) => (
-                                <div key={idx} className="p-1.5 rounded bg-black/40 border border-white/5 text-[#9499B3] text-[10px] truncate">
-                                  #{idx + 1}: {q}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Discovered Citations Pills */}
-                        {msg.researchData.crawledSources.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
-                            {msg.researchData.crawledSources.map((src, idx) => (
-                              <span
-                                key={idx}
-                                className="flex items-center gap-1 px-2 py-1 rounded bg-[#00F0FF]/10 text-[#00F0FF] text-[10px] border border-[#00F0FF]/30 font-mono"
-                              >
-                                <span>{src.sourceType.toUpperCase()}</span>
-                                <span className="text-[#9499B3]">· {src.title.slice(0, 24)}...</span>
-                                <strong className="text-[#00FF41]">({src.relevanceScore}%)</strong>
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Main Markdown Text Output */}
-                    <div className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-[#F1F3F9]">
-                      {msg.text}
-                    </div>
-
-                    {/* Action Bar for AI message */}
-                    {!isUser && (
-                      <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-white/5 text-[10px] text-[#4F536E]">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => copyMessage(msg.text, msg.id)}
-                            className="flex items-center gap-1 hover:text-[#00FF41] cursor-pointer"
-                          >
-                            {copiedId === msg.id ? <Check size={12} /> : <Copy size={12} />}
-                            <span>{copiedId === msg.id ? "COPIED" : "COPY"}</span>
-                          </button>
-
-                          {msg.mode === "deep_research" && (
-                            <button
-                              onClick={() => handleSaveToObsidian(msg)}
-                              className="flex items-center gap-1 hover:text-[#00F0FF] cursor-pointer"
-                            >
-                              <Database size={12} />
-                              <span>SAVE TO OBSIDIAN</span>
-                            </button>
-                          )}
-                        </div>
-
-                        {msg.citations && (
-                          <span className="text-[#00FF41] font-bold">
-                            {msg.citations.length} VERIFIED CITATIONS
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                <div key={msg.id} className="w-full">
+                  <HermesMessageBlock
+                    content={msg.text}
+                    sender={msg.sender === "user" ? "user" : "bot"}
+                    timestamp={msg.timestamp}
+                    model={msg.model}
+                  />
                 </div>
               );
             })}
@@ -1111,15 +964,19 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           </div>
 
           {/* Prompt Templates Quick Carousel */}
-          <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
-            <span className="text-[10px] text-[#4F536E] uppercase font-bold">Deep Research Prompt Starters:</span>
+          <div className="flex flex-col gap-2 pt-2 border-t border-white/5 max-w-4xl mx-auto w-full">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-[#4F536E] uppercase font-bold tracking-wider">
+                Deep Research Prompt Starters:
+              </span>
+            </div>
             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
               {DEEP_RESEARCH_TEMPLATES.map((tpl) => (
                 <button
                   key={tpl.label}
                   onClick={() => handleSend(tpl.prompt)}
                   disabled={isGenerating}
-                  className="px-3 py-1.5 rounded-xl bg-black/40 border border-white/5 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] text-[11px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40"
+                  className="px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] text-[11px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40 shadow-sm hover:bg-white/[0.05]"
                 >
                   {tpl.label}
                 </button>
@@ -1127,7 +984,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
             </div>
 
             {/* Interactive Compositor */}
-            <div className="relative mt-1 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl focus-within:border-[#00FF41]/40 focus-within:shadow-[0_0_20px_rgba(0,255,65,0.1)] transition-all flex flex-col">
+            <div className="relative mt-1 bg-[#080A16]/90 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl focus-within:border-[#00FF41]/50 focus-within:shadow-[0_0_25px_rgba(0,255,65,0.12)] transition-all flex flex-col">
               
               {/* Slash Command Popover */}
               {showSlashMenu && (
