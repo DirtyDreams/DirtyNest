@@ -918,7 +918,8 @@ export default function Home() {
 
           {/* Central Tactical Workspace */}
           <main className={`flex-1 overflow-y-auto md:overflow-visible min-w-0 max-w-full ml-0 md:ml-[68px] ${isRightPanelOpen ? "xl:mr-[340px]" : "xl:mr-[52px]"} px-3 sm:px-5 py-3 md:pt-[112px] md:sm:pt-[118px] pb-24 md:pb-40 flex flex-col transition-all duration-300`}>
-            {/* ACTIVE VIEW RENDERING WITH ERROR BOUNDARIES & PROTECTED ACCESS GATES */}
+            {/* ACTIVE VIEW RENDERING WITH SMOOTH VIEW TRANSITION, ERROR BOUNDARIES & ACCESS GATES */}
+            <div key={activeView} className="animate-view-enter w-full flex flex-col flex-1">
           {activeView === "dashboard" && (
             <ProtectedAccessGate minClearance={1} viewName="Overview Dashboard">
               <ErrorBoundary fallbackTitle="DASHBOARD WIDGET GRID ERROR">
@@ -1277,6 +1278,7 @@ export default function Home() {
               </ErrorBoundary>
             </ProtectedAccessGate>
           )}
+            </div>
         </main>
 
         {/* Right Tactical Sidebar with Tabbed Focus Deck */}

@@ -263,7 +263,7 @@ export default function DashboardCustomizeModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-4xl cyber-card bg-[#05060A] border border-[#00FF41]/40 rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.9)] flex flex-col max-h-[90vh]"
+        className="w-full max-w-4xl cyber-card bg-[#05060A] border border-[#00FF41]/40 rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.9)] flex flex-col max-h-[90vh] animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

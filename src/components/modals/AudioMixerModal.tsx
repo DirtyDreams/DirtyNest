@@ -56,7 +56,7 @@ export default function AudioMixerModal({ isOpen, onClose }: AudioMixerModalProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in font-mono">
-      <div className="cyber-card p-6 w-full max-w-lg relative flex flex-col gap-5 border border-white/10 shadow-[0_0_30px_rgba(0,255,65,0.15)]">
+      <div className="cyber-card p-6 w-full max-w-lg relative flex flex-col gap-5 border border-white/10 shadow-[0_0_30px_rgba(0,255,65,0.15)] animate-modal-pop">
         {/* HUD Corners */}
         <div className="hud-corner hud-corner-tl" />
         <div className="hud-corner hud-corner-tr" />

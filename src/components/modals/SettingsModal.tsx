@@ -151,7 +151,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[90vh] flex flex-col cyber-card overflow-hidden animate-fade-in shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)]"
+        className="w-full max-w-2xl max-h-[90vh] flex flex-col cyber-card overflow-hidden animate-modal-pop shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)]"
         style={{
           border: "1px solid rgba(0, 255, 65, 0.3)",
           background: "rgba(11, 12, 20, 0.96)",

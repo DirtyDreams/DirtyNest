@@ -213,7 +213,7 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-3xl max-h-[92vh] flex flex-col cyber-card p-4 sm:p-6 gap-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.95)] border border-[#00FF41]/40 overflow-hidden"
+        className="w-full max-w-3xl max-h-[92vh] flex flex-col cyber-card p-4 sm:p-6 gap-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.95)] border border-[#00FF41]/40 overflow-hidden animate-modal-pop"
         style={{ background: "rgba(10, 11, 20, 0.98)" }}
         onClick={(e) => e.stopPropagation()}
       >

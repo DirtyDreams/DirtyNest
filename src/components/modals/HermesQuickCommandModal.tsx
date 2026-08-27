@@ -126,7 +126,7 @@ export default function HermesQuickCommandModal({
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/80 backdrop-blur-md animate-fade-in font-mono select-none">
       <div
-        className="w-full max-w-2xl bg-[#07070B] border border-[#00FF41]/40 rounded-2xl p-5 shadow-[0_0_50px_rgba(0,255,65,0.2)] flex flex-col gap-4"
+        className="w-full max-w-2xl bg-[#07070B] border border-[#00FF41]/40 rounded-2xl p-5 shadow-[0_0_50px_rgba(0,255,65,0.2)] flex flex-col gap-4 animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}

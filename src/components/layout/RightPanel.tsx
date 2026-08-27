@@ -219,11 +219,11 @@ export default function RightPanel() {
         </div>
       )}
 
-      {/* Widget Body Container */}
-      <div className="flex flex-col gap-3 w-full pb-24 font-mono">
+      {/* Widget Body Container with Smooth Transition */}
+      <div key={`${deckMode}-${activeTab}-${activeView}`} className="flex flex-col gap-3 w-full pb-24 font-mono animate-view-enter">
         {/* CONTEXTUAL DECK ROUTING */}
         {deckMode === "context" && (
-          <div className="space-y-3 animate-fade-in w-full">
+          <div className="space-y-3 w-full">
             {/* View specific header badge */}
             <div className="p-2 px-3 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between text-[10px]">
               <span className="text-[#4F536E] uppercase font-bold">Active Subsystem:</span>

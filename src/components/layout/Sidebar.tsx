@@ -150,7 +150,7 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
               aria-label={`Navigate to ${item.label}`}
               aria-current={isActive ? "page" : undefined}
               onClick={() => handleNavClick(item)}
-              className="relative flex items-center gap-3.5 px-3 py-2 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00FF41] focus:outline-none"
+              className="relative flex items-center gap-3.5 px-3 py-2 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00FF41] focus:outline-none btn-spring"
               style={{
                 background: isActive ? "rgba(0,255,65,0.09)" : "transparent",
                 color: isActive ? "#00FF41" : "#9499B3",
@@ -174,16 +174,16 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
             >
               <Icon
                 size={18}
-                className="shrink-0 transition-transform group-hover/btn:scale-110"
+                className="shrink-0 transition-transform duration-200 group-hover/btn:scale-115"
                 style={{
                   color: isActive ? "#00FF41" : undefined,
                   filter: isActive
                     ? "drop-shadow(0 0 6px rgba(0,255,65,0.6))"
-                    : "none",
+                    : undefined,
                 }}
               />
               <span
-                className="text-xs font-medium whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-1"
+                className="text-xs font-semibold whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-1"
                 style={{
                   fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
                 }}
@@ -196,6 +196,7 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
                 {item.tag}
               </span>
 
+              {/* Active Glow Pill Indicator */}
               {isActive && (
                 <div
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r"
@@ -227,7 +228,7 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
               aria-label={`Open telemetry view ${item.label}`}
               aria-current={isActive ? "page" : undefined}
               onClick={() => handleNavClick(item)}
-              className="relative flex items-center gap-3.5 px-3 py-1.5 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00F0FF] focus:outline-none"
+              className="relative flex items-center gap-3.5 px-3 py-1.5 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00F0FF] focus:outline-none btn-spring"
               style={{
                 background: isActive ? "rgba(0,240,255,0.08)" : "transparent",
                 color: isActive ? "#00F0FF" : "#9499B3",
