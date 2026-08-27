@@ -284,7 +284,7 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
         >
           <Settings size={17} />
           <span className="text-xs font-mono font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">
-            CONFIG
+            SETTINGS
           </span>
         </button>
       </div>
