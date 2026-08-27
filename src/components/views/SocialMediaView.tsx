@@ -14,16 +14,22 @@ import {
   Activity,
   Rss,
   Flame,
+  CalendarDays,
+  Repeat,
 } from "lucide-react";
 import MultiPlatformComposer, { SocialPlatform } from "./social_media/MultiPlatformComposer";
 import HermesAiCopywriter from "./social_media/HermesAiCopywriter";
 import SocialScheduledQueue, { ScheduledPost, INITIAL_SCHEDULE } from "./social_media/SocialScheduledQueue";
 import EngagementRadar from "./social_media/EngagementRadar";
+import SocialContentCalendar from "./social_media/SocialContentCalendar";
+import ThreadHookArchitect from "./social_media/ThreadHookArchitect";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function SocialMediaView() {
   const [posts, setPosts] = useState<ScheduledPost[]>(INITIAL_SCHEDULE);
-  const [activeSubTab, setActiveSubTab] = useState<"composer" | "copywriter" | "queue" | "radar">("composer");
+  const [activeSubTab, setActiveSubTab] = useState<
+    "composer" | "calendar" | "thread" | "copywriter" | "queue" | "radar"
+  >("composer");
   const [injectedText, setInjectedText] = useState<string | null>(null);
 
   const handleSchedulePost = (newPost: { platform: SocialPlatform; text: string; hasMedia: boolean }) => {
@@ -117,7 +123,9 @@ export default function SocialMediaView() {
       {/* Sub-Navigation Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {[
-          { id: "composer" as const, label: "Omnichannel Composer & Live Simulators", icon: Send },
+          { id: "composer" as const, label: "Omnichannel Composer", icon: Send },
+          { id: "calendar" as const, label: "Visual Content Calendar", icon: CalendarDays },
+          { id: "thread" as const, label: "Viral Thread Architect", icon: Repeat },
           { id: "copywriter" as const, label: "Hermes Viral Copywriter", icon: Sparkles },
           { id: "queue" as const, label: "Scheduled Dispatch Queue", icon: Calendar },
           { id: "radar" as const, label: "Audience & Engagement Radar", icon: TrendingUp },
@@ -135,7 +143,7 @@ export default function SocialMediaView() {
               }}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                 isActive
-                  ? "bg-[#00F0FF] text-black shadow-[0_0_12px_rgba(0,240,255,0.3)]"
+                  ? "bg-[#00F0FF] text-black shadow-[0_0_12px_rgba(0,240,255,0.3)] font-black"
                   : "bg-white/5 text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/10"
               }`}
             >
@@ -150,6 +158,18 @@ export default function SocialMediaView() {
       {activeSubTab === "composer" && (
         <div className="animate-fade-in">
           <MultiPlatformComposer onSchedulePost={handleSchedulePost} />
+        </div>
+      )}
+
+      {activeSubTab === "calendar" && (
+        <div className="animate-fade-in">
+          <SocialContentCalendar />
+        </div>
+      )}
+
+      {activeSubTab === "thread" && (
+        <div className="animate-fade-in">
+          <ThreadHookArchitect />
         </div>
       )}
 
