@@ -32,6 +32,8 @@ import {
   Filter,
   EyeOff,
   Focus,
+  MousePointer,
+  Keyboard,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -191,17 +193,18 @@ export default function KnowledgeGraphCanvas({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mountRef = useRef<HTMLDivElement | null>(null);
 
-  // High-Level Configuration
+  // Configuration States
   const [preset, setPreset] = useState<ConstellationPreset>("LIVE_VAULT");
   const [lodMode, setLodMode] = useState<LabelLodMode>("ADAPTIVE");
-  const [showSectorHalos, setShowSectorHalos] = useState(true);
   const [isAutoRotating, setIsAutoRotating] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Interaction States
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [cursorStyle, setCursorStyle] = useState<"grab" | "grabbing" | "pointer">("grab");
 
   // Visual Tuning State
   const [tuning, setTuning] = useState({
@@ -209,7 +212,6 @@ export default function KnowledgeGraphCanvas({
     starfieldDensity: 2400,
     laserBrightness: 1.2,
     particleSpeed: 1.1,
-    haloOpacity: 0.12,
   });
 
   // Current Active Nodes based on Preset
@@ -235,26 +237,27 @@ export default function KnowledgeGraphCanvas({
     radius: number;
     links: string[];
   }[]>([]);
-  const sectorHalosRef = useRef<THREE.Group[]>([]);
   const lineMeshRef = useRef<THREE.LineSegments | null>(null);
-  const activeLineMeshRef = useRef<THREE.LineSegments | null>(null);
   const particlesSystemRef = useRef<THREE.Points | null>(null);
   const starfieldRef = useRef<THREE.Points | null>(null);
 
-  // Camera Orbit State
+  // Smooth Orbit State
   const orbitState = useRef({
     isMouseDown: false,
     prevMouseX: 0,
     prevMouseY: 0,
+    touchDist: 0,
     rotX: 0.25,
     rotY: 0.45,
+    targetRotX: 0.25,
+    targetRotY: 0.45,
     distance: 520,
     targetDistance: 520,
     targetLookAt: new THREE.Vector3(0, 0, 0),
     currentLookAt: new THREE.Vector3(0, 0, 0),
   });
 
-  // Ref tracking current active selection for 60FPS loop
+  // Ref tracking selection for the render loop
   const activeSelectionRef = useRef<{ selectedId: string | null; hoveredId: string | null }>({
     selectedId: selectedNodeId,
     hoveredId: hoveredNodeId,
@@ -264,7 +267,7 @@ export default function KnowledgeGraphCanvas({
     activeSelectionRef.current = { selectedId: selectedNodeId, hoveredId: hoveredNodeId };
   }, [selectedNodeId, hoveredNodeId]);
 
-  // --- THREE.JS INITIALIZATION ---
+  // --- THREE.JS INITIALIZATION WITH RESIZE OBSERVER ---
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
@@ -283,7 +286,7 @@ export default function KnowledgeGraphCanvas({
     cameraRef.current = camera;
 
     // 3. WebGL Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -293,7 +296,7 @@ export default function KnowledgeGraphCanvas({
     mount.innerHTML = "";
     mount.appendChild(renderer.domElement);
 
-    // 4. Lights
+    // 4. Lighting Suite
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
@@ -354,20 +357,22 @@ export default function KnowledgeGraphCanvas({
     scene.add(starfield);
     starfieldRef.current = starfield;
 
-    // Resize Handler
-    const handleResize = () => {
-      if (!mount || !renderer || !camera) return;
-      const w = mount.clientWidth;
-      const h = mount.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
+    // 6. Responsive Resize Observer on Mount Container
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width: w, height: h } = entry.contentRect;
+        if (w > 0 && h > 0) {
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        }
+      }
+    });
 
-    window.addEventListener("resize", handleResize);
+    resizeObserver.observe(mount);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
       renderer.dispose();
     };
   }, []);
@@ -380,7 +385,6 @@ export default function KnowledgeGraphCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return new THREE.Sprite();
 
-    // Background pill with cyberpunk glow border
     ctx.fillStyle = "rgba(4, 6, 12, 0.92)";
     ctx.strokeStyle = colorHex;
     ctx.lineWidth = isHub ? 4 : 2;
@@ -389,12 +393,10 @@ export default function KnowledgeGraphCanvas({
     ctx.fill();
     ctx.stroke();
 
-    // Category Tag
     ctx.font = "bold 20px monospace";
     ctx.fillStyle = colorHex;
     ctx.fillText(`[ ${category.toUpperCase()} ]`, 28, 40);
 
-    // Main Title (Smart wrapping)
     ctx.font = "bold 25px monospace";
     ctx.fillStyle = "#FFFFFF";
     const words = text.split(" ");
@@ -425,7 +427,7 @@ export default function KnowledgeGraphCanvas({
     return sprite;
   };
 
-  // --- POPULATE 3D SECTORS, NODES & SYNAPSE LASERS ---
+  // --- POPULATE 3D NODES & SYNAPSE LASERS WITH STABLE COORDINATES ---
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
@@ -433,19 +435,12 @@ export default function KnowledgeGraphCanvas({
     // Clean previous objects
     nodeObjectsRef.current.forEach((obj) => scene.remove(obj.mesh));
     nodeObjectsRef.current = [];
-    sectorHalosRef.current.forEach((g) => scene.remove(g));
-    sectorHalosRef.current = [];
     if (lineMeshRef.current) scene.remove(lineMeshRef.current);
-    if (activeLineMeshRef.current) scene.remove(activeLineMeshRef.current);
     if (particlesSystemRef.current) scene.remove(particlesSystemRef.current);
 
     const nodes = activeDataset;
 
-    // 1. Position Nodes Harmoniously grouped by category cluster
-    const nodePositions: { [id: string]: THREE.Vector3 } = {};
-    const nodeColorMap: { [id: string]: THREE.Color } = {};
-
-    // Group nodes by matching sector
+    // Group nodes by matching sector deterministically
     const sectorBuckets: { [secId: string]: GraphNode[] } = {};
     SECTORS.forEach((s) => (sectorBuckets[s.id] = []));
 
@@ -454,6 +449,9 @@ export default function KnowledgeGraphCanvas({
       if (!matchedSec) matchedSec = SECTORS[0];
       sectorBuckets[matchedSec.id].push(n);
     });
+
+    const nodePositions: { [id: string]: THREE.Vector3 } = {};
+    const nodeColorMap: { [id: string]: THREE.Color } = {};
 
     SECTORS.forEach((sec) => {
       const bucket = sectorBuckets[sec.id];
@@ -511,8 +509,8 @@ export default function KnowledgeGraphCanvas({
           opacity: 0.5,
         });
         const ringLine = new THREE.Line(ringGeo, ringMat);
-        ringLine.rotation.x = Math.random() * Math.PI;
-        ringLine.rotation.y = Math.random() * Math.PI;
+        ringLine.rotation.x = (i * 0.4) % Math.PI;
+        ringLine.rotation.y = (i * 0.7) % Math.PI;
         nodeGroup.add(ringLine);
 
         // 3D Billboard Sprite Label
@@ -534,7 +532,7 @@ export default function KnowledgeGraphCanvas({
       });
     });
 
-    // 3. Build 3D Laser Synapse Mesh
+    // Build 3D Laser Synapses
     const linePositions: number[] = [];
     const lineColors: number[] = [];
     const photonTraversals: { p1: THREE.Vector3; p2: THREE.Vector3; color: THREE.Color; progress: number; speed: number; srcId: string; tgtId: string }[] = [];
@@ -579,7 +577,7 @@ export default function KnowledgeGraphCanvas({
     scene.add(lineSegments);
     lineMeshRef.current = lineSegments;
 
-    // 4. Build 3D Travelling Photons
+    // Build 3D Travelling Photons
     const photonCount = photonTraversals.length;
     const photonGeo = new THREE.BufferGeometry();
     const photonPositions = new Float32Array(photonCount * 3);
@@ -606,9 +604,9 @@ export default function KnowledgeGraphCanvas({
     (photons as any).traversals = photonTraversals;
     scene.add(photons);
     particlesSystemRef.current = photons;
-  }, [activeDataset, tuning.haloOpacity]);
+  }, [activeDataset]);
 
-  // --- 60FPS ANIMATION LOOP & DYNAMIC LOD/FOCUS SOLVER ---
+  // --- 60FPS ANIMATION LOOP & PREDICTABLE INTERPOLATION ---
   useEffect(() => {
     let animId: number;
 
@@ -626,11 +624,13 @@ export default function KnowledgeGraphCanvas({
 
       // 1. Auto-rotation
       if (isAutoRotating && !orbit.isMouseDown) {
-        orbit.rotY += 0.0018 * tuning.autoRotateSpeed;
+        orbit.targetRotY += 0.0018 * tuning.autoRotateSpeed;
       }
 
-      // 2. Camera Interpolation
-      orbit.distance += (orbit.targetDistance - orbit.distance) * 0.1;
+      // 2. Smooth Damped Spherical Camera Interpolation
+      orbit.rotX += (orbit.targetRotX - orbit.rotX) * 0.12;
+      orbit.rotY += (orbit.targetRotY - orbit.rotY) * 0.12;
+      orbit.distance += (orbit.targetDistance - orbit.distance) * 0.12;
       orbit.currentLookAt.lerp(orbit.targetLookAt, 0.08);
 
       camera.position.x =
@@ -648,7 +648,7 @@ export default function KnowledgeGraphCanvas({
         activeNodeObj.links.forEach((id) => neighborSet.add(id));
       }
 
-      // 5. Update Nodes, Gyroscopic Rings & Label LOD Density
+      // 4. Update Nodes, Gyroscopic Rings & Label LOD Density
       nodeObjectsRef.current.forEach((obj) => {
         obj.ring.rotation.x += 0.018;
         obj.ring.rotation.y += 0.014;
@@ -704,7 +704,7 @@ export default function KnowledgeGraphCanvas({
         }
       });
 
-      // 6. Update Travelling 3D Photons
+      // 5. Update Travelling 3D Photons
       if (particlesSystemRef.current) {
         const traversals = (particlesSystemRef.current as any).traversals;
         const posAttr = particlesSystemRef.current.geometry.attributes.position as THREE.BufferAttribute;
@@ -732,13 +732,14 @@ export default function KnowledgeGraphCanvas({
     animId = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(animId);
-  }, [isAutoRotating, tuning, lodMode, showSectorHalos]);
+  }, [isAutoRotating, tuning, lodMode]);
 
-  // --- MOUSE ORBIT CONTROLS & RAYCASTING ---
+  // --- MOUSE & TOUCH EVENT HANDLERS ---
   const handleMouseDown = (e: React.MouseEvent) => {
     orbitState.current.isMouseDown = true;
     orbitState.current.prevMouseX = e.clientX;
     orbitState.current.prevMouseY = e.clientY;
+    setCursorStyle("grabbing");
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -747,8 +748,8 @@ export default function KnowledgeGraphCanvas({
       const dx = e.clientX - orbit.prevMouseX;
       const dy = e.clientY - orbit.prevMouseY;
 
-      orbit.rotY -= dx * 0.0055;
-      orbit.rotX = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, orbit.rotX + dy * 0.0055));
+      orbit.targetRotY -= dx * 0.0055;
+      orbit.targetRotX = Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, orbit.targetRotX + dy * 0.0055));
 
       orbit.prevMouseX = e.clientX;
       orbit.prevMouseY = e.clientY;
@@ -773,14 +774,19 @@ export default function KnowledgeGraphCanvas({
 
     if (intersects.length > 0) {
       const hit = nodeObjectsRef.current.find((n) => n.sphere === intersects[0].object);
-      if (hit) setHoveredNodeId(hit.id);
+      if (hit) {
+        setHoveredNodeId(hit.id);
+        if (!orbit.isMouseDown) setCursorStyle("pointer");
+      }
     } else {
       setHoveredNodeId(null);
+      if (!orbit.isMouseDown) setCursorStyle("grab");
     }
   };
 
   const handleMouseUp = () => {
     orbitState.current.isMouseDown = false;
+    setCursorStyle(hoveredNodeId ? "pointer" : "grab");
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -814,12 +820,144 @@ export default function KnowledgeGraphCanvas({
         cyberAudio.play("click");
         onSelectNode(hit.id, false);
 
-        // Camera Fly-To target
+        // Smooth camera target transition
         orbitState.current.targetLookAt.copy(hit.mesh.position);
         orbitState.current.targetDistance = 220;
       }
+    } else {
+      // Click empty background to reset selection
+      if (selectedNodeId) {
+        onSelectNode("", false);
+      }
     }
   };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    const mount = mountRef.current;
+    const camera = cameraRef.current;
+    if (!mount || !camera) return;
+
+    const rect = mount.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+
+    const meshes = nodeObjectsRef.current.map((n) => n.sphere);
+    const intersects = raycaster.intersectObjects(meshes);
+
+    if (intersects.length > 0) {
+      const hit = nodeObjectsRef.current.find((n) => n.sphere === intersects[0].object);
+      if (hit) {
+        cyberAudio.play("chime");
+        onSelectNode(hit.id, true);
+        if (onOpenVaultEditor) onOpenVaultEditor(hit.id);
+      }
+    }
+  };
+
+  // Touch Support for Mobile / Tablets
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      orbitState.current.isMouseDown = true;
+      orbitState.current.prevMouseX = e.touches[0].clientX;
+      orbitState.current.prevMouseY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      orbitState.current.touchDist = Math.hypot(dx, dy);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1 && orbitState.current.isMouseDown) {
+      const dx = e.touches[0].clientX - orbitState.current.prevMouseX;
+      const dy = e.touches[0].clientY - orbitState.current.prevMouseY;
+
+      orbitState.current.targetRotY -= dx * 0.006;
+      orbitState.current.targetRotX = Math.max(
+        -Math.PI / 2.3,
+        Math.min(Math.PI / 2.3, orbitState.current.targetRotX + dy * 0.006)
+      );
+
+      orbitState.current.prevMouseX = e.touches[0].clientX;
+      orbitState.current.prevMouseY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const delta = orbitState.current.touchDist - dist;
+
+      orbitState.current.targetDistance = Math.max(
+        100,
+        Math.min(1200, orbitState.current.targetDistance + delta * 1.5)
+      );
+      orbitState.current.touchDist = dist;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    orbitState.current.isMouseDown = false;
+  };
+
+  // Keyboard Shortcuts for Smooth Navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in search input
+      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") return;
+
+      const orbit = orbitState.current;
+      switch (e.key) {
+        case "ArrowLeft":
+        case "a":
+        case "A":
+          orbit.targetRotY += 0.15;
+          break;
+        case "ArrowRight":
+        case "d":
+        case "D":
+          orbit.targetRotY -= 0.15;
+          break;
+        case "ArrowUp":
+        case "w":
+        case "W":
+          orbit.targetRotX = Math.min(Math.PI / 2.3, orbit.targetRotX + 0.15);
+          break;
+        case "ArrowDown":
+        case "s":
+        case "S":
+          orbit.targetRotX = Math.max(-Math.PI / 2.3, orbit.targetRotX - 0.15);
+          break;
+        case "+":
+        case "=":
+          orbit.targetDistance = Math.max(100, orbit.targetDistance - 60);
+          break;
+        case "-":
+        case "_":
+          orbit.targetDistance = Math.min(1200, orbit.targetDistance + 60);
+          break;
+        case " ":
+          e.preventDefault();
+          setIsAutoRotating((r) => !r);
+          break;
+        case "Escape":
+          setSearchQuery("");
+          onSelectNode("", false);
+          orbit.targetLookAt.set(0, 0, 0);
+          break;
+        case "r":
+        case "R":
+          handleResetCamera();
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onSelectNode]);
 
   // Fly-To Search Match in 3D
   const handleSearchFlyTo = (nodeId: string) => {
@@ -834,8 +972,8 @@ export default function KnowledgeGraphCanvas({
 
   const handleResetCamera = () => {
     cyberAudio.play("click");
-    orbitState.current.rotX = 0.25;
-    orbitState.current.rotY = 0.45;
+    orbitState.current.targetRotX = 0.25;
+    orbitState.current.targetRotY = 0.45;
     orbitState.current.targetDistance = 520;
     orbitState.current.targetLookAt.set(0, 0, 0);
   };
@@ -855,29 +993,27 @@ export default function KnowledgeGraphCanvas({
     <div
       ref={containerRef}
       className={`relative w-full rounded-2xl bg-[#020306] border border-emerald-500/20 overflow-hidden font-mono select-none shadow-2xl transition-all ${
-        isFullscreen ? "fixed inset-0 z-50 rounded-none h-screen" : "h-[640px]"
+        isFullscreen ? "fixed inset-0 z-50 rounded-none h-screen" : "h-[520px] sm:h-[620px] lg:h-[680px]"
       }`}
     >
       {/* TOP HUD BAR */}
       <div className="absolute top-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
         {/* Left: Universe Title & Preset Badges */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="flex items-center gap-2 bg-black/85 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10 text-xs shadow-xl">
+        <div className="flex items-center gap-2 pointer-events-auto flex-wrap">
+          <div className="flex items-center gap-2 bg-black/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-xs shadow-xl">
             <Globe className="w-4 h-4 text-emerald-400 animate-spin" style={{ animationDuration: "16s" }} />
             <span className="font-bold text-emerald-400 tracking-wider">3D KNOWLEDGE UNIVERSE</span>
-            <span className="text-[10px] text-cyan-300">
-              ({activeDataset.length} nodes • {SECTORS.length} sectors)
-            </span>
+            <span className="text-[10px] text-cyan-300">({activeDataset.length} nodes)</span>
           </div>
 
           {/* Constellation Presets */}
-          <div className="hidden lg:flex items-center gap-1 bg-black/85 backdrop-blur-md p-1 rounded-xl border border-white/10 text-[11px]">
+          <div className="flex items-center gap-1 bg-black/85 backdrop-blur-md p-1 rounded-xl border border-white/10 text-[11px] overflow-x-auto max-w-full">
             <button
               onClick={() => {
                 cyberAudio.play("click");
                 setPreset("LIVE_VAULT");
               }}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                 preset === "LIVE_VAULT"
                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_8px_rgba(0,255,65,0.3)]"
                   : "text-slate-400 hover:text-white"
@@ -890,7 +1026,7 @@ export default function KnowledgeGraphCanvas({
                 cyberAudio.play("click");
                 setPreset("KARPATHY_TREE");
               }}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                 preset === "KARPATHY_TREE"
                   ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_8px_rgba(255,184,0,0.3)]"
                   : "text-slate-400 hover:text-white"
@@ -903,7 +1039,7 @@ export default function KnowledgeGraphCanvas({
                 cyberAudio.play("click");
                 setPreset("CYBER_DEFENSE");
               }}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                 preset === "CYBER_DEFENSE"
                   ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-[0_0_8px_rgba(255,42,109,0.3)]"
                   : "text-slate-400 hover:text-white"
@@ -916,7 +1052,7 @@ export default function KnowledgeGraphCanvas({
                 cyberAudio.play("click");
                 setPreset("MEGA_CORTEX");
               }}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
                 preset === "MEGA_CORTEX"
                   ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.4)]"
                   : "text-cyan-400 hover:text-white"
@@ -928,14 +1064,14 @@ export default function KnowledgeGraphCanvas({
           </div>
         </div>
 
-        {/* Center: Search & 3D Fly-To */}
-        <div className="relative pointer-events-auto min-w-[200px] max-w-xs flex-1">
+        {/* Center: Search with 3D Fly-To */}
+        <div className="relative pointer-events-auto min-w-[180px] max-w-xs flex-1">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search 3D nodes..."
+            placeholder="Search 3D nodes (Esc to clear)..."
             className="w-full pl-8 pr-7 py-1.5 bg-black/85 backdrop-blur-md border border-white/10 rounded-xl text-xs text-white placeholder:text-slate-500 outline-none focus:border-cyan-400 transition-all font-mono"
           />
           {searchQuery && (
@@ -965,7 +1101,7 @@ export default function KnowledgeGraphCanvas({
           )}
         </div>
 
-        {/* Right: Label LOD Selector & Camera Controls */}
+        {/* Right: Controls & LOD Switcher */}
         <div className="flex items-center gap-1.5 bg-black/85 backdrop-blur-md p-1 rounded-xl border border-white/10 text-xs pointer-events-auto shadow-xl">
           {/* Label LOD Switcher */}
           <div className="hidden sm:flex items-center gap-0.5 border-r border-white/10 pr-1.5 mr-0.5">
@@ -998,7 +1134,7 @@ export default function KnowledgeGraphCanvas({
                 ? "bg-emerald-500/20 text-emerald-400"
                 : "hover:bg-slate-800 text-slate-300 hover:text-white"
             }`}
-            title={isAutoRotating ? "Pause 360° Auto-Rotation" : "Start 360° Auto-Rotation"}
+            title={isAutoRotating ? "Pause 360° Auto-Rotation (Space)" : "Start 360° Auto-Rotation (Space)"}
           >
             <Orbit className="w-3.5 h-3.5" />
           </button>
@@ -1006,10 +1142,10 @@ export default function KnowledgeGraphCanvas({
           <button
             onClick={() => {
               cyberAudio.play("click");
-              orbitState.current.targetDistance = Math.max(120, orbitState.current.targetDistance - 80);
+              orbitState.current.targetDistance = Math.max(100, orbitState.current.targetDistance - 80);
             }}
             className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-            title="Zoom In 3D"
+            title="Zoom In (+)"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
@@ -1017,10 +1153,10 @@ export default function KnowledgeGraphCanvas({
           <button
             onClick={() => {
               cyberAudio.play("click");
-              orbitState.current.targetDistance = Math.min(1100, orbitState.current.targetDistance + 80);
+              orbitState.current.targetDistance = Math.min(1200, orbitState.current.targetDistance + 80);
             }}
             className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-            title="Zoom Out 3D"
+            title="Zoom Out (-)"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
@@ -1028,9 +1164,20 @@ export default function KnowledgeGraphCanvas({
           <button
             onClick={handleResetCamera}
             className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-cyan-400 transition-colors"
-            title="Reset 3D Camera & Orientation"
+            title="Reset 3D Camera (R)"
           >
             <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setShowHelpModal((h) => !h);
+            }}
+            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-amber-400 transition-colors"
+            title="Keyboard & Mouse Guide"
+          >
+            <Keyboard className="w-3.5 h-3.5" />
           </button>
 
           <button
@@ -1060,6 +1207,52 @@ export default function KnowledgeGraphCanvas({
           </button>
         </div>
       </div>
+
+      {/* KEYBOARD SHORTCUTS HELP MODAL */}
+      {showHelpModal && (
+        <div className="absolute top-14 right-3 z-30 w-80 bg-black/95 backdrop-blur-xl border border-amber-500/40 rounded-2xl p-4 text-xs font-mono text-slate-200 shadow-2xl animate-fade-in">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2 mb-3">
+            <span className="font-bold text-amber-400 flex items-center gap-1.5">
+              <Keyboard className="w-3.5 h-3.5" />
+              CONTROLS & SHORTCUTS
+            </span>
+            <button onClick={() => setShowHelpModal(false)} className="text-slate-400 hover:text-white">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="space-y-2 text-[11px]">
+            <div className="flex justify-between border-b border-white/5 py-1">
+              <span className="text-slate-400">Left Click + Drag</span>
+              <span className="text-emerald-300">Orbit 360°</span>
+            </div>
+            <div className="flex justify-between border-b border-white/5 py-1">
+              <span className="text-slate-400">Mouse Wheel / Pinch</span>
+              <span className="text-emerald-300">Smooth Zoom</span>
+            </div>
+            <div className="flex justify-between border-b border-white/5 py-1">
+              <span className="text-slate-400">Click Node</span>
+              <span className="text-cyan-300">Focus & Fly-To</span>
+            </div>
+            <div className="flex justify-between border-b border-white/5 py-1">
+              <span className="text-slate-400">Double Click Node</span>
+              <span className="text-cyan-300">Open in Vault Editor</span>
+            </div>
+            <div className="flex justify-between border-b border-white/5 py-1">
+              <span className="text-slate-400">Arrow Keys / WASD</span>
+              <span className="text-amber-300">Rotate Camera</span>
+            </div>
+            <div className="flex justify-between border-b border-white/5 py-1">
+              <span className="text-slate-400">Spacebar</span>
+              <span className="text-amber-300">Toggle Auto-Rotation</span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span className="text-slate-400">Escape</span>
+              <span className="text-amber-300">Clear Focus & Search</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 3D VISUAL SETTINGS DRAWER */}
       {showSettingsDrawer && (
@@ -1179,7 +1372,12 @@ export default function KnowledgeGraphCanvas({
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
         onClick={handleClick}
-        className="w-full h-full cursor-grab active:cursor-grabbing bg-radial from-[#040711] via-[#020306] to-[#010204]"
+        onDoubleClick={handleDoubleClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ cursor: cursorStyle }}
+        className="w-full h-full bg-radial from-[#040711] via-[#020306] to-[#010204]"
       />
     </div>
   );
