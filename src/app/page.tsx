@@ -48,7 +48,7 @@ import CyberWindowManager from "@/components/desktop/CyberWindowManager";
 import KeyboardHotkeyStudioModal from "@/components/views/tools/KeyboardHotkeyStudioModal";
 import dynamic from "next/dynamic";
 import ViewLoadingSkeleton from "@/components/common/ViewLoadingSkeleton";
-import { loadWidgetLayout, type WidgetLayoutItem, DEFAULT_LAYOUT } from "@/lib/widgetLayout";
+import { loadWidgetLayout, saveWidgetLayout, type WidgetLayoutItem, DEFAULT_LAYOUT, LAYOUT_PRESETS, ALL_WIDGETS_METADATA } from "@/lib/widgetLayout";
 
 const ChatbotView = dynamic(() => import("@/components/views/ChatbotView"), {
   ssr: false,
@@ -439,6 +439,39 @@ export default function Home() {
     widgets.forEach((w) => (map[w.id] = w.enabled));
     setCustomWidgets(map);
     setDashboardLayout(loadWidgetLayout());
+  };
+
+  const handleQuickPreset = (presetKey: string) => {
+    cyberAudio.play("chime");
+    let targetIds: string[] = [];
+    if (presetKey === "all_widgets" || presetKey === "all") {
+      targetIds = ALL_WIDGETS_METADATA.map((w) => w.id);
+    } else if (presetKey === "tactical_sre" || presetKey === "sre") {
+      targetIds = LAYOUT_PRESETS.sre.ids;
+    } else if (presetKey === "ai_researcher" || presetKey === "ai") {
+      targetIds = LAYOUT_PRESETS.ai.ids;
+    } else if (presetKey === "cyber_ops" || presetKey === "devops") {
+      targetIds = LAYOUT_PRESETS.devops.ids;
+    } else if (presetKey === "developer_docker") {
+      targetIds = ["service_status", "system_stats", "aws_cloud_burn", "git_pr_velocity", "github_trending", "pipeline_queue", "github_activity", "api_health"];
+    } else if (presetKey === "minimalist" || presetKey === "minimal") {
+      targetIds = LAYOUT_PRESETS.minimal.ids;
+    }
+
+    const newLayout: WidgetLayoutItem[] = ALL_WIDGETS_METADATA.map((w) => ({
+      id: w.id,
+      enabled: targetIds.includes(w.id),
+      span: w.defaultSpan,
+    }));
+
+    saveWidgetLayout(newLayout);
+    setDashboardLayout(newLayout);
+    const map: Record<string, boolean> = {};
+    newLayout.forEach((w) => (map[w.id] = w.enabled));
+    setCustomWidgets(map);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("dirtynest-layout-updated"));
+    }
   };
 
   return (
@@ -901,10 +934,7 @@ export default function Home() {
                       ].map((p) => (
                         <button
                           key={p.id}
-                          onClick={() => {
-                            cyberAudio.play("chime");
-                            setCustomizeOpen(true);
-                          }}
+                          onClick={() => handleQuickPreset(p.id)}
                           className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-[#00FF41]/10 text-slate-300 hover:text-[#00FF41] border border-white/10 hover:border-[#00FF41]/30 transition-all font-bold cursor-pointer text-[10px] shrink-0"
                         >
                           {p.label}
@@ -938,8 +968,8 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Fluid Dynamic Bento / Masonry Tile Stream */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start [grid-auto-flow:dense]">
+                  {/* Predictable Sequential Bento Tile Stream (No auto-packing or erratic jumping) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
                     {dashboardLayout
                       .filter((w) => w.enabled)
                       .map((w) => {
@@ -989,6 +1019,7 @@ export default function Home() {
                             widgetNode = <EbpfKernelHeatWidget />;
                             break;
                           case "cve_radar":
+                          case "cve_vulnerability_radar":
                             widgetNode = <CveVulnerabilityRadar />;
                             break;
                           case "crypto_hash":
@@ -1049,7 +1080,7 @@ export default function Home() {
                           <div
                             key={w.id}
                             id={`${w.id}-widget`}
-                            className={isWide ? "col-span-1 lg:col-span-2" : "col-span-1"}
+                            className={isWide ? "col-span-1 lg:col-span-2 w-full" : "col-span-1 w-full min-w-0"}
                           >
                             {widgetNode}
                           </div>
