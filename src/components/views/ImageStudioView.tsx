@@ -26,7 +26,7 @@ export default function ImageStudioView() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showLatentModal, setShowLatentModal] = useState(false);
   const [showShaderModal, setShowShaderModal] = useState(false);
-  const [activeSubTab, setActiveSubTab] = useState<"editor" | "generator" | "gallery" | "toolbox">("editor");
+  const [activeSubTab, setActiveSubTab] = useState<"generator" | "editor" | "gallery" | "toolbox">("generator");
 
   const handleGenerate = (params: GenerationParams) => {
     setIsGenerating(true);
@@ -105,8 +105,8 @@ export default function ImageStudioView() {
       {/* Sub-Navigation Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {[
-          { id: "editor" as const, label: "Canvas Studio Pro (Editor & Inpaint)", icon: Paintbrush },
           { id: "generator" as const, label: "Prompt Matrix & Live Canvas", icon: Wand2 },
+          { id: "editor" as const, label: "Canvas Studio Pro (Editor & Inpaint)", icon: Paintbrush },
           { id: "gallery" as const, label: "Generated Assets Vault", icon: Grid },
           { id: "toolbox" as const, label: "Neural Post-Processing Toolbox", icon: Wrench },
         ].map((tab) => {
