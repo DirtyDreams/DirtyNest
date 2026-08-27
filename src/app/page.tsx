@@ -968,11 +968,10 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Predictable Sequential Bento Tile Stream (No auto-packing or erratic jumping) */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start">
-                    {dashboardLayout
-                      .filter((w) => w.enabled)
-                      .map((w) => {
+                  {/* Dynamic Floating Waterfall / Masonry Tile Stream (Tight vertical stacking with 0 dead space) */}
+                  <div className="flex flex-col gap-4 sm:gap-5">
+                    {(() => {
+                      const renderWidgetNode = (w: WidgetLayoutItem) => {
                         let widgetNode: React.ReactNode = null;
                         switch (w.id) {
                           case "clock":
@@ -1074,18 +1073,61 @@ export default function Home() {
                         }
 
                         if (!widgetNode) return null;
-                        const isWide = w.span === "2-col";
-
                         return (
-                          <div
-                            key={w.id}
-                            id={`${w.id}-widget`}
-                            className={isWide ? "col-span-1 lg:col-span-2 w-full" : "col-span-1 w-full min-w-0"}
-                          >
+                          <div key={w.id} id={`${w.id}-widget`} className="w-full">
                             {widgetNode}
                           </div>
                         );
-                      })}
+                      };
+
+                      // Partition into full-width sections and 2-column masonry waterfalls
+                      const enabled = dashboardLayout.filter((w) => w.enabled);
+                      const sections: { type: "wide" | "masonry"; items: WidgetLayoutItem[] }[] = [];
+                      let currentBatch: WidgetLayoutItem[] = [];
+
+                      enabled.forEach((w) => {
+                        if (w.span === "2-col") {
+                          if (currentBatch.length > 0) {
+                            sections.push({ type: "masonry", items: currentBatch });
+                            currentBatch = [];
+                          }
+                          sections.push({ type: "wide", items: [w] });
+                        } else {
+                          currentBatch.push(w);
+                        }
+                      });
+
+                      if (currentBatch.length > 0) {
+                        sections.push({ type: "masonry", items: currentBatch });
+                      }
+
+                      return sections.map((sec, secIdx) => {
+                        if (sec.type === "wide") {
+                          return (
+                            <div key={`sec-wide-${secIdx}`} className="w-full">
+                              {renderWidgetNode(sec.items[0])}
+                            </div>
+                          );
+                        }
+
+                        const colLeft = sec.items.filter((_, i) => i % 2 === 0);
+                        const colRight = sec.items.filter((_, i) => i % 2 === 1);
+
+                        return (
+                          <div
+                            key={`sec-masonry-${secIdx}`}
+                            className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start"
+                          >
+                            <div className="flex flex-col gap-4 sm:gap-5 w-full min-w-0">
+                              {colLeft.map((w) => renderWidgetNode(w))}
+                            </div>
+                            <div className="flex flex-col gap-4 sm:gap-5 w-full min-w-0">
+                              {colRight.map((w) => renderWidgetNode(w))}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               </ErrorBoundary>
