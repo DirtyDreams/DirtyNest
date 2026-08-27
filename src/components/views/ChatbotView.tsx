@@ -55,6 +55,7 @@ import { useToast } from "@/components/common/ToastProvider";
 import ArtifactsCanvas from "./chatbot/ArtifactsCanvas";
 import HermesMessageBlock from "./chatbot/HermesMessageBlock";
 import ChatbotSessionsDrawer, { HermesChatSession } from "./chatbot/ChatbotSessionsDrawer";
+import ChatbotSidebar from "./chatbot/ChatbotSidebar";
 import PersonaStudioModal, { AgentPersona, AGENT_PERSONAS } from "./chatbot/PersonaStudioModal";
 
 export type ChatMode = "standard" | "reasoning" | "deep_research" | "code_interpreter";
@@ -161,6 +162,7 @@ export default function ChatbotView() {
   ]);
   const [activeSessionId, setActiveSessionId] = useState<string>("session-root");
   const [showSessionsDrawer, setShowSessionsDrawer] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [activePersona, setActivePersona] = useState<AgentPersona>(AGENT_PERSONAS[0]);
   const [showPersonaModal, setShowPersonaModal] = useState<boolean>(false);
 
@@ -650,17 +652,21 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
 
           {/* Top Actions */}
           <div className="flex items-center gap-2">
-            {/* Sessions & History Drawer Trigger */}
+            {/* Sidebar Collapse / Expand Toggle */}
             <button
               onClick={() => {
                 cyberAudio.play("click");
-                setShowSessionsDrawer(true);
+                setIsSidebarOpen(!isSidebarOpen);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-[#00FF41] hover:bg-[#00FF41]/15 transition-all cursor-pointer shadow-[0_0_10px_rgba(0,255,65,0.15)]"
-              title="Open Chat Sessions & Threads History"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                isSidebarOpen
+                  ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/50 shadow-[0_0_10px_rgba(0,255,65,0.15)]"
+                  : "bg-white/5 border-white/10 text-[#9499B3] hover:text-white"
+              }`}
+              title="Toggle Chat History Left Sidebar"
             >
               <GitBranch size={13} />
-              <span>SESSIONS ({sessions.length})</span>
+              <span>SIDEBAR {isSidebarOpen ? "ON" : "OFF"}</span>
             </button>
 
             {/* Persona Studio Trigger */}
@@ -921,15 +927,35 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
         )}
       </div>
 
-      {/* MAIN CHAT & RESEARCH WORKSPACE */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        {/* MESSAGES THREAD (Full, 6-Cols if Canvas Open, or 8-Cols if Sources Drawer Open) */}
-        <div 
-          className={`relative cyber-card p-4 flex flex-col justify-between gap-4 min-h-[580px] transition-colors ${activeArtifact ? "lg:col-span-6" : showSourcesDrawer ? "lg:col-span-8" : "lg:col-span-12"} ${isDragging ? "border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.1)]" : ""}`}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-          onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
-          onDrop={(e) => { e.preventDefault(); setIsDragging(false); /* in a real app, handle files here */ }}
-        >
+      {/* MAIN CHAT & RESEARCH WORKSPACE (2-COLUMN SPLIT SCREEN) */}
+      <div className="flex flex-col lg:flex-row gap-4 items-start w-full">
+        {/* LEFT CHAT THREADS & PERSONA SIDEBAR */}
+        {isSidebarOpen && (
+          <div className="w-full lg:w-auto shrink-0 animate-fade-in">
+            <ChatbotSidebar
+              sessions={sessions}
+              activeSessionId={activeSessionId}
+              onSelectSession={handleSelectSession}
+              onCreateSession={handleCreateSession}
+              onBranchSession={handleBranchSession}
+              onDeleteSession={handleDeleteSession}
+              onRenameSession={handleRenameSession}
+              onExportSessionMarkdown={handleExportSessionMarkdown}
+              activePersona={activePersona}
+              onOpenPersonaStudio={() => setShowPersonaModal(true)}
+            />
+          </div>
+        )}
+
+        {/* RIGHT MAIN CHAT CONVERSATION WORKSPACE */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start w-full min-w-0">
+          {/* MESSAGES THREAD (Full, 6-Cols if Canvas Open, or 8-Cols if Sources Drawer Open) */}
+          <div 
+            className={`relative cyber-card p-4 flex flex-col justify-between gap-4 min-h-[680px] w-full transition-colors ${activeArtifact ? "lg:col-span-6" : showSourcesDrawer ? "lg:col-span-8" : "lg:col-span-12"} ${isDragging ? "border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.1)]" : ""}`}
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+            onDrop={(e) => { e.preventDefault(); setIsDragging(false); /* in a real app, handle files here */ }}
+          >
           {/* Mock Drag Overlay */}
           {isDragging && (
              <div className="absolute inset-0 z-50 rounded-2xl border-2 border-dashed border-[#00FF41] bg-[#00FF41]/10 flex flex-col items-center justify-center backdrop-blur-sm animate-fade-in pointer-events-none">
@@ -1233,6 +1259,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* Sessions History Drawer */}
