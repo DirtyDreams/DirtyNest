@@ -312,7 +312,12 @@ export default function Home() {
       e.preventDefault();
       lockSession();
     }
-  }, [toggleTerminal, toggleRightPanel, lockSession, setIsHermesCommandModalOpen, setIsHotkeyModalOpen]);
+    if (e.altKey && e.key.toLowerCase() === "w" && !isInput) {
+      e.preventDefault();
+      cyberAudio.play("warp");
+      setIsFloatingOsOpen((prev) => !prev);
+    }
+  }, [toggleTerminal, toggleRightPanel, lockSession, setIsHermesCommandModalOpen, setIsHotkeyModalOpen, setIsFloatingOsOpen]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -565,6 +570,10 @@ export default function Home() {
         onClose={() => setAudioMixerOpen(false)}
       />
       <TerminalDock isOpen={isTerminalOpen} onClose={() => setTerminalOpen(false)} />
+      <CyberWindowManager
+        isOpen={isFloatingOsOpen}
+        onClose={() => setIsFloatingOsOpen(false)}
+      />
 
       {/* Main Responsive Grid Layout */}
       <div className="h-[100dvh] md:h-auto md:min-h-screen bg-[#07070B] text-[#F1F3F9] font-sans antialiased selection:bg-[#00FF41]/20 selection:text-[#00FF41] flex flex-col md:block overflow-hidden md:overflow-visible relative">
@@ -708,16 +717,40 @@ export default function Home() {
                 {/* Terminal CLI Toggle */}
                 <button
                   onClick={toggleTerminal}
-                  title="Toggle Cyber CLI Terminal (Hotkey: `)"
+                  title="Toggle Cyber Terminal CLI (Hotkey: ~ or `)"
                   aria-label="Toggle Terminal"
-                  className={`h-9 px-2.5 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`h-9 px-2.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
                     isTerminalOpen
-                      ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 font-bold"
+                      ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                       : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40"
                   }`}
                 >
                   <Terminal size={14} />
-                  <span className="text-xs font-mono hidden 2xl:inline">CLI</span>
+                  <span className="hidden 2xl:inline">Terminal</span>
+                  <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] hidden sm:inline">
+                    `
+                  </kbd>
+                </button>
+
+                {/* Cyber Floating Multi-Window OS Launcher */}
+                <button
+                  onClick={() => {
+                    cyberAudio.play("warp");
+                    setIsFloatingOsOpen((p) => !p);
+                  }}
+                  title="Launch Cyber Multi-Window OS Workspace (Hotkey: Alt+W)"
+                  aria-label="Launch Cyber Multi-Window OS"
+                  className={`h-9 px-2.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
+                    isFloatingOsOpen
+                      ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/50 shadow-[0_0_12px_rgba(0,255,65,0.3)]"
+                      : "bg-[#00FF41]/10 text-[#00FF41] border-[#00FF41]/30 hover:bg-[#00FF41]/20 shadow-[0_0_8px_rgba(0,255,65,0.15)]"
+                  }`}
+                >
+                  <Layers size={14} className="text-[#00FF41]" />
+                  <span className="hidden sm:inline">CYBER OS</span>
+                  <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] hidden xl:inline">
+                    Alt+W
+                  </kbd>
                 </button>
 
                 {/* Ambient Focus Audio Soundboard */}

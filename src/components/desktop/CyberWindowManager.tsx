@@ -21,6 +21,10 @@ import {
   Zap,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 export type FloatingWindowType =
   | "terminal"
@@ -121,19 +125,16 @@ export default function CyberWindowManager({ isOpen, onClose }: Props) {
     startHeight: 0,
   });
 
-  const bringToFront = useCallback(
-    (id: string) => {
-      setActiveWindowId(id);
-      setTopZ((prev) => {
-        const nextZ = prev + 1;
-        setWindows((wins) =>
-          wins.map((w) => (w.id === id ? { ...w, zIndex: nextZ } : w))
-        );
-        return nextZ;
-      });
-    },
-    []
-  );
+  const bringToFront = useCallback((id: string) => {
+    setActiveWindowId(id);
+    setTopZ((prev) => {
+      const nextZ = prev + 1;
+      setWindows((wins) =>
+        wins.map((w) => (w.id === id ? { ...w, zIndex: nextZ } : w))
+      );
+      return nextZ;
+    });
+  }, []);
 
   const handleMouseDownHeader = (e: React.MouseEvent, id: string) => {
     const win = windows.find((w) => w.id === id);
@@ -200,10 +201,10 @@ export default function CyberWindowManager({ isOpen, onClose }: Props) {
     };
 
     const handleMouseUp = () => {
-      if (dragRef.current.isDragging || resizeRef.current.isResizing) {
-        dragRef.current.isDragging = false;
-        resizeRef.current.isResizing = false;
-      }
+      dragRef.current.isDragging = false;
+      dragRef.current.windowId = null;
+      resizeRef.current.isResizing = false;
+      resizeRef.current.windowId = null;
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -222,7 +223,7 @@ export default function CyberWindowManager({ isOpen, onClose }: Props) {
   };
 
   const toggleMaximize = (id: string) => {
-    cyberAudio.play("click");
+    cyberAudio.play("warp");
     setWindows((wins) =>
       wins.map((w) => (w.id === id ? { ...w, maximized: !w.maximized } : w))
     );
@@ -235,124 +236,123 @@ export default function CyberWindowManager({ isOpen, onClose }: Props) {
 
   const spawnWindow = (type: FloatingWindowType) => {
     cyberAudio.play("warp");
-    const id = `win-${type}-${Date.now()}`;
-    let title = "NEW WINDOW";
-    let icon = "⚡";
-    let color = "#00FF41";
+    const count = windows.length + 1;
+    const newId = `win-${type}-${Date.now()}`;
+    const nextZ = topZ + 1;
+    setTopZ(nextZ);
 
+    let config: Partial<FloatingWindow> = {};
     if (type === "terminal") {
-      title = "CYBER TERMINAL CORE";
-      icon = "💻";
-      color = "#00FF41";
+      config = { title: `CYBER TERMINAL #${count}`, icon: "💻", color: "#00FF41", width: 520, height: 340 };
     } else if (type === "paperclip") {
-      title = "PAPERCLIP HEARTBEAT HUD";
-      icon = "🤖";
-      color = "#00F0FF";
+      config = { title: "PAPERCLIP AI OBSERVER", icon: "🤖", color: "#00F0FF", width: 480, height: 360 };
     } else if (type === "docker") {
-      title = "DOCKER CONTAINER MONITOR";
-      icon = "🐳";
-      color = "#BF40FF";
+      config = { title: "DOCKER HUB WATCHER", icon: "🐳", color: "#3B82F6", width: 460, height: 320 };
     } else if (type === "promql") {
-      title = "PROMQL HEATMAP & SPARKLINE";
-      icon = "📈";
-      color = "#FFB800";
+      config = { title: "PROMQL LIVE METRICS", icon: "📈", color: "#F59E0B", width: 480, height: 300 };
     } else if (type === "chatbot") {
-      title = "CYBER AI REASONING CORE";
-      icon = "💬";
-      color = "#00FF41";
+      config = { title: "CYBER CORE CHATBOT", icon: "💬", color: "#BF40FF", width: 500, height: 400 };
     } else if (type === "mitre") {
-      title = "MITRE ATT&CK THREAT RADAR";
-      icon = "🛡️";
-      color = "#FF2A6D";
+      config = { title: "MITRE THREAT RADAR", icon: "🛡️", color: "#EF4444", width: 480, height: 320 };
     }
 
     const newWin: FloatingWindow = {
-      id,
+      id: newId,
       type,
-      title,
-      icon,
-      color,
-      x: 120 + (windows.length * 30) % 300,
-      y: 120 + (windows.length * 30) % 200,
-      width: 500,
-      height: 360,
+      title: config.title || "CYBER WINDOW",
+      icon: config.icon || "🪟",
+      color: config.color || "#00FF41",
+      x: 100 + (windows.length % 5) * 40,
+      y: 120 + (windows.length % 5) * 30,
+      width: config.width || 480,
+      height: config.height || 340,
       minimized: false,
       maximized: false,
-      zIndex: topZ + 1,
+      zIndex: nextZ,
     };
 
-    setTopZ((z) => z + 1);
     setWindows((wins) => [...wins, newWin]);
-    setActiveWindowId(id);
+    setActiveWindowId(newId);
     setIsLauncherOpen(false);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-40 font-mono text-xs select-none">
+    <div className="fixed inset-0 z-50 pointer-events-none select-none font-mono animate-fade-in">
+      {/* Background OS Canvas Aura */}
+      <div className="absolute inset-0 bg-[#07070B]/50 backdrop-blur-sm pointer-events-auto" />
+
       {/* Floating Windows Stage */}
       {windows.map((win) => {
         if (win.minimized) return null;
-        const isActive = win.id === activeWindowId;
+        const isActive = activeWindowId === win.id;
 
         return (
           <div
             key={win.id}
-            onClick={() => bringToFront(win.id)}
+            onMouseDown={() => bringToFront(win.id)}
+            className={cn(
+              "absolute pointer-events-auto flex flex-col rounded-2xl overflow-hidden shadow-2xl transition-shadow backdrop-blur-2xl border",
+              isActive
+                ? "border-[#00FF41]/60 shadow-[0_0_30px_rgba(0,255,65,0.25)] ring-1 ring-[#00FF41]/40"
+                : "border-white/10 opacity-90 shadow-black/80"
+            )}
             style={{
-              position: "fixed",
               left: win.maximized ? 0 : win.x,
-              top: win.maximized ? 48 : win.y,
+              top: win.maximized ? 0 : win.y,
               width: win.maximized ? "100vw" : win.width,
-              height: win.maximized ? "calc(100vh - 96px)" : win.height,
+              height: win.maximized ? "100vh" : win.height,
               zIndex: win.zIndex,
-              borderColor: isActive ? win.color : "rgba(255, 255, 255, 0.15)",
-              boxShadow: isActive
-                ? `0 15px 50px rgba(0,0,0,0.85), 0 0 25px ${win.color}25`
-                : "0 10px 30px rgba(0,0,0,0.7)",
+              backgroundColor: "rgba(9, 10, 20, 0.88)",
             }}
-            className="pointer-events-auto flex flex-col rounded-xl bg-[#090A14]/95 backdrop-blur-md border shadow-2xl overflow-hidden animate-fade-in"
           >
-            {/* Titlebar Header */}
+            {/* Window Titlebar Header */}
             <div
               onMouseDown={(e) => handleMouseDownHeader(e, win.id)}
-              className="px-3 py-2 bg-[#0E101F] border-b border-white/10 flex items-center justify-between cursor-move shrink-0"
-              style={{
-                borderTop: `2px solid ${win.color}`,
-              }}
+              className={cn(
+                "flex items-center justify-between px-3 py-2 border-b cursor-move select-none",
+                isActive ? "bg-black/60 border-[#00FF41]/30" : "bg-black/40 border-white/10"
+              )}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-sm">{win.icon}</span>
-                <span className="font-black text-white text-[11px] truncate uppercase tracking-wider">
+                <span
+                  className="text-xs font-black truncate tracking-wide"
+                  style={{ color: win.color }}
+                >
                   {win.title}
                 </span>
               </div>
 
+              {/* Window Controls */}
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleMinimize(win.id);
                   }}
-                  className="w-5 h-5 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                  className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 text-[#9499B3] hover:text-white flex items-center justify-center cursor-pointer"
                   title="Minimize"
                   aria-label="Minimize Window"
                 >
                   <Minus size={11} />
                 </button>
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleMaximize(win.id);
                   }}
-                  className="w-5 h-5 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                  className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 text-[#9499B3] hover:text-white flex items-center justify-center cursor-pointer"
                   title={win.maximized ? "Restore" : "Maximize"}
                   aria-label="Maximize Window"
                 >
                   {win.maximized ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
                 </button>
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     closeWindow(win.id);
@@ -367,7 +367,7 @@ export default function CyberWindowManager({ isOpen, onClose }: Props) {
             </div>
 
             {/* Window Content Body */}
-            <div className="flex-1 overflow-auto p-3 text-slate-300 bg-black/40">
+            <div className="flex-1 overflow-auto p-3 text-[#F1F3F9] bg-black/40">
               {win.type === "terminal" && <FloatingTerminalContent />}
               {win.type === "paperclip" && <FloatingPaperclipContent />}
               {win.type === "docker" && <FloatingDockerContent />}
@@ -391,54 +391,61 @@ export default function CyberWindowManager({ isOpen, onClose }: Props) {
       })}
 
       {/* Cyber Taskbar at Bottom */}
-      <div className="fixed bottom-2 left-1/2 -translate-x-1/2 pointer-events-auto flex items-center gap-2 p-1.5 rounded-2xl bg-[#090A14]/90 backdrop-blur-xl border border-[#00FF41]/30 shadow-[0_10px_35px_rgba(0,0,0,0.8)] z-50">
+      <div className="fixed bottom-3 left-1/2 -translate-x-1/2 pointer-events-auto flex items-center gap-2 p-1.5 rounded-2xl bg-[#090A14]/90 backdrop-blur-xl border border-[#00FF41]/30 shadow-[0_10px_35px_rgba(0,0,0,0.8)] z-50">
         {/* Launcher Button */}
         <div className="relative">
-          <button
+          <Button
+            size="sm"
             onClick={() => {
               cyberAudio.play("click");
               setIsLauncherOpen((p) => !p);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00FF41] text-black font-black text-[10px] hover:bg-[#00cc34] cursor-pointer transition-all shadow-[0_0_12px_rgba(0,255,65,0.3)]"
+            className="h-7 bg-[#00FF41] text-black font-black text-[10px] hover:bg-[#00cc34] cursor-pointer shadow-[0_0_12px_rgba(0,255,65,0.3)] px-2.5"
           >
-            <Plus size={13} />
+            <Plus size={13} className="mr-1" />
             <span>APPS</span>
-          </button>
+          </Button>
 
           {/* Launcher Popout */}
           {isLauncherOpen && (
             <div className="absolute bottom-11 left-0 w-56 rounded-xl bg-[#0E101F] border border-white/15 p-1.5 shadow-2xl flex flex-col gap-1 animate-fade-in text-[10px]">
               <button
+                type="button"
                 onClick={() => spawnWindow("terminal")}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left text-white cursor-pointer"
               >
                 <span>💻</span> Cyber Terminal
               </button>
               <button
+                type="button"
                 onClick={() => spawnWindow("paperclip")}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left text-white cursor-pointer"
               >
                 <span>🤖</span> Paperclip Heartbeats
               </button>
               <button
+                type="button"
                 onClick={() => spawnWindow("docker")}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left text-white cursor-pointer"
               >
                 <span>🐳</span> Docker Watcher
               </button>
               <button
+                type="button"
                 onClick={() => spawnWindow("promql")}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left text-white cursor-pointer"
               >
                 <span>📈</span> PromQL Sparkline
               </button>
               <button
+                type="button"
                 onClick={() => spawnWindow("chatbot")}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left text-white cursor-pointer"
               >
                 <span>💬</span> Cyber AI Core
               </button>
               <button
+                type="button"
                 onClick={() => spawnWindow("mitre")}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left text-white cursor-pointer"
               >
@@ -453,6 +460,7 @@ export default function CyberWindowManager({ isOpen, onClose }: Props) {
           {windows.map((win) => (
             <button
               key={win.id}
+              type="button"
               onClick={() => {
                 if (win.minimized) {
                   toggleMinimize(win.id);
@@ -463,13 +471,14 @@ export default function CyberWindowManager({ isOpen, onClose }: Props) {
                   bringToFront(win.id);
                 }
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-all cursor-pointer",
                 !win.minimized && win.id === activeWindowId
                   ? "bg-white/15 text-white border-[#00FF41]/50 shadow-[0_0_10px_rgba(0,255,65,0.2)]"
                   : win.minimized
                   ? "bg-black/40 text-slate-500 border-white/5"
                   : "bg-white/5 text-slate-300 border-white/10 hover:text-white"
-              }`}
+              )}
             >
               <span>{win.icon}</span>
               <span className="max-w-[90px] truncate">{win.title.split(" // ")[0]}</span>
@@ -478,15 +487,17 @@ export default function CyberWindowManager({ isOpen, onClose }: Props) {
         </div>
 
         {/* Exit Floating Desktop Button */}
-        <button
+        <Button
+          size="sm"
+          variant="outline"
           onClick={() => {
             cyberAudio.play("click");
             onClose();
           }}
-          className="px-2.5 py-1 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-bold hover:bg-red-500/30 cursor-pointer"
+          className="h-7 px-2.5 rounded-xl bg-red-500/20 text-red-400 border-red-500/30 text-[10px] font-bold hover:bg-red-500/30 cursor-pointer"
         >
           EXIT OS
-        </button>
+        </Button>
       </div>
     </div>
   );
