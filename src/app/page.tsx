@@ -621,13 +621,10 @@ export default function Home() {
                   <span>•</span>
                   <UptimeBadge />
                 </div>
-
-                {/* Subsystem Telemetry Controls (Left of Hermes Brain) */}
-                <HeaderSubsystemsHud />
               </div>
 
               {/* Center: Hermes Master Brain Status HUD Badge (Centered) */}
-              <div className="hidden lg:flex items-center justify-center flex-1 min-w-0 px-2 pointer-events-auto">
+              <div className="hidden xl:flex items-center justify-center shrink-0 px-2 pointer-events-auto">
                 <HermesMasterStatusBadge onOpenCommandDrawer={() => setIsHermesCommandModalOpen(true)} />
               </div>
 
@@ -658,13 +655,16 @@ export default function Home() {
                   className={`h-9 px-2.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
                     isFloatingOsOpen
                       ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/50 shadow-[0_0_12px_rgba(0,255,65,0.3)] animate-pulse"
-                      : "bg-white/[0.03] border-white/10 text-slate-300 hover:text-[#00FF41] hover:border-[#00FF41]/40"
+                      : "bg-[#00FF41]/10 text-[#00FF41] border-[#00FF41]/30 hover:bg-[#00FF41]/20 shadow-[0_0_8px_rgba(0,255,65,0.15)]"
                   }`}
-                  title="Toggle Cyberpunk Floating Multi-Window Desktop OS"
+                  title="Toggle Cyberpunk Floating Multi-Window Desktop OS (Hotkey: Alt+W)"
                   aria-label="Toggle Floating Multi-Window Desktop OS"
                 >
-                  <Square size={13} className={isFloatingOsOpen ? "text-[#00FF41]" : "text-slate-400"} />
-                  <span className="hidden sm:inline">FLOAT OS</span>
+                  <Layers size={14} className="text-[#00FF41]" />
+                  <span className="hidden sm:inline">CYBER OS</span>
+                  <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] hidden 2xl:inline">
+                    Alt+W
+                  </kbd>
                 </button>
 
                 {/* Tactical Deck Toggle Button (Desktop & Mobile) */}
@@ -729,27 +729,6 @@ export default function Home() {
                   <span className="hidden 2xl:inline">Terminal</span>
                   <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] hidden sm:inline">
                     `
-                  </kbd>
-                </button>
-
-                {/* Cyber Floating Multi-Window OS Launcher */}
-                <button
-                  onClick={() => {
-                    cyberAudio.play("warp");
-                    setIsFloatingOsOpen((p) => !p);
-                  }}
-                  title="Launch Cyber Multi-Window OS Workspace (Hotkey: Alt+W)"
-                  aria-label="Launch Cyber Multi-Window OS"
-                  className={`h-9 px-2.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
-                    isFloatingOsOpen
-                      ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/50 shadow-[0_0_12px_rgba(0,255,65,0.3)]"
-                      : "bg-[#00FF41]/10 text-[#00FF41] border-[#00FF41]/30 hover:bg-[#00FF41]/20 shadow-[0_0_8px_rgba(0,255,65,0.15)]"
-                  }`}
-                >
-                  <Layers size={14} className="text-[#00FF41]" />
-                  <span className="hidden sm:inline">CYBER OS</span>
-                  <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] hidden xl:inline">
-                    Alt+W
                   </kbd>
                 </button>
 
