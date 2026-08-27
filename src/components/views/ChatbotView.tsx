@@ -1035,7 +1035,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           )}
 
           {/* Natural Full-Page Messages Stream (No inner scrollbar) */}
-          <div className="flex flex-col gap-3.5 w-full max-w-[88%] 2xl:max-w-[80%] mx-auto pb-6">
+          <div className="flex flex-col gap-3.5 w-full max-w-[88%] 2xl:max-w-[80%] mx-auto pb-44">
             {messages.map((msg) => {
               if (msg.sender === "system") {
                 return (
@@ -1062,28 +1062,28 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           </div>
 
           {/* Floating Sticky Bottom Composer Dock */}
-          <div className="sticky bottom-6 lg:bottom-8 z-30 pb-4 w-full pointer-events-none">
-            <div className="flex flex-col gap-2 w-full max-w-[88%] 2xl:max-w-[80%] mx-auto pointer-events-auto">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-[#4F536E] uppercase font-bold tracking-wider">
-                  Deep Research Prompt Starters:
-                </span>
-              </div>
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {DEEP_RESEARCH_TEMPLATES.map((tpl) => (
-                  <button
-                    key={tpl.label}
-                    onClick={() => handleSend(tpl.prompt)}
-                    disabled={isGenerating}
-                    className="px-3.5 py-1.5 rounded-xl bg-[#0A0C18]/90 border border-white/15 hover:border-[#00FF41]/50 text-[#9499B3] hover:text-[#00FF41] text-[11px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40 shadow-lg hover:bg-[#0E1222]"
-                  >
-                    {tpl.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Interactive Compositor */}
-              <div className="relative mt-1 bg-[#080A16]/98 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.95)] focus-within:border-[#00FF41]/60 focus-within:shadow-[0_0_35px_rgba(0,255,65,0.2)] transition-all flex flex-col w-full">
+          <div className="sticky bottom-6 lg:bottom-8 z-30 w-full pointer-events-none">
+            <div className="w-full max-w-[88%] 2xl:max-w-[80%] mx-auto pointer-events-auto">
+              {/* Interactive Compositor (Self-contained Solid Card) */}
+              <div className="relative bg-[#080A16] border border-white/20 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] focus-within:border-[#00FF41]/60 focus-within:shadow-[0_0_35px_rgba(0,255,65,0.2)] transition-all flex flex-col w-full overflow-hidden">
+                
+                {/* Deep Research Prompt Starters Bar (Integrated inside solid card) */}
+                <div className="flex items-center gap-2 px-3.5 py-2 bg-[#0D1022] border-b border-white/10 overflow-x-auto scrollbar-none">
+                  <span className="text-[9px] text-[#4F536E] uppercase font-bold tracking-wider shrink-0 flex items-center gap-1">
+                    <Sparkles size={11} className="text-[#00FF41]" />
+                    <span>STARTERS:</span>
+                  </span>
+                  {DEEP_RESEARCH_TEMPLATES.map((tpl) => (
+                    <button
+                      key={tpl.label}
+                      onClick={() => handleSend(tpl.prompt)}
+                      disabled={isGenerating}
+                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] text-[10px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40"
+                    >
+                      {tpl.label}
+                    </button>
+                  ))}
+                </div>
               
               {/* Slash Command Popover */}
               {showSlashMenu && (
