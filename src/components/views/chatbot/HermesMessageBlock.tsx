@@ -355,11 +355,11 @@ export default function HermesMessageBlock({
   // User Message Rendering
   if (sender === "user") {
     return (
-      <div className="flex justify-end font-mono select-none my-1.5 animate-fade-in w-full">
-        <div className="max-w-3xl p-3.5 sm:p-4 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#F1F3F9] text-xs leading-relaxed space-y-1.5 shadow-[0_0_15px_rgba(0,255,65,0.06)]">
+      <div className="flex justify-end font-mono select-none my-1.5 animate-slide-up-fade w-full">
+        <div className="max-w-3xl p-3.5 sm:p-4 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#F1F3F9] text-xs leading-relaxed space-y-1.5 shadow-[0_0_20px_rgba(0,255,65,0.08)] transition-all duration-200 hover:border-[#00FF41]/50">
           <div className="flex items-center justify-between text-[10px] text-[#4F536E] pb-1 border-b border-white/5">
             <span className="font-bold text-[#00FF41] flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-neural-pulse" />
               <span>OPERATOR DIRECTIVE</span>
             </span>
             {timestamp && <span>{timestamp}</span>}
@@ -375,9 +375,9 @@ export default function HermesMessageBlock({
   // System Message Rendering
   if (sender === "system") {
     return (
-      <div className="flex justify-center my-2 select-none font-mono animate-fade-in w-full">
-        <div className="px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-[10px] text-[#9499B3] flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-pulse" />
+      <div className="flex justify-center my-2 select-none font-mono animate-slide-up-fade w-full">
+        <div className="px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-[10px] text-[#9499B3] flex items-center gap-2 shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-neural-pulse" />
           <span>{content}</span>
           {timestamp && <span className="text-[#4F536E]">• {timestamp}</span>}
         </div>
@@ -389,17 +389,20 @@ export default function HermesMessageBlock({
   const segments = parseHermesContent(content);
 
   return (
-    <div className="flex justify-start font-mono my-2 animate-fade-in w-full">
-      <div className="w-full p-4 sm:p-5 rounded-2xl bg-[#090B14]/90 border border-white/10 text-xs space-y-3.5 shadow-xl backdrop-blur-md">
+    <div className="flex justify-start font-mono my-2 animate-slide-up-fade w-full">
+      <div className="w-full p-4 sm:p-5 rounded-2xl bg-[#090B14]/95 border border-white/10 text-xs space-y-3.5 shadow-2xl backdrop-blur-md transition-all duration-200 hover:border-white/20">
         {/* Hermes Message Header */}
         <div className="flex items-center justify-between pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-lg bg-[#00FF41]/15 border border-[#00FF41]/30 flex items-center justify-center text-[#00FF41] shadow-[0_0_10px_rgba(0,255,65,0.2)]">
+            <div className="w-6 h-6 rounded-lg bg-[#00FF41]/15 border border-[#00FF41]/30 flex items-center justify-center text-[#00FF41] shadow-[0_0_12px_rgba(0,255,65,0.25)]">
               <Brain size={13} />
             </div>
-            <span className="font-bold text-[#F1F3F9] tracking-wider text-xs">
-              HERMES NEURAL SYNAPSE
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#F1F3F9] tracking-wider text-xs">
+                HERMES NEURAL SYNAPSE
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-neural-pulse" />
+            </div>
             <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-white/5 text-[#00FF41] border border-white/10">
               {model || "Nous-Hermes-3-70B"}
             </span>
@@ -418,34 +421,39 @@ export default function HermesMessageBlock({
               return (
                 <div
                   key={idx}
-                  className="rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all overflow-hidden w-full"
+                  className="rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300 overflow-hidden w-full shadow-sm"
                 >
                   <div
                     onClick={() => {
                       cyberAudio.play("click");
                       setThoughtExpanded(!thoughtExpanded);
                     }}
-                    className="flex items-center justify-between p-2.5 px-3 cursor-pointer select-none"
+                    className="flex items-center justify-between p-2.5 px-3.5 cursor-pointer select-none group"
                   >
-                    <div className="flex items-center gap-2 text-[#A1A7C4] text-[11px] font-bold">
-                      <Sparkles size={12} className="text-[#00FF41]" />
+                    <div className="flex items-center gap-2 text-[#A1A7C4] text-[11px] font-bold group-hover:text-white transition-colors">
+                      <Sparkles size={12} className="text-[#00FF41] animate-pulse" />
                       <span>Thinking Process & Cognitive Reasoning</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] text-[#4F536E]">
+                    <div className="flex items-center gap-1.5 text-[10px] text-[#4F536E] group-hover:text-[#9499B3] transition-colors">
                       <span>{thoughtExpanded ? "Collapse" : "Show details"}</span>
-                      {thoughtExpanded ? (
-                        <ChevronDown size={13} />
-                      ) : (
-                        <ChevronRight size={13} />
-                      )}
+                      <ChevronDown
+                        size={13}
+                        className={`transition-transform duration-300 ease-out ${
+                          thoughtExpanded ? "rotate-180 text-[#00FF41]" : "text-[#4F536E]"
+                        }`}
+                      />
                     </div>
                   </div>
 
-                  {thoughtExpanded && (
-                    <div className="p-3 pt-2 text-[11px] text-[#A1A7C4] leading-relaxed border-t border-white/5 font-sans whitespace-pre-wrap bg-black/40">
-                      {seg.content}
-                    </div>
-                  )}
+                  <div
+                    className={`transition-all duration-300 ease-in-out overflow-hidden font-sans whitespace-pre-wrap bg-black/40 ${
+                      thoughtExpanded
+                        ? "max-h-[900px] opacity-100 p-3.5 pt-2 border-t border-white/5 text-[11px] text-[#A1A7C4] leading-relaxed"
+                        : "max-h-0 opacity-0 p-0 border-t-0"
+                    }`}
+                  >
+                    {seg.content}
+                  </div>
                 </div>
               );
             }
@@ -454,7 +462,7 @@ export default function HermesMessageBlock({
               return (
                 <div
                   key={idx}
-                  className="rounded-xl border border-white/10 bg-[#070913] p-3 space-y-1.5 font-mono w-full"
+                  className="rounded-xl border border-white/10 bg-[#070913] p-3 space-y-1.5 font-mono w-full shadow-sm"
                 >
                   <div className="flex items-center justify-between text-xs pb-1 border-b border-white/5">
                     <div className="flex items-center gap-1.5 text-[#00F0FF] text-[10px] font-bold">
@@ -474,7 +482,7 @@ export default function HermesMessageBlock({
               return (
                 <div
                   key={idx}
-                  className="rounded-xl border border-white/10 bg-[#070913] p-3 space-y-1.5 font-mono w-full"
+                  className="rounded-xl border border-white/10 bg-[#070913] p-3 space-y-1.5 font-mono w-full shadow-sm"
                 >
                   <div className="flex items-center justify-between text-xs pb-1 border-b border-white/5">
                     <div className="flex items-center gap-1.5 text-[#00FF41] text-[10px] font-bold">
@@ -503,7 +511,7 @@ export default function HermesMessageBlock({
             <button
               type="button"
               onClick={handleCopyFullMessage}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-white transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
               title="Copy message text"
             >
               {copiedAll ? (
@@ -538,7 +546,7 @@ export default function HermesMessageBlock({
                   );
                 }
               }}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#00F0FF] hover:text-cyan-300 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#00F0FF] hover:text-cyan-300 transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
               title="Save to Obsidian Markdown Notes"
             >
               <Database size={12} />
@@ -549,7 +557,7 @@ export default function HermesMessageBlock({
             <button
               type="button"
               onClick={handleToggleSpeak}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer shadow-sm ${
                 isSpeaking
                   ? "bg-purple-500/20 text-purple-400 border border-purple-500/40 animate-pulse"
                   : "bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-purple-300"

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Bot,
+  Brain,
   Send,
   Sparkles,
   Cpu,
@@ -1058,16 +1059,30 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                 </div>
               );
             })}
+            
+            {/* Live Neural Inference Indicator while generating */}
+            {isGenerating && (
+              <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-[#090B14]/90 border border-[#00FF41]/30 w-full animate-slide-up-fade text-xs font-mono shadow-[0_0_20px_rgba(0,255,65,0.1)]">
+                <div className="w-5 h-5 rounded-md bg-[#00FF41]/20 border border-[#00FF41]/40 flex items-center justify-center text-[#00FF41]">
+                  <Brain size={12} className="animate-pulse" />
+                </div>
+                <span className="text-[#00FF41] font-bold tracking-wider text-[11px]">
+                  HERMES NEURAL SYNAPSE REASONING & SYNTHESIS...
+                </span>
+                <span className="inline-block w-2 h-3.5 bg-[#00FF41] animate-caret-blink" />
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
           {/* Floating Sticky Bottom Composer Dock */}
           <div className="sticky bottom-6 lg:bottom-8 z-30 w-full pointer-events-none">
             <div className="w-full max-w-[88%] 2xl:max-w-[80%] mx-auto pointer-events-auto">
-              {/* Interactive Compositor (Self-contained Solid Card) */}
-              <div className="relative bg-[#080A16] border border-white/20 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] focus-within:border-[#00FF41]/60 focus-within:shadow-[0_0_35px_rgba(0,255,65,0.2)] transition-all flex flex-col w-full overflow-hidden">
+              {/* Interactive Compositor (Self-contained Solid Card with Ambient Glow) */}
+              <div className="relative bg-[#080A16] border border-white/20 hover:border-white/30 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] focus-within:border-[#00FF41]/60 focus-within:shadow-[0_0_35px_rgba(0,255,65,0.2)] transition-all duration-300 flex flex-col w-full overflow-hidden">
                 
-                {/* Deep Research Prompt Starters Bar (Integrated inside solid card) */}
+                {/* Deep Research Prompt Starters Bar */}
                 <div className="flex items-center gap-2 px-3.5 py-2 bg-[#0D1022] border-b border-white/10 overflow-x-auto scrollbar-none">
                   <span className="text-[9px] text-[#4F536E] uppercase font-bold tracking-wider shrink-0 flex items-center gap-1">
                     <Sparkles size={11} className="text-[#00FF41]" />
@@ -1078,7 +1093,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                       key={tpl.label}
                       onClick={() => handleSend(tpl.prompt)}
                       disabled={isGenerating}
-                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] text-[10px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40"
+                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] text-[10px] whitespace-nowrap transition-all duration-150 hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-40 shadow-sm"
                     >
                       {tpl.label}
                     </button>
