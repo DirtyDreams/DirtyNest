@@ -552,3 +552,40 @@ body {
     @apply font-sans;
   }
 }
+
+/* ============================================================
+   View Transitions API & Cyber Glow Morph Transitions
+   ============================================================ */
+@keyframes cyber-view-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.992);
+    filter: blur(1.5px);
+  }
+}
+
+@keyframes cyber-view-in {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.995);
+    filter: blur(1.5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+::view-transition-old(root) {
+  animation: cyber-view-out 0.18s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: cyber-view-in 0.22s cubic-bezier(0, 0, 0.2, 1) both;
+}

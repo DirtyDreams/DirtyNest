@@ -62,9 +62,21 @@ interface AppState {
 export const useAppStore = create<AppState>((set) => ({
   activeView: "dashboard",
   setActiveView: (view) => {
-    set({ activeView: view });
-    if (typeof window !== "undefined") {
-      window.history.replaceState(null, "", `#${view}`);
+    const update = () => {
+      set({ activeView: view });
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", `#${view}`);
+      }
+    };
+
+    if (
+      typeof document !== "undefined" &&
+      "startViewTransition" in document &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      (document as any).startViewTransition(update);
+    } else {
+      update();
     }
   },
 
