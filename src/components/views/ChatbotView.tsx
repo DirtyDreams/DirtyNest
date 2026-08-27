@@ -358,73 +358,65 @@ Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator powerin
 
       setActiveResearchSources(mockSources);
 
-      // Phase 1: Planning
-      const initialAiMsg: Message = {
-        id: researchMsgId,
-        sender: "ai",
-        text: "Initiating multi-phase deep research protocol...",
-        timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
-        model: activeAiModel?.name,
-        mode: "deep_research",
-        thinkingTimeSec: 2.4,
-        thinkingTrace: `1. Decomposing user prompt into 4 search axes.\n2. Checking SQLite-Vec knowledge embeddings for cosine similarity.\n3. Dispatching parallel search crawl across arXiv, GitHub, and web citations.\n4. Synthesizing citations into structured Markdown dossier.`,
-        researchData: {
-          status: "planning",
-          subQueries,
-          crawledSources: [],
-          activeStepText: "Phase 1/4: Query Decomposition & Sub-Task Planning...",
-          thinkingSeconds: 2.4,
-          totalTokens: 620,
-        },
-      };
+      const isCodeRequest = textToSend.toLowerCase().includes("code") || textToSend.toLowerCase().includes("component") || textToSend.toLowerCase().includes("react") || textToSend.toLowerCase().includes("sandbox");
 
-      setMessages((prev) => [...prev, initialAiMsg]);
+      const finalReport = isCodeRequest
+        ? `<thought>
+Synthesizing requested full-stack React UI component with Tailwind CSS cyber styling.
+Testing syntax validity, props contract, and animation hooks...
+</thought>
 
-      // Phase 2: Searching & Crawling
-      setTimeout(() => {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === researchMsgId
-              ? {
-                  ...msg,
-                  researchData: {
-                    ...msg.researchData!,
-                    status: "searching",
-                    crawledSources: mockSources.slice(0, 2),
-                    activeStepText: "Phase 2/4: Crawling & Semantic Vector Search (2/4 sources indexed)...",
-                    thinkingSeconds: 6.8,
-                  },
-                }
-              : msg
-          )
-        );
-        cyberAudio.play("click");
-      }, 1500);
+### 💻 OPERATIONAL ARTIFACT GENERATED
 
-      // Phase 3: Reading & Fact Verification
-      setTimeout(() => {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === researchMsgId
-              ? {
-                  ...msg,
-                  researchData: {
-                    ...msg.researchData!,
-                    status: "reading",
-                    crawledSources: mockSources,
-                    activeStepText: "Phase 3/4: Extracting Key Evidence & Cross-Referencing Knowledge Vault...",
-                    thinkingSeconds: 11.2,
-                  },
-                }
-              : msg
-          )
-        );
-        cyberAudio.play("click");
-      }, 3000);
+Here is the requested high-throughput reactive component implementation:
 
-      // Phase 4: Final Synthesis Report
-      setTimeout(() => {
-        const finalReport = `### 📑 DEEP RESEARCH EXECUTIVE REPORT: ${textToSend.toUpperCase()}
+\`\`\`tsx
+import React, { useState } from 'react';
+import { Shield, Zap, Terminal, Activity } from 'lucide-react';
+
+export default function CyberTelemetryWidget() {
+  const [active, setActive] = useState(true);
+  const [load, setLoad] = useState(42);
+
+  return (
+    <div className="p-4 rounded-2xl bg-[#080A16] border border-[#00FF41]/40 text-white font-mono shadow-[0_0_25px_rgba(0,255,65,0.15)] space-y-3">
+      <div className="flex items-center justify-between pb-2 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <Shield size={16} className="text-[#00FF41] animate-pulse" />
+          <span className="font-bold text-xs tracking-wider">NEURAL NODE #84</span>
+        </div>
+        <span className="text-[10px] px-2 py-0.5 rounded bg-[#00FF41]/20 text-[#00FF41] font-bold">ACTIVE</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="p-2 rounded-lg bg-white/5">
+          <span className="text-[#4F536E] text-[9px] block">THROUGHPUT</span>
+          <span className="font-bold text-[#00F0FF]">14.8 GB/s</span>
+        </div>
+        <div className="p-2 rounded-lg bg-white/5">
+          <span className="text-[#4F536E] text-[9px] block">SYSTEM LOAD</span>
+          <span className="font-bold text-[#FFB800]">{load}%</span>
+        </div>
+      </div>
+      <button 
+        onClick={() => setLoad(Math.floor(Math.random() * 60) + 30)}
+        className="w-full py-2 rounded-xl bg-[#00FF41] text-black font-black text-xs hover:bg-[#00FF41]/90 transition-all cursor-pointer"
+      >
+        CYCLE KERNEL TELEMETRY
+      </button>
+    </div>
+  );
+}
+\`\`\`
+
+- **Zero-Trust Memory Guard**: Component adheres to containerized eBPF isolation standards.
+- Click **\`RUN IN LIVE CANVAS\`** above to mount and interact with this component in the live split-screen sandbox.`
+        : `<thought>
+Phase 1: Deep crawling arXiv (2403.18921), Obsidian Vault, and GitHub telemetry.
+Phase 2: Extracting cross-domain parameter vectors and zero-trust benchmarks.
+Phase 3: Synthesizing comparative matrix and executable directives.
+</thought>
+
+### 📄 DEEP RESEARCH EXECUTIVE REPORT: ${textToSend.toUpperCase()}
 
 #### 1. Executive Summary & Core Findings
 Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vault, and GitHub telemetry), this architectural analysis reveals three critical paradigms:
@@ -456,40 +448,49 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
 2. Ingest the newly resolved citations into the **DataCore SQLite-Vec** vector store.
 3. Save this research dossier directly to the **Obsidian Vault** for automated backlink resolution.`;
 
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === researchMsgId
-              ? {
-                  ...msg,
-                  text: finalReport,
-                  tokens: 1480,
-                  thinkingTimeSec: 14.8,
-                  citations: mockSources,
-                  researchData: {
-                    ...msg.researchData!,
-                    status: "completed",
-                    activeStepText: "Phase 4/4: Research Synthesis Completed · 4 Sources Verified",
-                    thinkingSeconds: 14.8,
-                    totalTokens: 1480,
-                  },
-                }
-              : msg
-          )
-        );
-        setIsGenerating(false);
-        cyberAudio.play("chime");
-      }, 4800);
+      const initialAiMsg: Message = {
+        id: researchMsgId,
+        sender: "ai",
+        text: "",
+        timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
+        model: activeAiModel?.name || "Nous-Hermes-3-70B",
+        tokens: 0,
+        citations: mockSources,
+      };
+
+      setMessages((prev) => [...prev, initialAiMsg]);
+
+      const words = finalReport.split(" ");
+      let currentWordIdx = 0;
+      let streamedAccumulator = "";
+
+      const streamTimer = setInterval(() => {
+        if (currentWordIdx < words.length) {
+          streamedAccumulator += (currentWordIdx === 0 ? "" : " ") + words[currentWordIdx];
+          currentWordIdx++;
+          const currentTokens = Math.floor(currentWordIdx * 1.3);
+
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === researchMsgId
+                ? {
+                    ...msg,
+                    text: streamedAccumulator,
+                    tokens: currentTokens,
+                  }
+                : msg
+            )
+          );
+        } else {
+          clearInterval(streamTimer);
+          setIsGenerating(false);
+          cyberAudio.play("chime");
+        }
+      }, 16);
     } else {
-      // Real LLM Integration for standard and reasoning modes
       let apiKey = "";
       if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
         apiKey = localStorage.getItem("dirtynest_gemini_key") || "";
-      }
-
-      if (!apiKey) {
-        toast.error("NO API KEY DETECTED", "Configure your Gemini API key in Settings > API Keys.");
-        setIsGenerating(false);
-        return;
       }
 
       const aiMsgId = `ai-${Date.now()}`;
@@ -500,8 +501,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
         timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
         model: activeAiModel?.name,
         mode: activeMode,
-        thinkingTimeSec: activeMode === "reasoning" ? 0 : undefined,
-        thinkingTrace: activeMode === "reasoning" ? "Initiating deep reasoning chain...\n" : undefined,
+        tokens: 0,
       };
 
       setMessages((prev) => [...prev, aiResponse]);
@@ -530,6 +530,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
         const decoder = new TextDecoder("utf-8");
         let done = false;
         let responseText = "";
+        let tokenCounter = 0;
 
         while (!done) {
           const { value, done: readerDone } = await reader.read();
@@ -537,10 +538,11 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           if (value) {
             const chunkText = decoder.decode(value, { stream: true });
             responseText += chunkText;
+            tokenCounter += Math.ceil(chunkText.length / 4);
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.id === aiMsgId
-                  ? { ...msg, text: responseText }
+                  ? { ...msg, text: responseText, tokens: tokenCounter }
                   : msg
               )
             );
@@ -1055,6 +1057,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                     model={msg.model}
                     tokens={msg.tokens}
                     onSaveToObsidian={() => handleSaveToObsidian(msg)}
+                    onOpenArtifact={(artifact) => setActiveArtifact(artifact)}
                   />
                 </div>
               );

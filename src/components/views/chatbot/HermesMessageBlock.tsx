@@ -19,6 +19,7 @@ import {
   FileCode,
   CheckCheck,
   Table,
+  Play,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -29,6 +30,7 @@ interface Props {
   model?: string;
   tokens?: number;
   onSaveToObsidian?: (text: string) => void;
+  onOpenArtifact?: (artifact: { title: string; language: string; code: string }) => void;
 }
 
 interface ParsedSegment {
@@ -114,7 +116,13 @@ function formatInlineMarkdown(text: string) {
 }
 
 // Markdown Formatter Component for AI text
-function MarkdownContent({ text }: { text: string }) {
+function MarkdownContent({
+  text,
+  onOpenArtifact,
+}: {
+  text: string;
+  onOpenArtifact?: (artifact: { title: string; language: string; code: string }) => void;
+}) {
   const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
 
   const handleCopy = (code: string, idx: number) => {
@@ -147,23 +155,43 @@ function MarkdownContent({ text }: { text: string }) {
                   <FileCode size={13} />
                   <span>{language}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleCopy(codeBody, idx)}
-                  className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer px-2.5 py-1 rounded hover:bg-white/5"
-                >
-                  {copiedCodeIndex === idx ? (
-                    <>
-                      <CheckCheck size={12} className="text-[#00FF41]" />
-                      <span className="text-[#00FF41] font-bold">COPIED</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={12} />
-                      <span>COPY</span>
-                    </>
+                <div className="flex items-center gap-2">
+                  {onOpenArtifact && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        cyberAudio.play("warp");
+                        onOpenArtifact({
+                          title: `Interactive Code Artifact (${language.toUpperCase()})`,
+                          language: language || "tsx",
+                          code: codeBody,
+                        });
+                      }}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#00FF41]/15 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/25 font-bold transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer text-[10px]"
+                      title="Run and preview in split-screen Live Canvas"
+                    >
+                      <Play size={10} className="fill-[#00FF41]" />
+                      <span>RUN IN LIVE CANVAS</span>
+                    </button>
                   )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(codeBody, idx)}
+                    className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer px-2.5 py-1 rounded hover:bg-white/5"
+                  >
+                    {copiedCodeIndex === idx ? (
+                      <>
+                        <CheckCheck size={12} className="text-[#00FF41]" />
+                        <span className="text-[#00FF41] font-bold">COPIED</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={12} />
+                        <span>COPY</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Code body */}
@@ -316,6 +344,7 @@ export default function HermesMessageBlock({
   model,
   tokens,
   onSaveToObsidian,
+  onOpenArtifact,
 }: Props) {
   const [thoughtExpanded, setThoughtExpanded] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
@@ -500,7 +529,7 @@ export default function HermesMessageBlock({
             }
 
             // Rich Markdown Body
-            return <MarkdownContent key={idx} text={seg.content} />;
+            return <MarkdownContent key={idx} text={seg.content} onOpenArtifact={onOpenArtifact} />;
           })}
         </div>
 
