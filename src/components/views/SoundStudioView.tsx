@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Mic, Sliders, AudioLines, Sparkles, Volume2, Radio, Zap, VolumeX, Music } from "lucide-react";
+import { Mic, Sliders, AudioLines, Sparkles, Volume2, Radio, Zap, Music } from "lucide-react";
 import VoiceCloningMatrix, { VOICE_MODELS, VoiceModel } from "./sound_studio/VoiceCloningMatrix";
 import TtsScriptEditor, { VocalSynthesisParams } from "./sound_studio/TtsScriptEditor";
 import DspVoiceChanger from "./sound_studio/DspVoiceChanger";
 import AudioTakesVault, { AudioTake, SAMPLE_TAKES } from "./sound_studio/AudioTakesVault";
 import AiSfxSoundboardStudio from "./sound_studio/AiSfxSoundboardStudio";
+import LiveWaveformVisualizer from "./sound_studio/LiveWaveformVisualizer";
 import AgentVoiceSynthesizerModal from "./sound/AgentVoiceSynthesizerModal";
 import WebAudioTrackerDawModal from "./sound/WebAudioTrackerDawModal";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function SoundStudioView() {
   const [selectedVoice, setSelectedVoice] = useState<VoiceModel>(VOICE_MODELS[0]);
@@ -59,9 +63,9 @@ export default function SoundStudioView() {
               <h2 className="text-lg font-black tracking-tight text-[#F1F3F9]">
                 SOUND STUDIO // <span className="text-[#BF40FF]">VOICE CLONING, SFX & DSP</span>
               </h2>
-              <span className="text-[10px] font-bold text-[#BF40FF] px-2 py-0.5 rounded bg-[#BF40FF]/10 border border-[#BF40FF]/30">
+              <Badge variant="outline" className="text-[10px] bg-[#BF40FF]/10 text-[#BF40FF] border-[#BF40FF]/30">
                 NEURAL AUDIO WORKBENCH
-              </span>
+              </Badge>
             </div>
             <p className="text-xs text-[#9499B3]">
               Zero-shot neural voice cloning, AI sound effects generator, 8-pad soundboard & real-time DSP
@@ -70,29 +74,80 @@ export default function SoundStudioView() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="outline"
             onClick={() => {
               cyberAudio.play("warp");
               setIsDawModalOpen(true);
             }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#BF40FF]/15 text-[#BF40FF] border border-[#BF40FF]/40 font-bold hover:bg-[#BF40FF]/25 cursor-pointer shadow-[0_0_15px_rgba(191,64,255,0.2)] text-xs transition-all"
+            className="bg-[#BF40FF]/15 text-[#BF40FF] border-[#BF40FF]/40 font-bold hover:bg-[#BF40FF]/25 shadow-[0_0_15px_rgba(191,64,255,0.2)] text-xs h-9"
           >
-            <Music size={14} />
+            <Music size={14} className="mr-1.5" />
             <span>CYBER DAW TRACKER</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
             onClick={() => {
               cyberAudio.play("warp");
               setIsTtsModalOpen(true);
             }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/40 font-bold hover:bg-[#00FF41]/25 cursor-pointer shadow-[0_0_15px_rgba(0,255,65,0.2)] text-xs transition-all"
+            className="bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 font-bold hover:bg-[#00FF41]/25 shadow-[0_0_15px_rgba(0,255,65,0.2)] text-xs h-9"
           >
-            <Radio size={14} />
+            <Radio size={14} className="mr-1.5" />
             <span>AGENT VOICE TTS STUDIO</span>
-          </button>
+          </Button>
         </div>
       </div>
+
+      {/* Realtime Waveform Canvas Analyzer & Synthesizer Stage */}
+      <LiveWaveformVisualizer />
+
+      {/* Sub-Navigation Tabs */}
+      <Tabs value={activeSubTab} onValueChange={(val) => setActiveSubTab(val as any)} className="w-full flex flex-col gap-4">
+        <TabsList className="bg-black/50 border border-white/10 p-1 flex items-center gap-1 overflow-x-auto justify-start h-auto">
+          <TabsTrigger value="tts" className="text-xs font-bold flex items-center gap-1.5 py-2 px-3">
+            <Mic size={14} />
+            <span>Voice Matrix & TTS</span>
+          </TabsTrigger>
+          <TabsTrigger value="sfx" className="text-xs font-bold flex items-center gap-1.5 py-2 px-3">
+            <Zap size={14} />
+            <span>AI SFX Soundboard</span>
+          </TabsTrigger>
+          <TabsTrigger value="dsp" className="text-xs font-bold flex items-center gap-1.5 py-2 px-3">
+            <Sliders size={14} />
+            <span>DSP Voice Changer</span>
+          </TabsTrigger>
+          <TabsTrigger value="takes" className="text-xs font-bold flex items-center gap-1.5 py-2 px-3">
+            <AudioLines size={14} />
+            <span>Vocal Takes Vault ({takes.length})</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="tts" className="flex flex-col gap-5 mt-0 animate-fade-in">
+          <VoiceCloningMatrix
+            selectedVoiceId={selectedVoice.id}
+            onSelectVoice={(v) => setSelectedVoice(v)}
+          />
+          <TtsScriptEditor
+            selectedVoice={selectedVoice}
+            onSynthesize={handleSynthesize}
+            isSynthesizing={isSynthesizing}
+          />
+        </TabsContent>
+
+        <TabsContent value="sfx" className="mt-0 animate-fade-in">
+          <AiSfxSoundboardStudio />
+        </TabsContent>
+
+        <TabsContent value="dsp" className="mt-0 animate-fade-in">
+          <DspVoiceChanger />
+        </TabsContent>
+
+        <TabsContent value="takes" className="mt-0 animate-fade-in">
+          <AudioTakesVault takes={takes} />
+        </TabsContent>
+      </Tabs>
 
       {/* Agent Voice TTS Modal */}
       <AgentVoiceSynthesizerModal
@@ -105,71 +160,6 @@ export default function SoundStudioView() {
         isOpen={isDawModalOpen}
         onClose={() => setIsDawModalOpen(false)}
       />
-
-      {/* Sub-Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        {[
-          { id: "tts" as const, label: "Voice Matrix & TTS Script Editor", icon: Mic },
-          { id: "sfx" as const, label: "AI SFX & Cyber Soundboard", icon: Zap },
-          { id: "dsp" as const, label: "Real-Time DSP Voice Changer Rack", icon: Sliders },
-          { id: "takes" as const, label: "Vocal Takes Vault & Visemes", icon: AudioLines },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeSubTab === tab.id;
-
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => {
-                cyberAudio.play("click");
-                setActiveSubTab(tab.id);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                isActive
-                  ? "bg-[#BF40FF] text-white shadow-[0_0_12px_rgba(191,64,255,0.3)]"
-                  : "bg-white/5 text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/10"
-              }`}
-            >
-              <Icon size={14} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Main Content Areas */}
-      {activeSubTab === "tts" && (
-        <div className="flex flex-col gap-5 animate-fade-in">
-          <VoiceCloningMatrix
-            selectedVoiceId={selectedVoice.id}
-            onSelectVoice={(v) => setSelectedVoice(v)}
-          />
-          <TtsScriptEditor
-            selectedVoice={selectedVoice}
-            onSynthesize={handleSynthesize}
-            isSynthesizing={isSynthesizing}
-          />
-        </div>
-      )}
-
-      {activeSubTab === "sfx" && (
-        <div className="animate-fade-in">
-          <AiSfxSoundboardStudio />
-        </div>
-      )}
-
-      {activeSubTab === "dsp" && (
-        <div className="animate-fade-in">
-          <DspVoiceChanger />
-        </div>
-      )}
-
-      {activeSubTab === "takes" && (
-        <div className="animate-fade-in">
-          <AudioTakesVault takes={takes} />
-        </div>
-      )}
     </div>
   );
 }
