@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Timer, Play, Pause, RotateCcw, Volume2, VolumeX, Sparkles } from "lucide-react";
+import NumberFlow from "@number-flow/react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { cn } from "@/lib/utils";
 
 type Mode = "work" | "shortBreak" | "longBreak";
 
@@ -44,7 +48,7 @@ export default function FocusTimer() {
       }, 1000);
     } else if (timeLeft === 0 && isActive) {
       if (soundEnabled) {
-        cyberAudio.playChime();
+        cyberAudio.play("chime");
       }
       
       // Save session to DB
@@ -86,8 +90,8 @@ export default function FocusTimer() {
     setTimeLeft(MODE_DURATIONS[mode]);
   };
 
-  const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
-  const seconds = (timeLeft % 60).toString().padStart(2, "0");
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
   const total = MODE_DURATIONS[mode];
   const progress = ((total - timeLeft) / total) * 100;
 
@@ -99,7 +103,7 @@ export default function FocusTimer() {
       : "#BF40FF";
 
   return (
-    <div className="cyber-card p-4.5 relative">
+    <div className="cyber-card p-4.5 relative font-mono select-none">
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
       <div className="hud-corner hud-corner-bl" />
@@ -109,33 +113,37 @@ export default function FocusTimer() {
         <Timer size={15} className="icon" style={{ color: modeColor }} />
         <h3>Focus Neural Loop</h3>
         <div className="ml-auto flex items-center gap-1.5">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="p-1 rounded hover:bg-white/10 text-[#9499B3]"
+            className="h-6 w-6 rounded-lg text-[#9499B3] hover:text-white"
             title={soundEnabled ? "Audio alert on" : "Audio alert off"}
           >
             {soundEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
-          </button>
+          </Button>
+
           {totalFocusMinutes > 0 && (
             <span className="text-[9px] font-mono font-bold text-[#9499B3] px-1.5 py-0.5">
-              {Math.floor(totalFocusMinutes / 60)}h {totalFocusMinutes % 60}m logged
+              <NumberFlow value={Math.floor(totalFocusMinutes / 60)} />h <NumberFlow value={totalFocusMinutes % 60} />m logged
             </span>
           )}
-          <span
-            className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase"
+
+          <Badge
+            variant="outline"
+            className="text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase border-transparent"
             style={{
               background: `${modeColor}15`,
               color: modeColor,
-              border: `1px solid ${modeColor}30`,
             }}
           >
             {mode === "work" ? "DEEP WORK" : "NEURAL REST"}
-          </span>
+          </Badge>
         </div>
       </div>
 
       {/* Mode Selectors */}
-      <div className="flex gap-1 mb-3 bg-white/5 rounded-lg p-0.5 border border-white/5 text-[9px] font-mono">
+      <div className="flex gap-1 mb-3 bg-white/5 rounded-xl p-0.5 border border-white/5 text-[9px] font-mono">
         {[
           { key: "work", label: "25M FOCUS" },
           { key: "shortBreak", label: "5M BREAK" },
@@ -144,11 +152,12 @@ export default function FocusTimer() {
           <button
             key={tab.key}
             onClick={() => switchMode(tab.key as Mode)}
-            className={`flex-1 py-1 rounded transition-colors text-center ${
+            className={cn(
+              "flex-1 py-1 rounded-lg transition-all text-center font-bold cursor-pointer",
               mode === tab.key
-                ? "bg-[#00FF41]/20 text-[#00FF41] font-bold"
-                : "text-[#9499B3]"
-            }`}
+                ? "bg-[#00FF41]/20 text-[#00FF41] shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                : "text-[#9499B3] hover:text-[#F1F3F9]"
+            )}
           >
             {tab.label}
           </button>
@@ -158,13 +167,15 @@ export default function FocusTimer() {
       {/* Digital Countdown & Arc Progress */}
       <div className="flex flex-col items-center justify-center py-2">
         <div
-          className="text-4xl font-mono font-black tracking-tight"
+          className="text-4xl font-mono font-black tracking-tight flex items-center justify-center"
           style={{
             color: modeColor,
             textShadow: `0 0 20px ${modeColor}40`,
           }}
         >
-          {minutes}:{seconds}
+          <NumberFlow value={minutes} format={{ minimumIntegerDigits: 2 }} />
+          <span className="mx-0.5 animate-pulse">:</span>
+          <NumberFlow value={seconds} format={{ minimumIntegerDigits: 2 }} />
         </div>
 
         {/* Progress bar */}
@@ -182,32 +193,38 @@ export default function FocusTimer() {
 
       {/* Controls */}
       <div className="flex items-center justify-center gap-3 mt-3 pt-2 border-t border-white/5">
-        <button
+        <Button
           onClick={() => {
-            cyberAudio.playClick();
+            cyberAudio.play("click");
             setIsActive(!isActive);
           }}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer"
-          style={{
-            background: isActive ? "rgba(255, 42, 109, 0.15)" : "rgba(0, 255, 65, 0.15)",
-            color: isActive ? "#FF2A6D" : "#00FF41",
-            border: `1px solid ${isActive ? "rgba(255, 42, 109, 0.3)" : "rgba(0, 255, 65, 0.3)"}`,
-          }}
+          variant={isActive ? "destructive" : "default"}
+          size="sm"
+          className={cn(
+            "flex items-center gap-1.5 px-4 h-8 text-xs font-mono font-bold uppercase transition-all cursor-pointer",
+            isActive
+              ? "bg-[#FF2A6D]/20 text-[#FF2A6D] border border-[#FF2A6D]/40 hover:bg-[#FF2A6D]/30"
+              : "bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/40 hover:bg-[#00FF41]/30"
+          )}
         >
           {isActive ? <Pause size={13} /> : <Play size={13} />}
           <span>{isActive ? "HOLD" : "ENGAGE"}</span>
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={resetTimer}
+          variant="outline"
+          size="icon"
           title="Reset timer"
-          className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#F1F3F9] transition-colors"
+          className="h-8 w-8 bg-white/5 border-white/10 text-[#9499B3] hover:text-[#F1F3F9]"
         >
           <RotateCcw size={13} />
-        </button>
+        </Button>
 
-        <div className="ml-auto text-[10px] font-mono text-[#9499B3]">
-          <span className="text-[#00FF41] font-bold">{completedSessions}</span> CYCLES DONE
+        <div className="ml-auto text-[10px] font-mono text-[#9499B3] flex items-center gap-1">
+          <Badge variant="outline" className="text-[10px] text-[#00FF41] bg-[#00FF41]/10 border-[#00FF41]/30">
+            <NumberFlow value={completedSessions} /> CYCLES
+          </Badge>
         </div>
       </div>
     </div>

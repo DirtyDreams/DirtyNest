@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Activity, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Zap } from "lucide-react";
+import NumberFlow from "@number-flow/react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface Endpoint {
   id: string;
@@ -71,7 +75,7 @@ export default function ApiHealth() {
   const upCount = endpoints.filter((e) => e.status === "up").length;
 
   return (
-    <div className="cyber-card p-5 relative flex flex-col gap-3">
+    <div className="cyber-card p-5 relative flex flex-col gap-3 font-mono select-none">
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
       <div className="hud-corner hud-corner-bl" />
@@ -82,39 +86,43 @@ export default function ApiHealth() {
         <h3>Mesh Node Health</h3>
         <div className="ml-auto flex items-center gap-2">
           {/* Filter toggles */}
-          <div className="flex bg-white/5 rounded-lg p-0.5 border border-white/5 text-[10px] font-mono">
+          <div className="flex bg-white/5 rounded-xl p-0.5 border border-white/5 text-[10px] font-mono">
             <button
               onClick={() => setFilter("all")}
-              className={`px-2 py-0.5 rounded transition-colors ${
+              className={cn(
+                "px-2 py-0.5 rounded-lg transition-all font-bold cursor-pointer",
                 filter === "all"
-                  ? "bg-[#00FF41]/20 text-[#00FF41] font-bold"
-                  : "text-[#9499B3]"
-              }`}
+                  ? "bg-[#00FF41]/20 text-[#00FF41] shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                  : "text-[#9499B3] hover:text-[#F1F3F9]"
+              )}
             >
               ALL ({endpoints.length})
             </button>
             <button
               onClick={() => setFilter("issues")}
-              className={`px-2 py-0.5 rounded transition-colors ${
+              className={cn(
+                "px-2 py-0.5 rounded-lg transition-all font-bold cursor-pointer",
                 filter === "issues"
-                  ? "bg-[#FF2A6D]/20 text-[#FF2A6D] font-bold"
-                  : "text-[#9499B3]"
-              }`}
+                  ? "bg-[#FF2A6D]/20 text-[#FF2A6D] shadow-[0_0_8px_rgba(255,42,109,0.2)]"
+                  : "text-[#9499B3] hover:text-[#F1F3F9]"
+              )}
             >
               ISSUES ({endpoints.length - upCount})
             </button>
           </div>
 
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleManualRefresh}
             title="Poll now"
-            className="p-1 rounded-lg hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41] transition-colors"
+            className="h-7 w-7 rounded-lg text-[#9499B3] hover:text-[#00FF41] hover:bg-white/5"
           >
             <RefreshCw
               size={13}
               className={isRefreshing ? "animate-spin text-[#00FF41]" : ""}
             />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -133,11 +141,10 @@ export default function ApiHealth() {
           return (
             <div
               key={ep.id}
-              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group"
-              style={{
-                background: "rgba(255, 255, 255, 0.02)",
-                border: `1px solid ${isDown ? "rgba(255, 42, 109, 0.25)" : "rgba(255, 255, 255, 0.04)"}`,
-              }}
+              className={cn(
+                "flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group bg-white/[0.02] border hover:border-white/20",
+                isDown ? "border-[#FF2A6D]/30" : "border-white/5"
+              )}
             >
               <div
                 className="w-2.5 h-2.5 rounded-full shrink-0 relative"
@@ -156,9 +163,9 @@ export default function ApiHealth() {
                   <span className="text-xs font-bold text-[#F1F3F9] truncate group-hover:text-[#00FF41] transition-colors">
                     {ep.name}
                   </span>
-                  <span className="text-[9px] font-mono text-[#4F536E] px-1 py-0.2 rounded bg-white/5">
+                  <Badge variant="outline" className="text-[8px] font-mono text-[#9499B3] px-1 py-0 bg-white/5 border-transparent">
                     {ep.region}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="text-[10px] font-mono text-[#4F536E] truncate mt-0.5">
                   {ep.url}
@@ -173,10 +180,16 @@ export default function ApiHealth() {
                     textShadow: `0 0 8px ${statusColor}40`,
                   }}
                 >
-                  {isDown ? "TIMEOUT" : `${ep.responseTime}ms`}
+                  {isDown ? (
+                    "TIMEOUT"
+                  ) : (
+                    <span>
+                      <NumberFlow value={ep.responseTime} />ms
+                    </span>
+                  )}
                 </div>
                 <div className="text-[9px] font-mono text-[#9499B3] mt-0.5">
-                  {ep.uptime}% SLA
+                  <NumberFlow value={ep.uptime} format={{ minimumFractionDigits: 2 }} />% SLA
                 </div>
               </div>
             </div>

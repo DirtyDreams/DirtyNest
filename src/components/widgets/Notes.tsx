@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { FileText, Copy, Check, Trash2, Code } from "lucide-react";
+import NumberFlow from "@number-flow/react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 export default function Notes() {
   const [content, setContent] = useState("");
@@ -57,7 +62,7 @@ export default function Notes() {
   const chars = content.length;
 
   return (
-    <div className="cyber-card p-4.5 relative">
+    <div className="cyber-card p-4.5 relative select-none font-mono">
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
       <div className="hud-corner hud-corner-bl" />
@@ -67,49 +72,44 @@ export default function Notes() {
         <FileText size={15} className="icon" />
         <h3>Scratchpad Buffer</h3>
         <div className="ml-auto flex items-center gap-1.5">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={copyContent}
             title="Copy buffer"
-            className="p-1 rounded-md hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41] transition-colors"
+            className="h-6 w-6 rounded-lg text-[#9499B3] hover:text-[#00FF41]"
           >
             {copied ? <Check size={12} className="text-[#00FF41]" /> : <Copy size={12} />}
-          </button>
-          <span
-            className="text-[9px] font-mono px-2 py-0.5 rounded transition-all duration-300 font-bold"
-            style={{
-              background: saved ? "rgba(0, 255, 65, 0.1)" : "rgba(255, 184, 0, 0.15)",
-              color: saved ? "#00FF41" : "#FFB800",
-              border: saved
-                ? "1px solid rgba(0, 255, 65, 0.25)"
-                : "1px solid rgba(255, 184, 0, 0.35)",
-            }}
+          </Button>
+
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-[9px] font-mono px-2 py-0.5 font-bold transition-all duration-300",
+              saved
+                ? "bg-[#00FF41]/10 text-[#00FF41] border-[#00FF41]/30"
+                : "bg-[#FFB800]/15 text-[#FFB800] border-[#FFB800]/35"
+            )}
           >
             {saved ? "SYNCED" : "BUFFERING"}
-          </span>
+          </Badge>
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-[9px] font-mono text-[#4F536E] px-2 py-1 bg-[#07070B] rounded-t-lg border-t border-x border-white/5">
+      <div className="flex items-center justify-between text-[9px] font-mono text-[#4F536E] px-3 py-1.5 bg-[#07070B] rounded-t-xl border-t border-x border-white/5">
         <span className="flex items-center gap-1">
           <Code size={10} className="text-[#BF40FF]" />
           <span>dirtynest://notes.md</span>
         </span>
         <span>
-          {words} W · {chars} C
+          <NumberFlow value={words} /> W · <NumberFlow value={chars} /> C
         </span>
       </div>
 
-      <textarea
+      <Textarea
         value={content}
         onChange={handleChange}
-        className="w-full h-[135px] outline-none text-xs resize-none rounded-b-lg p-3 text-[#F1F3F9] placeholder:text-[#4F536E]"
-        style={{
-          border: "1px solid rgba(255, 255, 255, 0.05)",
-          borderTop: "none",
-          background: "rgba(7, 7, 11, 0.7)",
-          fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
-          lineHeight: "1.6",
-        }}
+        className="w-full h-[135px] text-xs resize-none rounded-t-none rounded-b-xl p-3 bg-[#07070B]/80 text-[#F1F3F9] border-white/5 focus-visible:border-[#00FF41]/50 focus-visible:ring-[#00FF41]/20 font-mono leading-relaxed placeholder:text-[#4F536E]"
         placeholder="// Record operational insights, keys, scratch data..."
       />
     </div>
