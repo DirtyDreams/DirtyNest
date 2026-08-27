@@ -43,6 +43,7 @@ import ThemeCustomizerModal from "@/components/modals/ThemeCustomizerModal";
 import AudioMixerModal from "@/components/modals/AudioMixerModal";
 import HermesQuickCommandModal from "@/components/modals/HermesQuickCommandModal";
 import HermesMasterStatusBadge from "@/components/common/HermesMasterStatusBadge";
+import HeaderSubsystemsHud from "@/components/common/HeaderSubsystemsHud";
 import TerminalDock from "@/components/terminal/TerminalDock";
 import CyberWindowManager from "@/components/desktop/CyberWindowManager";
 import KeyboardHotkeyStudioModal from "@/components/views/tools/KeyboardHotkeyStudioModal";
@@ -540,6 +541,9 @@ export default function Home() {
                   <span>•</span>
                   <UptimeBadge />
                 </div>
+
+                {/* Subsystem Telemetry Controls (Left of Hermes Brain) */}
+                <HeaderSubsystemsHud />
               </div>
 
               {/* Center: Hermes Master Brain Status HUD Badge (Centered) */}
