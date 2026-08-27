@@ -1052,6 +1052,8 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                     sender={msg.sender === "user" ? "user" : "bot"}
                     timestamp={msg.timestamp}
                     model={msg.model}
+                    tokens={msg.tokens}
+                    onSaveToObsidian={() => handleSaveToObsidian(msg)}
                   />
                 </div>
               );

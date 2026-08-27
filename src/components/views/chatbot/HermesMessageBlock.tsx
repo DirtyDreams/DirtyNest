@@ -10,10 +10,14 @@ import {
   ChevronRight,
   Sparkles,
   Terminal,
-  Activity,
   Copy,
   Check,
   Zap,
+  Volume2,
+  VolumeX,
+  Database,
+  FileCode,
+  CheckCheck,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -22,6 +26,8 @@ interface Props {
   sender: "user" | "bot" | "system";
   timestamp?: string;
   model?: string;
+  tokens?: number;
+  onSaveToObsidian?: (text: string) => void;
 }
 
 interface ParsedSegment {
@@ -66,29 +72,204 @@ export function parseHermesContent(raw: string): ParsedSegment[] {
   return segments;
 }
 
-export default function HermesMessageBlock({ content, sender, timestamp, model }: Props) {
-  const [thoughtExpanded, setThoughtExpanded] = useState(false);
-  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+// Markdown Formatter Component for AI text
+function MarkdownContent({ text }: { text: string }) {
+  const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
 
-  const handleCopyCode = (id: string, text: string) => {
+  const handleCopy = (code: string, idx: number) => {
     cyberAudio.play("click");
-    navigator.clipboard?.writeText(text);
-    setCopiedCodeId(id);
-    setTimeout(() => setCopiedCodeId(null), 2000);
+    navigator.clipboard?.writeText(code);
+    setCopiedCodeIndex(idx);
+    setTimeout(() => setCopiedCodeIndex(null), 2000);
+  };
+
+  // Split content by code fences ```lang\ncode\n```
+  const parts = text.split(/(```[\s\S]*?```)/g);
+
+  return (
+    <div className="space-y-3 font-sans text-xs text-[#E2E8F0] leading-relaxed select-text">
+      {parts.map((part, idx) => {
+        if (part.startsWith("```") && part.endsWith("```")) {
+          const lines = part.slice(3, -3).split("\n");
+          const firstLine = lines[0].trim();
+          const language = firstLine || "code";
+          const codeBody = (firstLine ? lines.slice(1) : lines).join("\n");
+
+          return (
+            <div
+              key={idx}
+              className="my-3 rounded-xl border border-white/10 bg-[#070913] overflow-hidden font-mono text-[11px] shadow-lg"
+            >
+              {/* Code block header */}
+              <div className="flex items-center justify-between px-3 py-1.5 bg-[#0D101E] border-b border-white/10 text-[10px] text-[#9499B3]">
+                <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[#00FF41]">
+                  <FileCode size={12} />
+                  <span>{language}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(codeBody, idx)}
+                  className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-white/5"
+                >
+                  {copiedCodeIndex === idx ? (
+                    <>
+                      <CheckCheck size={11} className="text-[#00FF41]" />
+                      <span className="text-[#00FF41]">COPIED</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={11} />
+                      <span>COPY</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Code body */}
+              <pre className="p-3 overflow-x-auto text-[#A6E22E] bg-black/50 leading-relaxed font-mono">
+                <code>{codeBody}</code>
+              </pre>
+            </div>
+          );
+        }
+
+        // Render standard Markdown elements (Headers, Lists, Blockquotes, Paragraphs)
+        const paragraphs = part.split("\n\n");
+        return (
+          <div key={idx} className="space-y-2.5">
+            {paragraphs.map((p, pIdx) => {
+              const trimmed = p.trim();
+              if (!trimmed) return null;
+
+              // Header 3
+              if (trimmed.startsWith("### ")) {
+                return (
+                  <h4 key={pIdx} className="text-sm font-bold text-white pt-2 text-[#00FF41] font-mono flex items-center gap-1.5">
+                    <span>#</span>
+                    <span>{trimmed.replace(/^###\s+/, "")}</span>
+                  </h4>
+                );
+              }
+              // Header 2
+              if (trimmed.startsWith("## ")) {
+                return (
+                  <h3 key={pIdx} className="text-sm font-black text-white pt-2.5 text-[#00F0FF] font-mono flex items-center gap-1.5 border-b border-white/5 pb-1">
+                    <span>##</span>
+                    <span>{trimmed.replace(/^##\s+/, "")}</span>
+                  </h3>
+                );
+              }
+              // Header 1
+              if (trimmed.startsWith("# ")) {
+                return (
+                  <h2 key={pIdx} className="text-base font-black text-white pt-3 text-[#00FF41] font-mono border-b border-white/10 pb-1.5">
+                    {trimmed.replace(/^#\s+/, "")}
+                  </h2>
+                );
+              }
+
+              // Blockquote
+              if (trimmed.startsWith("> ")) {
+                return (
+                  <blockquote
+                    key={pIdx}
+                    className="border-l-2 border-[#00FF41]/60 bg-white/[0.02] pl-3 py-1.5 rounded-r-lg text-slate-300 italic"
+                  >
+                    {trimmed.replace(/^>\s+/, "")}
+                  </blockquote>
+                );
+              }
+
+              // Bullet List
+              if (trimmed.split("\n").some((l) => l.trim().startsWith("- ") || l.trim().startsWith("* ") || /^\d+\.\s/.test(l.trim()))) {
+                const listLines = trimmed.split("\n");
+                return (
+                  <ul key={pIdx} className="space-y-1 pl-2">
+                    {listLines.map((line, lIdx) => {
+                      const cleanLine = line.replace(/^(\s*[-*]|\s*\d+\.)\s+/, "");
+                      return (
+                        <li key={lIdx} className="flex items-start gap-2">
+                          <span className="text-[#00FF41] text-[10px] select-none mt-0.5">•</span>
+                          <span className="flex-1 leading-relaxed">{cleanLine}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                );
+              }
+
+              // Regular paragraph with inline bold / code parsing
+              return (
+                <p key={pIdx} className="leading-relaxed text-slate-200">
+                  {trimmed}
+                </p>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function HermesMessageBlock({
+  content,
+  sender,
+  timestamp,
+  model,
+  tokens,
+  onSaveToObsidian,
+}: Props) {
+  const [thoughtExpanded, setThoughtExpanded] = useState(false);
+  const [copiedAll, setCopiedAll] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const handleCopyFullMessage = () => {
+    cyberAudio.play("click");
+    // Strip XML tags for pure response copy
+    const cleanText = content.replace(/<(thought|tool_call|tool_response)>[\s\S]*?<\/\1>/gi, "").trim();
+    navigator.clipboard?.writeText(cleanText || content);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 2000);
+  };
+
+  const handleToggleSpeak = () => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    const cleanText = content.replace(/<(thought|tool_call|tool_response)>[\s\S]*?<\/\1>/gi, "").trim();
+    if (!cleanText) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 1.05;
+    utterance.pitch = 1.0;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
   };
 
   // User Message Rendering
   if (sender === "user") {
     return (
-      <div className="flex justify-end font-mono select-none my-1">
-        <div className="max-w-2xl p-3.5 sm:p-4 rounded-2xl bg-black/60 border border-[#00FF41]/30 text-[#F1F3F9] text-xs leading-relaxed space-y-1 shadow-[0_0_15px_rgba(0,255,65,0.05)]">
+      <div className="flex justify-end font-mono select-none my-1.5 animate-fade-in">
+        <div className="max-w-2xl p-3.5 sm:p-4 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#F1F3F9] text-xs leading-relaxed space-y-1.5 shadow-[0_0_15px_rgba(0,255,65,0.06)]">
           <div className="flex items-center justify-between text-[10px] text-[#4F536E] pb-1 border-b border-white/5">
-            <span className="font-bold text-[#00FF41] flex items-center gap-1">
+            <span className="font-bold text-[#00FF41] flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
               <span>OPERATOR DIRECTIVE</span>
             </span>
             {timestamp && <span>{timestamp}</span>}
           </div>
-          <p className="whitespace-pre-wrap font-sans text-xs pt-1 text-slate-100 leading-relaxed">{content}</p>
+          <p className="whitespace-pre-wrap font-sans text-xs pt-0.5 text-slate-100 leading-relaxed select-text">
+            {content}
+          </p>
         </div>
       </div>
     );
@@ -97,8 +278,8 @@ export default function HermesMessageBlock({ content, sender, timestamp, model }
   // System Message Rendering
   if (sender === "system") {
     return (
-      <div className="flex justify-center my-2 select-none font-mono">
-        <div className="px-3 py-1 rounded-full bg-white/[0.02] border border-white/10 text-[10px] text-[#9499B3] flex items-center gap-2">
+      <div className="flex justify-center my-2 select-none font-mono animate-fade-in">
+        <div className="px-3.5 py-1 rounded-full bg-white/[0.03] border border-white/10 text-[10px] text-[#9499B3] flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-pulse" />
           <span>{content}</span>
           {timestamp && <span className="text-[#4F536E]">• {timestamp}</span>}
@@ -111,7 +292,7 @@ export default function HermesMessageBlock({ content, sender, timestamp, model }
   const segments = parseHermesContent(content);
 
   return (
-    <div className="flex justify-start font-mono my-2">
+    <div className="flex justify-start font-mono my-2 animate-fade-in">
       <div className="max-w-4xl w-full p-4 sm:p-5 rounded-2xl bg-[#090B14]/90 border border-white/10 text-xs space-y-3.5 shadow-xl backdrop-blur-md">
         {/* Hermes Message Header */}
         <div className="flex items-center justify-between pb-2.5 border-b border-white/10">
@@ -127,7 +308,10 @@ export default function HermesMessageBlock({ content, sender, timestamp, model }
             </span>
           </div>
 
-          {timestamp && <span className="text-[10px] text-[#4F536E]">{timestamp}</span>}
+          <div className="flex items-center gap-2 text-[10px] text-[#4F536E]">
+            {tokens && <span className="text-[#00FF41] font-mono">{tokens} tok</span>}
+            {timestamp && <span>{timestamp}</span>}
+          </div>
         </div>
 
         {/* Parsed Segments Stream */}
@@ -170,7 +354,6 @@ export default function HermesMessageBlock({ content, sender, timestamp, model }
             }
 
             if (seg.type === "tool_call") {
-              const codeId = `tool-call-${idx}`;
               return (
                 <div
                   key={idx}
@@ -181,14 +364,6 @@ export default function HermesMessageBlock({ content, sender, timestamp, model }
                       <Terminal size={12} />
                       <span>FUNCTION INVOCATION // TOOL_CALL</span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyCode(codeId, seg.content)}
-                      className="text-[9px] text-[#4F536E] hover:text-white flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedCodeId === codeId ? <Check size={10} className="text-[#00FF41]" /> : <Copy size={10} />}
-                      <span>{copiedCodeId === codeId ? "COPIED" : "COPY"}</span>
-                    </button>
                   </div>
 
                   <pre className="p-2 rounded-lg bg-black/60 text-[10px] text-[#00FF41] overflow-x-auto">
@@ -219,16 +394,79 @@ export default function HermesMessageBlock({ content, sender, timestamp, model }
               );
             }
 
-            // Regular Response Body
-            return (
-              <div
-                key={idx}
-                className="font-sans text-xs text-[#F1F3F9] leading-relaxed whitespace-pre-wrap selection:bg-[#00FF41]/30"
-              >
-                {seg.content}
-              </div>
-            );
+            // Rich Markdown Body
+            return <MarkdownContent key={idx} text={seg.content} />;
           })}
+        </div>
+
+        {/* Bottom Message Action Bar */}
+        <div className="flex items-center justify-between pt-2.5 border-t border-white/5 text-[10px] text-[#9499B3]">
+          <div className="flex items-center gap-2">
+            {/* Copy Full Message */}
+            <button
+              type="button"
+              onClick={handleCopyFullMessage}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-white transition-colors cursor-pointer"
+              title="Copy message text"
+            >
+              {copiedAll ? (
+                <>
+                  <Check size={12} className="text-[#00FF41]" />
+                  <span className="text-[#00FF41] font-bold">COPIED</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={12} />
+                  <span>COPY</span>
+                </>
+              )}
+            </button>
+
+            {/* Save to Obsidian */}
+            <button
+              type="button"
+              onClick={() => {
+                cyberAudio.play("chime");
+                if (onSaveToObsidian) {
+                  onSaveToObsidian(content);
+                } else {
+                  window.dispatchEvent(
+                    new CustomEvent("dirtynest-add-note", {
+                      detail: {
+                        title: `Hermes AI Brief - ${new Date().toLocaleDateString()}`,
+                        content: content.replace(/<(thought|tool_call|tool_response)>[\s\S]*?<\/\1>/gi, "").trim(),
+                        tags: ["hermes-ai", "chat-export"],
+                      },
+                    })
+                  );
+                }
+              }}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#00F0FF] hover:text-cyan-300 transition-colors cursor-pointer"
+              title="Save to Obsidian Markdown Notes"
+            >
+              <Database size={12} />
+              <span>SAVE TO OBSIDIAN</span>
+            </button>
+
+            {/* Read Aloud (TTS) */}
+            <button
+              type="button"
+              onClick={handleToggleSpeak}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+                isSpeaking
+                  ? "bg-purple-500/20 text-purple-400 border border-purple-500/40 animate-pulse"
+                  : "bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-purple-300"
+              }`}
+              title={isSpeaking ? "Stop speech audio" : "Read aloud (Text-to-Speech)"}
+            >
+              {isSpeaking ? <VolumeX size={12} /> : <Volume2 size={12} />}
+              <span>{isSpeaking ? "STOP AUDIO" : "READ ALOUD"}</span>
+            </button>
+          </div>
+
+          <span className="text-[9px] text-[#4F536E]">
+            ACP PROTOCOL V2 // VERIFIED
+          </span>
         </div>
       </div>
     </div>
