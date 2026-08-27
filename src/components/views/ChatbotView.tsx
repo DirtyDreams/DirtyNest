@@ -991,10 +991,10 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
       </div>
 
       {/* MAIN CHAT & RESEARCH WORKSPACE (2-COLUMN SPLIT SCREEN) */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start w-full">
-        {/* LEFT CHAT THREADS & PERSONA SIDEBAR */}
+      <div className="flex flex-col lg:flex-row gap-4 items-start w-full relative">
+        {/* LEFT CHAT THREADS & PERSONA SIDEBAR (STICKY ON SCROLL) */}
         {isSidebarOpen && (
-          <div className="w-full lg:w-auto shrink-0 animate-fade-in">
+          <div className="w-full lg:w-auto shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] z-20 animate-fade-in">
             <ChatbotSidebar
               sessions={sessions}
               activeSessionId={activeSessionId}
@@ -1019,9 +1019,9 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
 
         {/* RIGHT MAIN CHAT CONVERSATION WORKSPACE */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start w-full min-w-0">
-          {/* MESSAGES THREAD (Full, 6-Cols if Canvas Open, or 8-Cols if Sources Drawer Open) */}
+          {/* MESSAGES THREAD */}
           <div 
-            className={`relative cyber-card p-4 flex flex-col justify-between gap-4 min-h-[680px] w-full transition-colors ${activeArtifact ? "lg:col-span-6" : showSourcesDrawer ? "lg:col-span-8" : "lg:col-span-12"} ${isDragging ? "border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.1)]" : ""}`}
+            className={`relative cyber-card p-4 flex flex-col justify-between gap-4 w-full transition-colors ${activeArtifact ? "lg:col-span-6" : showSourcesDrawer ? "lg:col-span-8" : "lg:col-span-12"} ${isDragging ? "border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.1)]" : ""}`}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
             onDrop={(e) => { e.preventDefault(); setIsDragging(false); /* in a real app, handle files here */ }}
@@ -1034,8 +1034,8 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
              </div>
           )}
 
-          {/* Scrollable Messages Stream */}
-          <div className="flex flex-col gap-3.5 overflow-y-auto flex-1 min-h-[480px] max-h-[720px] pr-2 w-full max-w-[88%] 2xl:max-w-[80%] mx-auto">
+          {/* Natural Full-Page Messages Stream (No inner scrollbar) */}
+          <div className="flex flex-col gap-3.5 w-full max-w-[88%] 2xl:max-w-[80%] mx-auto pb-6">
             {messages.map((msg) => {
               if (msg.sender === "system") {
                 return (
@@ -1061,28 +1061,29 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Prompt Templates Quick Carousel */}
-          <div className="flex flex-col gap-2 pt-2.5 border-t border-white/5 w-full max-w-[88%] 2xl:max-w-[80%] mx-auto">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-[#4F536E] uppercase font-bold tracking-wider">
-                Deep Research Prompt Starters:
-              </span>
-            </div>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {DEEP_RESEARCH_TEMPLATES.map((tpl) => (
-                <button
-                  key={tpl.label}
-                  onClick={() => handleSend(tpl.prompt)}
-                  disabled={isGenerating}
-                  className="px-3.5 py-1.5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] text-[11px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40 shadow-sm hover:bg-white/[0.05]"
-                >
-                  {tpl.label}
-                </button>
-              ))}
-            </div>
+          {/* Floating Sticky Bottom Composer Dock */}
+          <div className="sticky bottom-3 z-30 pt-3 pb-1 w-full bg-gradient-to-t from-[#05060A] via-[#05060A]/95 to-transparent backdrop-blur-md">
+            <div className="flex flex-col gap-2 w-full max-w-[88%] 2xl:max-w-[80%] mx-auto">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-[#4F536E] uppercase font-bold tracking-wider">
+                  Deep Research Prompt Starters:
+                </span>
+              </div>
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {DEEP_RESEARCH_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.label}
+                    onClick={() => handleSend(tpl.prompt)}
+                    disabled={isGenerating}
+                    className="px-3.5 py-1.5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] text-[11px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40 shadow-sm hover:bg-white/[0.05]"
+                  >
+                    {tpl.label}
+                  </button>
+                ))}
+              </div>
 
-            {/* Interactive Compositor */}
-            <div className="relative mt-1 bg-[#080A16]/90 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl focus-within:border-[#00FF41]/50 focus-within:shadow-[0_0_25px_rgba(0,255,65,0.12)] transition-all flex flex-col w-full max-w-[88%] 2xl:max-w-[80%] mx-auto">
+              {/* Interactive Compositor */}
+              <div className="relative mt-1 bg-[#080A16]/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.85)] focus-within:border-[#00FF41]/50 focus-within:shadow-[0_0_30px_rgba(0,255,65,0.15)] transition-all flex flex-col w-full">
               
               {/* Slash Command Popover */}
               {showSlashMenu && (
@@ -1278,6 +1279,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
               </div>
             </div>
           </div>
+        </div>
         </div>
 
         {/* ARTIFACTS LIVE CANVAS PANE (6-Cols) */}
