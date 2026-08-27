@@ -11,6 +11,9 @@ import {
   DollarSign,
   Layers,
 } from "lucide-react";
+import NumberFlow from "@number-flow/react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface ModelQuota {
@@ -118,18 +121,22 @@ export default function AiAgentQuotaWidget() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/50 border border-white/5 text-[10px]">
+          <Badge variant="outline" className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-black/50 border-white/10 text-[10px]">
             <span className="text-[#4F536E]">EST. BURN:</span>
-            <span className="text-[#FFB800] font-bold">${totalCost}</span>
-          </div>
+            <span className="text-[#FFB800] font-bold">
+              $<NumberFlow value={Number(totalCost)} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />
+            </span>
+          </Badge>
 
-          <button
+          <Button
             onClick={handleRefresh}
-            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
             title="Refresh LLM Quotas"
           >
             <RotateCcw size={13} className={isRefreshing ? "animate-spin" : ""} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -137,7 +144,6 @@ export default function AiAgentQuotaWidget() {
       <div className="space-y-3 pt-1">
         {models.map((m) => {
           const pct = Math.round((m.usedTokens / m.maxTokens) * 100);
-          const isHigh = pct > 75;
 
           return (
             <div
@@ -158,17 +164,18 @@ export default function AiAgentQuotaWidget() {
 
                 <div className="flex items-center gap-2 shrink-0 text-[10px]">
                   <span className="text-[#9499B3]">
-                    {(m.usedTokens / 1000).toFixed(0)}k / {(m.maxTokens / 1000).toFixed(0)}k
+                    <NumberFlow value={Math.round(m.usedTokens / 1000)} />k / {Math.round(m.maxTokens / 1000)}k
                   </span>
-                  <span
-                    className="font-bold px-1.5 py-0.5 rounded text-[9px]"
+                  <Badge
+                    variant="outline"
+                    className="font-bold px-1.5 py-0.5 rounded text-[9px] border-transparent"
                     style={{
                       backgroundColor: `${m.color}20`,
                       color: m.color,
                     }}
                   >
-                    {pct}%
-                  </span>
+                    <NumberFlow value={pct} />%
+                  </Badge>
                 </div>
               </div>
 
@@ -186,7 +193,9 @@ export default function AiAgentQuotaWidget() {
 
               {/* Mini RPM stats row */}
               <div className="flex items-center justify-between text-[9px] text-[#4F536E] pt-0.5">
-                <span>RPM: {m.rpmUsed} / {m.rpmLimit}</span>
+                <span>
+                  RPM: <NumberFlow value={m.rpmUsed} /> / {m.rpmLimit}
+                </span>
                 <span>Session: ${m.cost.toFixed(2)}</span>
               </div>
             </div>

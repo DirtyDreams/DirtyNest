@@ -11,6 +11,9 @@ import {
   Server,
   Zap,
 } from "lucide-react";
+import NumberFlow from "@number-flow/react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function AwsCloudBurnWidget() {
@@ -51,24 +54,30 @@ export default function AwsCloudBurnWidget() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#FFB800]/10 text-[#FFB800] border border-[#FFB800]/30 text-[10px] font-bold">
-          <span>{burnPct}% OF BUDGET</span>
-        </div>
+        <Badge variant="outline" className="flex items-center gap-1.5 px-2 py-0.5 bg-[#FFB800]/10 text-[#FFB800] border-[#FFB800]/30 text-[10px] font-bold">
+          <span><NumberFlow value={burnPct} />% OF BUDGET</span>
+        </Badge>
       </div>
 
       {/* Burn Rate Metrics Strip */}
       <div className="grid grid-cols-3 gap-2 text-center text-xs">
         <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col">
           <span className="text-[9px] text-[#4F536E] uppercase">Current Spend</span>
-          <span className="text-sm font-black text-[#F1F3F9] mt-0.5">${spent}</span>
+          <span className="text-sm font-black text-[#F1F3F9] mt-0.5">
+            $<NumberFlow value={spent} />
+          </span>
         </div>
         <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col">
           <span className="text-[9px] text-[#4F536E] uppercase">Forecast EOM</span>
-          <span className="text-sm font-black text-[#00F0FF] mt-0.5">${projected}</span>
+          <span className="text-sm font-black text-[#00F0FF] mt-0.5">
+            $<NumberFlow value={projected} />
+          </span>
         </div>
         <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col">
           <span className="text-[9px] text-[#4F536E] uppercase">Max Budget</span>
-          <span className="text-sm font-black text-[#9499B3] mt-0.5">${budget}</span>
+          <span className="text-sm font-black text-[#9499B3] mt-0.5">
+            $<NumberFlow value={budget} />
+          </span>
         </div>
       </div>
 
@@ -105,13 +114,15 @@ export default function AwsCloudBurnWidget() {
             ))}
           </div>
 
-          <button
+          <Button
             onClick={handleTerminateIdle}
-            className="w-full py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            variant="destructive"
+            size="sm"
+            className="w-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs h-8 cursor-pointer flex items-center justify-center gap-1.5"
           >
             <Trash2 size={12} />
             <span>TERMINATE IDLE RESOURCES</span>
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="p-2 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-center text-xs text-[#00FF41] flex items-center justify-center gap-1.5">

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, memo } from "react";
 import { Cpu, HardDrive, Wifi, MemoryStick, Activity } from "lucide-react";
+import NumberFlow from "@number-flow/react";
+import { Badge } from "@/components/ui/badge";
 
 interface StatData {
   id: string;
@@ -191,9 +193,9 @@ function SystemStats() {
         <Activity size={15} className="icon" />
         <h3>Hardware Telemetry</h3>
         <div className="ml-auto flex items-center gap-2">
-          <span className="text-[10px] font-mono text-[#00FF41] px-2 py-0.5 rounded bg-[#00FF41]/10 border border-[#00FF41]/20">
+          <Badge variant="outline" className="text-[10px] font-mono text-[#00FF41] bg-[#00FF41]/10 border-[#00FF41]/30">
             POLL: 2.5s
-          </span>
+          </Badge>
         </div>
       </div>
 
@@ -223,7 +225,7 @@ function SystemStats() {
                       textShadow: `0 0 10px ${stat.glowColor}`,
                     }}
                   >
-                    {stat.value}
+                    <NumberFlow value={stat.value} />
                   </span>
                   <span className="text-[9px] font-mono text-[#9499B3] uppercase">
                     {stat.unit}
