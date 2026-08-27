@@ -1035,7 +1035,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           )}
 
           {/* Scrollable Messages Stream */}
-          <div className="flex flex-col gap-3 overflow-y-auto flex-1 min-h-[380px] max-h-[620px] pr-2 max-w-4xl mx-auto w-full">
+          <div className="flex flex-col gap-3.5 overflow-y-auto flex-1 min-h-[480px] max-h-[720px] pr-2 w-full">
             {messages.map((msg) => {
               if (msg.sender === "system") {
                 return (
@@ -1062,7 +1062,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
           </div>
 
           {/* Prompt Templates Quick Carousel */}
-          <div className="flex flex-col gap-2 pt-2 border-t border-white/5 max-w-4xl mx-auto w-full">
+          <div className="flex flex-col gap-2 pt-2.5 border-t border-white/5 w-full">
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-[#4F536E] uppercase font-bold tracking-wider">
                 Deep Research Prompt Starters:
@@ -1074,7 +1074,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                   key={tpl.label}
                   onClick={() => handleSend(tpl.prompt)}
                   disabled={isGenerating}
-                  className="px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] text-[11px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40 shadow-sm hover:bg-white/[0.05]"
+                  className="px-3.5 py-1.5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] text-[11px] whitespace-nowrap transition-all cursor-pointer disabled:opacity-40 shadow-sm hover:bg-white/[0.05]"
                 >
                   {tpl.label}
                 </button>
@@ -1082,7 +1082,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
             </div>
 
             {/* Interactive Compositor */}
-            <div className="relative mt-1 bg-[#080A16]/90 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl focus-within:border-[#00FF41]/50 focus-within:shadow-[0_0_25px_rgba(0,255,65,0.12)] transition-all flex flex-col">
+            <div className="relative mt-1 bg-[#080A16]/90 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl focus-within:border-[#00FF41]/50 focus-within:shadow-[0_0_25px_rgba(0,255,65,0.12)] transition-all flex flex-col w-full">
               
               {/* Slash Command Popover */}
               {showSlashMenu && (

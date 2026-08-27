@@ -18,6 +18,7 @@ import {
   Database,
   FileCode,
   CheckCheck,
+  Table,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -72,6 +73,46 @@ export function parseHermesContent(raw: string): ParsedSegment[] {
   return segments;
 }
 
+// Inline formatting helper for bold, code, links
+function formatInlineMarkdown(text: string) {
+  // Regex to split by bold (**text**), inline code (`code`), or links [text](url)
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g);
+
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={i} className="text-white font-bold">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return (
+        <code key={i} className="px-1.5 py-0.5 rounded bg-white/10 text-[#00FF41] font-mono text-[11px]">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    if (part.startsWith("[") && part.includes("](") && part.endsWith(")")) {
+      const match = part.match(/\[([^\]]+)\]\(([^)]+)\)/);
+      if (match) {
+        return (
+          <a
+            key={i}
+            href={match[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#00F0FF] hover:underline font-semibold"
+          >
+            {match[1]}
+          </a>
+        );
+      }
+    }
+    return part;
+  });
+}
+
 // Markdown Formatter Component for AI text
 function MarkdownContent({ text }: { text: string }) {
   const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
@@ -87,7 +128,7 @@ function MarkdownContent({ text }: { text: string }) {
   const parts = text.split(/(```[\s\S]*?```)/g);
 
   return (
-    <div className="space-y-3 font-sans text-xs text-[#E2E8F0] leading-relaxed select-text">
+    <div className="space-y-3 font-sans text-xs text-[#E2E8F0] leading-relaxed select-text w-full">
       {parts.map((part, idx) => {
         if (part.startsWith("```") && part.endsWith("```")) {
           const lines = part.slice(3, -3).split("\n");
@@ -98,27 +139,27 @@ function MarkdownContent({ text }: { text: string }) {
           return (
             <div
               key={idx}
-              className="my-3 rounded-xl border border-white/10 bg-[#070913] overflow-hidden font-mono text-[11px] shadow-lg"
+              className="my-3 rounded-xl border border-white/10 bg-[#070913] overflow-hidden font-mono text-[11px] shadow-lg w-full"
             >
               {/* Code block header */}
-              <div className="flex items-center justify-between px-3 py-1.5 bg-[#0D101E] border-b border-white/10 text-[10px] text-[#9499B3]">
+              <div className="flex items-center justify-between px-3.5 py-2 bg-[#0D101E] border-b border-white/10 text-[10px] text-[#9499B3]">
                 <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[#00FF41]">
-                  <FileCode size={12} />
+                  <FileCode size={13} />
                   <span>{language}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleCopy(codeBody, idx)}
-                  className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-white/5"
+                  className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer px-2.5 py-1 rounded hover:bg-white/5"
                 >
                   {copiedCodeIndex === idx ? (
                     <>
-                      <CheckCheck size={11} className="text-[#00FF41]" />
-                      <span className="text-[#00FF41]">COPIED</span>
+                      <CheckCheck size={12} className="text-[#00FF41]" />
+                      <span className="text-[#00FF41] font-bold">COPIED</span>
                     </>
                   ) : (
                     <>
-                      <Copy size={11} />
+                      <Copy size={12} />
                       <span>COPY</span>
                     </>
                   )}
@@ -126,45 +167,101 @@ function MarkdownContent({ text }: { text: string }) {
               </div>
 
               {/* Code body */}
-              <pre className="p-3 overflow-x-auto text-[#A6E22E] bg-black/50 leading-relaxed font-mono">
+              <pre className="p-3.5 overflow-x-auto text-[#A6E22E] bg-black/50 leading-relaxed font-mono">
                 <code>{codeBody}</code>
               </pre>
             </div>
           );
         }
 
-        // Render standard Markdown elements (Headers, Lists, Blockquotes, Paragraphs)
+        // Render standard Markdown elements (Headers, Tables, Lists, Blockquotes, Paragraphs)
         const paragraphs = part.split("\n\n");
         return (
-          <div key={idx} className="space-y-2.5">
+          <div key={idx} className="space-y-3 w-full">
             {paragraphs.map((p, pIdx) => {
               const trimmed = p.trim();
               if (!trimmed) return null;
 
+              // Markdown Table Detection (contains pipes and table row delimiters)
+              if (trimmed.includes("|") && (trimmed.includes("---") || trimmed.includes(":---") || trimmed.split("\n").length >= 2)) {
+                const rows = trimmed.split("\n").filter((r) => r.trim().startsWith("|") || r.trim().includes("|"));
+                if (rows.length >= 2) {
+                  const headerRow = rows[0].split("|").filter((c) => c.trim().length > 0);
+                  const dataRows = rows.slice(1).filter((r) => !r.includes("---") && !r.includes(":---"));
+
+                  return (
+                    <div
+                      key={pIdx}
+                      className="my-3 overflow-x-auto rounded-xl border border-white/10 bg-[#070913]/90 shadow-md w-full"
+                    >
+                      <table className="w-full text-left text-xs border-collapse font-sans">
+                        <thead>
+                          <tr className="bg-[#0D101E] border-b border-white/10 text-white font-bold">
+                            {headerRow.map((cell, cIdx) => (
+                              <th key={cIdx} className="px-3.5 py-2.5 text-[11px] text-[#00F0FF] uppercase tracking-wider">
+                                {formatInlineMarkdown(cell.trim())}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {dataRows.map((row, rIdx) => {
+                            const cells = row.split("|").filter((c) => c.trim().length > 0);
+                            return (
+                              <tr key={rIdx} className="hover:bg-white/[0.02] transition-colors">
+                                {cells.map((cell, cIdx) => (
+                                  <td key={cIdx} className="px-3.5 py-2 text-[11px] text-slate-200">
+                                    {formatInlineMarkdown(cell.trim())}
+                                  </td>
+                                ))}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                }
+              }
+
+              // Divider
+              if (trimmed === "---" || trimmed === "***") {
+                return <hr key={pIdx} className="border-white/10 my-3" />;
+              }
+
+              // Header 4
+              if (trimmed.startsWith("#### ")) {
+                return (
+                  <h4 key={pIdx} className="text-xs font-bold text-[#00FF41] pt-2 font-mono flex items-center gap-1.5 uppercase tracking-wider">
+                    <span>####</span>
+                    <span>{formatInlineMarkdown(trimmed.replace(/^####\s+/, ""))}</span>
+                  </h4>
+                );
+              }
               // Header 3
               if (trimmed.startsWith("### ")) {
                 return (
-                  <h4 key={pIdx} className="text-sm font-bold text-white pt-2 text-[#00FF41] font-mono flex items-center gap-1.5">
-                    <span>#</span>
-                    <span>{trimmed.replace(/^###\s+/, "")}</span>
-                  </h4>
+                  <h3 key={pIdx} className="text-sm font-bold text-white pt-2 text-[#00FF41] font-mono flex items-center gap-1.5">
+                    <span>###</span>
+                    <span>{formatInlineMarkdown(trimmed.replace(/^###\s+/, ""))}</span>
+                  </h3>
                 );
               }
               // Header 2
               if (trimmed.startsWith("## ")) {
                 return (
-                  <h3 key={pIdx} className="text-sm font-black text-white pt-2.5 text-[#00F0FF] font-mono flex items-center gap-1.5 border-b border-white/5 pb-1">
+                  <h2 key={pIdx} className="text-sm font-black text-white pt-2.5 text-[#00F0FF] font-mono flex items-center gap-1.5 border-b border-white/5 pb-1">
                     <span>##</span>
-                    <span>{trimmed.replace(/^##\s+/, "")}</span>
-                  </h3>
+                    <span>{formatInlineMarkdown(trimmed.replace(/^##\s+/, ""))}</span>
+                  </h2>
                 );
               }
               // Header 1
               if (trimmed.startsWith("# ")) {
                 return (
-                  <h2 key={pIdx} className="text-base font-black text-white pt-3 text-[#00FF41] font-mono border-b border-white/10 pb-1.5">
-                    {trimmed.replace(/^#\s+/, "")}
-                  </h2>
+                  <h1 key={pIdx} className="text-base font-black text-white pt-3 text-[#00FF41] font-mono border-b border-white/10 pb-1.5">
+                    {formatInlineMarkdown(trimmed.replace(/^#\s+/, ""))}
+                  </h1>
                 );
               }
 
@@ -173,9 +270,9 @@ function MarkdownContent({ text }: { text: string }) {
                 return (
                   <blockquote
                     key={pIdx}
-                    className="border-l-2 border-[#00FF41]/60 bg-white/[0.02] pl-3 py-1.5 rounded-r-lg text-slate-300 italic"
+                    className="border-l-2 border-[#00FF41]/60 bg-white/[0.02] pl-3.5 py-2 rounded-r-lg text-slate-300 italic"
                   >
-                    {trimmed.replace(/^>\s+/, "")}
+                    {formatInlineMarkdown(trimmed.replace(/^>\s+/, ""))}
                   </blockquote>
                 );
               }
@@ -184,13 +281,13 @@ function MarkdownContent({ text }: { text: string }) {
               if (trimmed.split("\n").some((l) => l.trim().startsWith("- ") || l.trim().startsWith("* ") || /^\d+\.\s/.test(l.trim()))) {
                 const listLines = trimmed.split("\n");
                 return (
-                  <ul key={pIdx} className="space-y-1 pl-2">
+                  <ul key={pIdx} className="space-y-1.5 pl-2">
                     {listLines.map((line, lIdx) => {
                       const cleanLine = line.replace(/^(\s*[-*]|\s*\d+\.)\s+/, "");
                       return (
                         <li key={lIdx} className="flex items-start gap-2">
-                          <span className="text-[#00FF41] text-[10px] select-none mt-0.5">•</span>
-                          <span className="flex-1 leading-relaxed">{cleanLine}</span>
+                          <span className="text-[#00FF41] text-xs select-none mt-0.5">•</span>
+                          <span className="flex-1 leading-relaxed">{formatInlineMarkdown(cleanLine)}</span>
                         </li>
                       );
                     })}
@@ -201,7 +298,7 @@ function MarkdownContent({ text }: { text: string }) {
               // Regular paragraph with inline bold / code parsing
               return (
                 <p key={pIdx} className="leading-relaxed text-slate-200">
-                  {trimmed}
+                  {formatInlineMarkdown(trimmed)}
                 </p>
               );
             })}
@@ -258,8 +355,8 @@ export default function HermesMessageBlock({
   // User Message Rendering
   if (sender === "user") {
     return (
-      <div className="flex justify-end font-mono select-none my-1.5 animate-fade-in">
-        <div className="max-w-2xl p-3.5 sm:p-4 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#F1F3F9] text-xs leading-relaxed space-y-1.5 shadow-[0_0_15px_rgba(0,255,65,0.06)]">
+      <div className="flex justify-end font-mono select-none my-1.5 animate-fade-in w-full">
+        <div className="max-w-3xl p-3.5 sm:p-4 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#F1F3F9] text-xs leading-relaxed space-y-1.5 shadow-[0_0_15px_rgba(0,255,65,0.06)]">
           <div className="flex items-center justify-between text-[10px] text-[#4F536E] pb-1 border-b border-white/5">
             <span className="font-bold text-[#00FF41] flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
@@ -278,8 +375,8 @@ export default function HermesMessageBlock({
   // System Message Rendering
   if (sender === "system") {
     return (
-      <div className="flex justify-center my-2 select-none font-mono animate-fade-in">
-        <div className="px-3.5 py-1 rounded-full bg-white/[0.03] border border-white/10 text-[10px] text-[#9499B3] flex items-center gap-2">
+      <div className="flex justify-center my-2 select-none font-mono animate-fade-in w-full">
+        <div className="px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-[10px] text-[#9499B3] flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-pulse" />
           <span>{content}</span>
           {timestamp && <span className="text-[#4F536E]">• {timestamp}</span>}
@@ -292,8 +389,8 @@ export default function HermesMessageBlock({
   const segments = parseHermesContent(content);
 
   return (
-    <div className="flex justify-start font-mono my-2 animate-fade-in">
-      <div className="max-w-4xl w-full p-4 sm:p-5 rounded-2xl bg-[#090B14]/90 border border-white/10 text-xs space-y-3.5 shadow-xl backdrop-blur-md">
+    <div className="flex justify-start font-mono my-2 animate-fade-in w-full">
+      <div className="w-full p-4 sm:p-5 rounded-2xl bg-[#090B14]/90 border border-white/10 text-xs space-y-3.5 shadow-xl backdrop-blur-md">
         {/* Hermes Message Header */}
         <div className="flex items-center justify-between pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2.5">
@@ -315,13 +412,13 @@ export default function HermesMessageBlock({
         </div>
 
         {/* Parsed Segments Stream */}
-        <div className="space-y-3">
+        <div className="space-y-3 w-full">
           {segments.map((seg, idx) => {
             if (seg.type === "thought") {
               return (
                 <div
                   key={idx}
-                  className="rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all overflow-hidden"
+                  className="rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all overflow-hidden w-full"
                 >
                   <div
                     onClick={() => {
@@ -357,7 +454,7 @@ export default function HermesMessageBlock({
               return (
                 <div
                   key={idx}
-                  className="rounded-xl border border-white/10 bg-[#070913] p-3 space-y-1.5 font-mono"
+                  className="rounded-xl border border-white/10 bg-[#070913] p-3 space-y-1.5 font-mono w-full"
                 >
                   <div className="flex items-center justify-between text-xs pb-1 border-b border-white/5">
                     <div className="flex items-center gap-1.5 text-[#00F0FF] text-[10px] font-bold">
@@ -366,7 +463,7 @@ export default function HermesMessageBlock({
                     </div>
                   </div>
 
-                  <pre className="p-2 rounded-lg bg-black/60 text-[10px] text-[#00FF41] overflow-x-auto">
+                  <pre className="p-2.5 rounded-lg bg-black/60 text-[10px] text-[#00FF41] overflow-x-auto">
                     <code>{seg.content}</code>
                   </pre>
                 </div>
@@ -377,7 +474,7 @@ export default function HermesMessageBlock({
               return (
                 <div
                   key={idx}
-                  className="rounded-xl border border-white/10 bg-[#070913] p-3 space-y-1.5 font-mono"
+                  className="rounded-xl border border-white/10 bg-[#070913] p-3 space-y-1.5 font-mono w-full"
                 >
                   <div className="flex items-center justify-between text-xs pb-1 border-b border-white/5">
                     <div className="flex items-center gap-1.5 text-[#00FF41] text-[10px] font-bold">
@@ -387,7 +484,7 @@ export default function HermesMessageBlock({
                     <span className="text-[8px] text-[#4F536E]">STATUS: OK</span>
                   </div>
 
-                  <pre className="p-2 rounded-lg bg-black/60 text-[10px] text-slate-300 overflow-x-auto">
+                  <pre className="p-2.5 rounded-lg bg-black/60 text-[10px] text-slate-300 overflow-x-auto">
                     <code>{seg.content}</code>
                   </pre>
                 </div>
@@ -406,7 +503,7 @@ export default function HermesMessageBlock({
             <button
               type="button"
               onClick={handleCopyFullMessage}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-white transition-colors cursor-pointer"
               title="Copy message text"
             >
               {copiedAll ? (
@@ -441,7 +538,7 @@ export default function HermesMessageBlock({
                   );
                 }
               }}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#00F0FF] hover:text-cyan-300 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#00F0FF] hover:text-cyan-300 transition-colors cursor-pointer"
               title="Save to Obsidian Markdown Notes"
             >
               <Database size={12} />
@@ -452,7 +549,7 @@ export default function HermesMessageBlock({
             <button
               type="button"
               onClick={handleToggleSpeak}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
                 isSpeaking
                   ? "bg-purple-500/20 text-purple-400 border border-purple-500/40 animate-pulse"
                   : "bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-purple-300"
