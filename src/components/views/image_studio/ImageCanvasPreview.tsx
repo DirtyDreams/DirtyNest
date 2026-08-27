@@ -22,6 +22,7 @@ interface Props {
   aspectRatio: string;
   isGenerating: boolean;
   onOpenToolbox?: () => void;
+  onOpenStudioPro?: () => void;
 }
 
 export default function ImageCanvasPreview({
@@ -30,6 +31,7 @@ export default function ImageCanvasPreview({
   aspectRatio,
   isGenerating,
   onOpenToolbox,
+  onOpenStudioPro,
 }: Props) {
   const [zoom, setZoom] = useState(100);
   const [showSplit, setShowSplit] = useState(false);
@@ -112,6 +114,17 @@ export default function ImageCanvasPreview({
           >
             {copied ? <Check size={13} className="text-[#00FF41]" /> : <Share2 size={13} />}
           </button>
+
+          {onOpenStudioPro && (
+            <button
+              type="button"
+              onClick={onOpenStudioPro}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#00F0FF]/15 border border-[#00F0FF]/40 text-[#00F0FF] font-bold text-xs hover:bg-[#00F0FF]/25 cursor-pointer transition-all ml-1"
+            >
+              <Sparkles size={12} />
+              <span>STUDIO PRO (EDIT)</span>
+            </button>
+          )}
 
           <button
             type="button"

@@ -10,11 +10,13 @@ import {
   Wrench,
   Flame,
   Activity,
+  Paintbrush,
 } from "lucide-react";
 import PromptMatrixGenerator, { GenerationParams } from "./image_studio/PromptMatrixGenerator";
 import ImageCanvasPreview from "./image_studio/ImageCanvasPreview";
 import GeneratedAssetsGallery, { AssetItem, SAMPLE_ASSETS } from "./image_studio/GeneratedAssetsGallery";
 import ImageToolboxDrawer from "./image_studio/ImageToolboxDrawer";
+import InteractiveCanvasEditor from "./image_studio/InteractiveCanvasEditor";
 import LatentDiffusionStudioModal from "./image_studio/LatentDiffusionStudioModal";
 import CyberpunkShaderFxStudioModal from "./tools/CyberpunkShaderFxStudioModal";
 import { cyberAudio } from "@/lib/cyberAudio";
@@ -24,7 +26,7 @@ export default function ImageStudioView() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showLatentModal, setShowLatentModal] = useState(false);
   const [showShaderModal, setShowShaderModal] = useState(false);
-  const [activeSubTab, setActiveSubTab] = useState<"generator" | "gallery" | "toolbox">("generator");
+  const [activeSubTab, setActiveSubTab] = useState<"editor" | "generator" | "gallery" | "toolbox">("editor");
 
   const handleGenerate = (params: GenerationParams) => {
     setIsGenerating(true);
@@ -57,14 +59,14 @@ export default function ImageStudioView() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-black tracking-tight text-[#F1F3F9]">
-                IMAGE STUDIO // <span className="text-[#00FF41]">NEURAL DIFFUSION CANVAS</span>
+                IMAGE STUDIO PRO // <span className="text-[#00FF41]">NEURAL CANVAS & INPAINT</span>
               </h2>
               <span className="text-[10px] font-bold text-[#00FF41] px-2 py-0.5 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
-                SDXL TURBO + HERMES PROMPT V2
+                SDXL TURBO + INPAINT V2
               </span>
             </div>
             <p className="text-xs text-[#9499B3]">
-              Tactical image synthesis, style matrix, real-time latent sampling & 4K AI upscaling
+              Photo editing, generative fill, mask inpainting, object erasing, color grading & HUD overlays
             </p>
           </div>
         </div>
@@ -103,6 +105,7 @@ export default function ImageStudioView() {
       {/* Sub-Navigation Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {[
+          { id: "editor" as const, label: "Canvas Studio Pro (Editor & Inpaint)", icon: Paintbrush },
           { id: "generator" as const, label: "Prompt Matrix & Live Canvas", icon: Wand2 },
           { id: "gallery" as const, label: "Generated Assets Vault", icon: Grid },
           { id: "toolbox" as const, label: "Neural Post-Processing Toolbox", icon: Wrench },
@@ -132,6 +135,12 @@ export default function ImageStudioView() {
       </div>
 
       {/* Main Content Area */}
+      {activeSubTab === "editor" && (
+        <div className="animate-fade-in">
+          <InteractiveCanvasEditor initialAsset={activeAsset} />
+        </div>
+      )}
+
       {activeSubTab === "generator" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start animate-fade-in">
           {/* Left Prompt Matrix (6 cols) */}
@@ -150,6 +159,7 @@ export default function ImageStudioView() {
               aspectRatio={activeAsset.aspectRatio}
               isGenerating={isGenerating}
               onOpenToolbox={() => setActiveSubTab("toolbox")}
+              onOpenStudioPro={() => setActiveSubTab("editor")}
             />
           </div>
         </div>
@@ -160,7 +170,7 @@ export default function ImageStudioView() {
           <GeneratedAssetsGallery
             onSelectAsset={(asset) => {
               setActiveAsset(asset);
-              setActiveSubTab("generator");
+              setActiveSubTab("editor");
             }}
             selectedAssetId={activeAsset.id}
           />
@@ -175,6 +185,7 @@ export default function ImageStudioView() {
             title={activeAsset.title}
             aspectRatio={activeAsset.aspectRatio}
             isGenerating={false}
+            onOpenStudioPro={() => setActiveSubTab("editor")}
           />
         </div>
       )}
