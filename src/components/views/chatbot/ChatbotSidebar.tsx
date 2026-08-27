@@ -354,12 +354,12 @@ export default function ChatbotSidebar({
         </div>
 
         {/* Snippet */}
-        <p className="text-[10px] text-[#9499B3] line-clamp-1 leading-snug">
+        <p className="text-[11px] text-[#9499B3] line-clamp-2 leading-relaxed">
           {session.lastMessageSnippet}
         </p>
 
         {/* Footer Meta */}
-        <div className="flex items-center justify-between text-[8px] text-[#4F536E] pt-0.5">
+        <div className="flex items-center justify-between text-[9px] text-[#4F536E] pt-1 border-t border-white/5">
           <div className="flex items-center gap-1.5">
             <span className="text-[#00FF41] font-bold">{session.personaName}</span>
             <span>•</span>
@@ -375,7 +375,7 @@ export default function ChatbotSidebar({
   const uncategorizedSessions = processedSessions.filter((s) => !s.folderId && !s.isPinned);
 
   return (
-    <div className="w-80 shrink-0 cyber-card p-3 flex flex-col justify-between h-[720px] font-mono select-none overflow-hidden transition-all border border-white/10 shadow-2xl relative">
+    <div className="w-80 sm:w-96 lg:w-[380px] xl:w-[410px] shrink-0 cyber-card p-3.5 flex flex-col justify-between h-[720px] font-mono select-none overflow-hidden transition-all border border-white/10 shadow-2xl relative">
       {/* Top Section */}
       <div className="flex flex-col gap-2.5">
         {/* Header */}
