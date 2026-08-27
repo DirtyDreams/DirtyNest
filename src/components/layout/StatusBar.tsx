@@ -95,7 +95,7 @@ export default function StatusBar({
               title="Interactive Canvas FX & Particle Mesh Controller"
             >
               <Atom size={11} className={fxConfig.backgroundFx !== "none" ? "animate-spin text-[#00FF41]" : ""} style={{ animationDuration: "8s" }} />
-              <span>FX: {fxConfig.backgroundFx === "none" ? "OFF" : "PARTICLES"}</span>
+              <span>FX: {fxConfig.backgroundFx === "none" ? "OFF" : fxConfig.backgroundFx === "tunnel" ? "3D TUNNEL" : "PARTICLES"}</span>
             </button>
           </PopoverTrigger>
           <PopoverContent side="top" align="end" className="w-72 bg-[#090A14] border-white/10 p-3 shadow-2xl backdrop-blur-2xl">
@@ -103,26 +103,42 @@ export default function StatusBar({
               <div className="flex items-center justify-between border-b border-white/10 pb-2">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#F1F3F9]">
                   <Atom size={13} className="text-[#00FF41]" />
-                  <span>PARTICLE MESH FX</span>
+                  <span>CANVAS FX & 3D TUNNEL</span>
                 </div>
                 <Badge
-                  variant={fxConfig.backgroundFx === "particles" ? "default" : "secondary"}
-                  className={fxConfig.backgroundFx === "particles" ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/30" : ""}
+                  variant={fxConfig.backgroundFx !== "none" ? "default" : "secondary"}
+                  className={fxConfig.backgroundFx !== "none" ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/30" : ""}
                 >
-                  {fxConfig.backgroundFx === "particles" ? "ACTIVE" : "DISABLED"}
+                  {fxConfig.backgroundFx === "tunnel" ? "3D TUNNEL" : fxConfig.backgroundFx === "particles" ? "PARTICLES" : "OFF"}
                 </Badge>
               </div>
 
-              {/* Master FX Toggle */}
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-[#9499B3]">Background Canvas</span>
-                <Switch
-                  checked={fxConfig.backgroundFx === "particles"}
-                  onCheckedChange={() => {
-                    cyberAudio.play("toggle");
-                    toggleBackgroundFx();
-                  }}
-                />
+              {/* Mode Selector */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] text-[#4F536E] font-bold uppercase">FX Engine Mode</span>
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { id: "particles", label: "Particles" },
+                    { id: "tunnel", label: "3D Tunnel" },
+                    { id: "none", label: "Disabled" },
+                  ].map((mode) => (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      onClick={() => {
+                        cyberAudio.play("click");
+                        setFxConfig({ backgroundFx: mode.id as any });
+                      }}
+                      className={`py-1 rounded text-[10px] font-bold border transition-all cursor-pointer ${
+                        fxConfig.backgroundFx === mode.id
+                          ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/40 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                          : "bg-white/5 text-[#9499B3] border-white/5 hover:text-white"
+                      }`}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Color Mode Selector */}

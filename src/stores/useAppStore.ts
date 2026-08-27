@@ -3,7 +3,7 @@ import { NavViewId } from "@/components/layout/Sidebar";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface FxConfig {
-  backgroundFx: "particles" | "none";
+  backgroundFx: "particles" | "tunnel" | "none";
   particleCount: number;
   particleSpeed: number;
   particleInteraction: "repulse" | "attract" | "none";
@@ -137,12 +137,17 @@ export const useAppStore = create<AppState>((set) => ({
       fxConfig: { ...state.fxConfig, ...config },
     })),
   toggleBackgroundFx: () =>
-    set((state) => ({
-      fxConfig: {
-        ...state.fxConfig,
-        backgroundFx: state.fxConfig.backgroundFx === "particles" ? "none" : "particles",
-      },
-    })),
+    set((state) => {
+      const next =
+        state.fxConfig.backgroundFx === "particles"
+          ? "tunnel"
+          : state.fxConfig.backgroundFx === "tunnel"
+          ? "none"
+          : "particles";
+      return {
+        fxConfig: { ...state.fxConfig, backgroundFx: next },
+      };
+    }),
 
   isDronePlaying: false,
   setDronePlaying: (playing) => set({ isDronePlaying: playing }),

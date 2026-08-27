@@ -46,6 +46,7 @@ export function ParticleMeshBackground() {
   const targetColorRef = useRef<RGB>({ r: 0, g: 255, b: 65 });
   const currentColorRef = useRef<RGB>({ r: 0, g: 255, b: 65 });
   const mouseRef = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
+  const tunnelOffsetRef = useRef(0);
 
   // Update target color when activeView or colorMode changes
   useEffect(() => {
@@ -102,95 +103,146 @@ export function ParticleMeshBackground() {
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.7 * speedMultiplier,
-        vy: (Math.random() - 0.5) * 0.7 * speedMultiplier,
+        vx: (Math.random() - 0.5) * 0.5 * speedMultiplier,
+        vy: (Math.random() - 0.5) * 0.5 * speedMultiplier,
         radius: Math.random() * 1.5 + 0.8,
-        baseAlpha: Math.random() * 0.35 + 0.2,
+        baseAlpha: Math.random() * 0.35 + 0.15,
       });
     }
 
-    const maxLineDist = 115;
-    const mouseRadius = 140;
-
-    const animate = () => {
-      // Color interpolation for smooth tint transitions
-      const cur = currentColorRef.current;
-      const target = targetColorRef.current;
-      cur.r += (target.r - cur.r) * 0.05;
-      cur.g += (target.g - cur.g) * 0.05;
-      cur.b += (target.b - cur.b) * 0.05;
-
-      const r = Math.round(cur.r);
-      const g = Math.round(cur.g);
-      const b = Math.round(cur.b);
-
+    const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Update and draw particles
-      const mouseX = mouseRef.current.x;
-      const mouseY = mouseRef.current.y;
-      const interaction = fxConfig.particleInteraction;
+      // Smooth color lerping
+      const target = targetColorRef.current;
+      const current = currentColorRef.current;
+      current.r += (target.r - current.r) * 0.05;
+      current.g += (target.g - current.g) * 0.05;
+      current.b += (target.b - current.b) * 0.05;
 
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
+      const r = Math.round(current.r);
+      const g = Math.round(current.g);
+      const b = Math.round(current.b);
 
-        // Mouse physics
-        if (mouseX !== null && mouseY !== null && interaction !== "none") {
-          const dx = p.x - mouseX;
-          const dy = p.y - mouseY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+      if (fxConfig.backgroundFx === "tunnel") {
+        // 3D CYBERSPACE TUNNEL ENGINE
+        tunnelOffsetRef.current += 0.015 * speedMultiplier;
+        const offset = tunnelOffsetRef.current;
 
-          if (dist < mouseRadius && dist > 0) {
-            const force = (mouseRadius - dist) / mouseRadius;
-            if (interaction === "repulse") {
-              p.x += (dx / dist) * force * 2.5;
-              p.y += (dy / dist) * force * 2.5;
-            } else if (interaction === "attract") {
-              p.x -= (dx / dist) * force * 1.8;
-              p.y -= (dy / dist) * force * 1.8;
-            }
-          }
+        // Vanishing point with mouse parallax deflection
+        let vpX = width / 2;
+        let vpY = height / 2;
+        if (mouseRef.current.x !== null && mouseRef.current.y !== null) {
+          vpX += (mouseRef.current.x - width / 2) * 0.12;
+          vpY += (mouseRef.current.y - height / 2) * 0.12;
         }
 
-        // Standard movement
-        p.x += p.vx;
-        p.y += p.vy;
+        const numRings = 14;
+        const maxRadius = Math.hypot(width, height) * 0.65;
 
-        // Boundary wrap / bounce
-        if (p.x < 0) p.x = width;
-        else if (p.x > width) p.x = 0;
-        if (p.y < 0) p.y = height;
-        else if (p.y > height) p.y = 0;
+        // Draw radial perspective rays
+        const numRays = 16;
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.12)`;
+        for (let i = 0; i < numRays; i++) {
+          const angle = (i / numRays) * Math.PI * 2;
+          const endX = vpX + Math.cos(angle) * maxRadius;
+          const endY = vpY + Math.sin(angle) * maxRadius;
 
-        // Draw particle dot
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.baseAlpha})`;
-        ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(vpX, vpY);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
+        }
 
-        // Connect nearby particles with lines
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const ldx = p.x - p2.x;
-          const ldy = p.y - p2.y;
-          const lDist = Math.sqrt(ldx * ldx + ldy * ldy);
+        // Draw forward-moving concentric perspective rings
+        for (let i = 0; i < numRings; i++) {
+          const progress = ((i / numRings + offset) % 1);
+          // Exponential distance scaling for realistic 3D depth
+          const depth = Math.pow(progress, 2.5);
+          const ringRadius = depth * maxRadius;
+          const alpha = depth * 0.35;
 
-          if (lDist < maxLineDist) {
-            const alpha = (1 - lDist / maxLineDist) * 0.15;
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
+          if (ringRadius > 2) {
+            ctx.lineWidth = Math.max(1, depth * 2.5);
             ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
-            ctx.lineWidth = 0.75;
+            ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
+            ctx.shadowBlur = depth > 0.6 ? 10 : 0;
+
+            ctx.beginPath();
+            ctx.arc(vpX, vpY, ringRadius, 0, Math.PI * 2);
             ctx.stroke();
+          }
+        }
+        ctx.shadowBlur = 0;
+      } else {
+        // PARTICLE MESH ENGINE
+        const maxDist = 130;
+        const mouseRadius = 140;
+        const interaction = fxConfig.particleInteraction;
+
+        // Update particle positions & interactions
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+
+          // Bounce off bounds
+          if (p.x < 0 || p.x > width) p.vx = -p.vx;
+          if (p.y < 0 || p.y > height) p.vy = -p.vy;
+
+          // Mouse physics
+          if (mouseRef.current.x !== null && mouseRef.current.y !== null && interaction !== "none") {
+            const dx = mouseRef.current.x - p.x;
+            const dy = mouseRef.current.y - p.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < mouseRadius && dist > 0) {
+              const force = (1 - dist / mouseRadius) * 2;
+              const angle = Math.atan2(dy, dx);
+              if (interaction === "repulse") {
+                p.x -= Math.cos(angle) * force;
+                p.y -= Math.sin(angle) * force;
+              } else if (interaction === "attract") {
+                p.x += Math.cos(angle) * force * 0.5;
+                p.y += Math.sin(angle) * force * 0.5;
+              }
+            }
+          }
+
+          // Draw node
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.baseAlpha})`;
+          ctx.fill();
+        }
+
+        // Draw connecting lines
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const p1 = particles[i];
+            const p2 = particles[j];
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < maxDist) {
+              const alpha = (1 - dist / maxDist) * 0.18;
+              ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+              ctx.lineWidth = 0.8;
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.stroke();
+            }
           }
         }
       }
 
-      animId = requestAnimationFrame(animate);
+      animId = requestAnimationFrame(render);
     };
 
-    animId = requestAnimationFrame(animate);
+    animId = requestAnimationFrame(render);
 
     return () => {
       cancelAnimationFrame(animId);
@@ -198,18 +250,15 @@ export function ParticleMeshBackground() {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [fxConfig]);
+  }, [fxConfig.backgroundFx, fxConfig.particleCount, fxConfig.particleSpeed, fxConfig.particleInteraction]);
 
-  if (fxConfig.backgroundFx === "none") {
-    return null;
-  }
+  if (fxConfig.backgroundFx === "none") return null;
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0 opacity-40 mix-blend-screen"
-      style={{ width: "100vw", height: "100vh" }}
-      aria-hidden="true"
+      className="fixed inset-0 pointer-events-none z-0 block w-full h-full"
+      style={{ opacity: 0.85 }}
     />
   );
 }
