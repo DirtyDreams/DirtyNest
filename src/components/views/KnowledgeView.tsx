@@ -552,7 +552,7 @@ export default function KnowledgeView() {
     return docs.find((d) => d.id === selectedDocId) || filteredDocs[0] || docs[0];
   }, [docs, selectedDocId, filteredDocs]);
 
-  // Dynamic 2D Graph Nodes mapped from docs and backlinks
+  // Dynamic 2D Graph Nodes mapped from docs, wikilinks, backlinks, and embeddings
   const graphNodes: GraphNode[] = useMemo(() => {
     return docs.map((d) => {
       const linkedIds: string[] = [];
@@ -576,19 +576,31 @@ export default function KnowledgeView() {
         ? "#FF2A6D"
         : d.category === "System Arch"
         ? "#00FF41"
-        : "#BF40FF";
+        : d.category === "API Contracts"
+        ? "#00F0FF"
+        : d.category === "Code Runbooks"
+        ? "#BF40FF"
+        : d.category === "Neural Memory"
+        ? "#FF007F"
+        : "#3B82F6";
 
       return {
         id: d.id,
         title: d.title,
         category: d.category,
         color,
-        radius: d.isKarpathySkill ? 7 : 5,
+        radius: d.isKarpathySkill ? 10 : 7,
         x: 0,
         y: 0,
         vx: 0,
         vy: 0,
         links: linkedIds,
+        tags: d.tags,
+        slug: d.slug,
+        tokens: d.tokens,
+        obsidianPath: d.obsidianPath,
+        embeddingSnippet: d.embeddingSnippet,
+        isKarpathySkill: d.isKarpathySkill,
       };
     });
   }, [docs]);
@@ -1026,8 +1038,8 @@ export default function KnowledgeView() {
                 : "text-[#9499B3] hover:text-[#00F0FF]"
             }`}
           >
-            <Network size={13} />
-            <span>2D GRAPH MESH</span>
+            <Sparkles size={13} className="text-[#00F0FF] animate-pulse" />
+            <span>3D HOLOGRAPHIC GRAPH</span>
           </button>
 
           <button
@@ -1088,9 +1100,17 @@ export default function KnowledgeView() {
           <KnowledgeGraphCanvas
             nodes={graphNodes}
             selectedNodeId={selectedDocId}
-            onSelectNode={(id) => {
+            onSelectNode={(id, switchToEditor) => {
+              setSelectedDocId(id);
+              if (switchToEditor) {
+                setViewMode("vault");
+                setEditorSplitMode("preview");
+              }
+            }}
+            onOpenVaultEditor={(id) => {
               setSelectedDocId(id);
               setViewMode("vault");
+              setEditorSplitMode("edit");
             }}
           />
         </div>
