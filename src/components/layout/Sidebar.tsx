@@ -60,7 +60,6 @@ export const navItems = [
   { icon: Wrench, label: "Tools Matrix", id: "tools" as NavViewId, tag: "DEV", isPrimaryView: true },
   { icon: Activity, label: "Stats & Metrics", id: "stats" as NavViewId, tag: "STAT", isPrimaryView: true },
   { icon: ScrollText, label: "System Logs", id: "logs" as NavViewId, tag: "LOGS", isPrimaryView: true },
-  { icon: Settings, label: "Settings", id: "settings" as NavViewId, tag: "SYS", isPrimaryView: true },
   { icon: Wifi, label: "API Health", id: "api" as NavViewId, tag: "01", isPrimaryView: false },
   { icon: Rss, label: "Intel Feed", id: "rss" as NavViewId, tag: "02", isPrimaryView: false },
   { icon: Calendar, label: "Schedule", id: "calendar" as NavViewId, tag: "03", isPrimaryView: false },
@@ -271,21 +270,51 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
         })}
       </div>
 
-      {/* Quick Settings Action Footer */}
+      {/* Dedicated System Settings Navigation Footer */}
       <div className="p-3 border-t border-white/5 flex items-center justify-center shrink-0">
         <button
           onClick={() => {
             cyberAudio.play("click");
-            if (onOpenSettingsModal) onOpenSettingsModal();
-            else onSelectView("settings");
+            onSelectView("settings");
           }}
-          className="w-full flex items-center justify-center gap-3 p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer border border-white/5"
+          className={`relative w-full flex items-center gap-3.5 px-3 py-2 rounded-xl transition-all duration-200 text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00FF41] focus:outline-none ${
+            activeView === "settings"
+              ? "bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 shadow-[0_0_10px_rgba(0,255,65,0.2)] font-bold"
+              : "bg-white/[0.03] hover:bg-white/[0.08] text-[#9499B3] hover:text-[#00FF41] border border-white/5"
+          }`}
           title="Open System Settings"
+          aria-label="Open System Settings"
+          aria-current={activeView === "settings" ? "page" : undefined}
         >
-          <Settings size={17} />
-          <span className="text-xs font-mono font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">
-            SETTINGS
+          <Settings
+            size={18}
+            className="shrink-0 transition-transform group-hover/btn:scale-110"
+            style={{
+              color: activeView === "settings" ? "#00FF41" : undefined,
+              filter: activeView === "settings" ? "drop-shadow(0 0 6px rgba(0,255,65,0.6))" : "none",
+            }}
+          />
+          <span
+            className="text-xs font-medium whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-1"
+            style={{
+              fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
+            }}
+          >
+            Settings
           </span>
+          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-[#4F536E] opacity-0 group-hover:opacity-100 transition-opacity">
+            SYS
+          </span>
+
+          {activeView === "settings" && (
+            <div
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r"
+              style={{
+                background: "#00FF41",
+                boxShadow: "0 0 10px rgba(0,255,65,0.8)",
+              }}
+            />
+          )}
         </button>
       </div>
     </aside>
