@@ -28,6 +28,7 @@ import {
   FileText,
   Workflow,
   ArrowRightLeft,
+  Network,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -48,6 +49,9 @@ import BpeTokenCounter from "@/components/tools/BpeTokenCounter";
 import UnixEpochConverter from "@/components/tools/UnixEpochConverter";
 import DiffViewer from "@/components/tools/DiffViewer";
 import SnippetVault from "@/components/tools/SnippetVault";
+import CyberColorPaletteConverter from "@/components/tools/CyberColorPaletteConverter";
+import NetworkTopologyStudioModal from "./tools/NetworkTopologyStudioModal";
+import CyberpunkShaderFxStudioModal from "./tools/CyberpunkShaderFxStudioModal";
 
 export interface DevToolItem {
   id: string;
@@ -107,6 +111,14 @@ const DEV_TOOLS: DevToolItem[] = [
     icon: Database,
     description: "Beautify, keyword-capitalize, and minify Postgres, SQLite, and MySQL queries.",
   },
+  {
+    id: "cyber_colors",
+    name: "Cyberpunk Palette & CSS Theme Engine",
+    category: "DATA & SCHEMAS",
+    icon: Sparkles,
+    description: "HEX / RGB / HSL / OKLCH conversions, WCAG contrast auditor, and :root CSS variables exporter.",
+    badge: "CSS / WCAG",
+  },
 
   // 🌐 WEB & NETWORK
   {
@@ -123,6 +135,14 @@ const DEV_TOOLS: DevToolItem[] = [
     category: "WEB & NETWORK",
     icon: Radio,
     description: "Live DNS propagation latency, SSL certificate expiry, and ping probe monitor.",
+  },
+  {
+    id: "network_topology",
+    name: "Network & Microservice Topology Canvas",
+    category: "WEB & NETWORK",
+    icon: Network,
+    description: "Interactive drag-and-drop architecture studio with animated packet flow and Mermaid/Compose export.",
+    badge: "Canvas / SVG",
   },
 
   // ⚙️ DEVOPS & CLOUD
@@ -186,6 +206,14 @@ const DEV_TOOLS: DevToolItem[] = [
     icon: FileText,
     description: "Searchable repository for reusable scripts, queries, and code patterns.",
   },
+  {
+    id: "shader_fx",
+    name: "Cyberpunk Shader & Matrix FX Studio",
+    category: "CODE & AI",
+    icon: Sparkles,
+    description: "Interactive CRT scanlines, RGB glitch displacement, Matrix digital rain & ASCII art synthesizer.",
+    badge: "WebGL / Canvas",
+  },
 ];
 
 const CATEGORIES = [
@@ -213,6 +241,9 @@ export default function ToolsView() {
       // ignore
     }
   }, []);
+
+  const [isTopologyModalOpen, setIsTopologyModalOpen] = useState(false);
+  const [isShaderModalOpen, setIsShaderModalOpen] = useState(false);
 
   const handleSelectTool = (id: string) => {
     cyberAudio.play("click");
@@ -456,6 +487,7 @@ export default function ToolsView() {
             {activeToolId === "zod_schema" && <ZodSchemaSynthesizer />}
             {activeToolId === "json_yaml" && <JsonYamlConverter />}
             {activeToolId === "sql_formatter" && <SqlFormatter />}
+            {activeToolId === "cyber_colors" && <CyberColorPaletteConverter />}
             {activeToolId === "api_workbench" && <ApiWorkbench />}
             {activeToolId === "network_radar" && <NetworkRadar />}
             {activeToolId === "docker_composer" && <DockerComposer />}
@@ -466,9 +498,72 @@ export default function ToolsView() {
             {activeToolId === "regex_tester" && <RegexTester />}
             {activeToolId === "diff_viewer" && <DiffViewer />}
             {activeToolId === "snippet_vault" && <SnippetVault />}
+            {activeToolId === "network_topology" && (
+              <div className="cyber-card p-6 bg-[#07070B]/95 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-4 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/30 flex items-center justify-center text-[#00FF41] shadow-[0_0_20px_rgba(0,255,65,0.2)]">
+                  <Network size={28} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase">
+                    NETWORK & MICROSERVICE TOPOLOGY CANVAS
+                  </h3>
+                  <p className="text-xs text-slate-400 max-w-md mt-1">
+                    Visual drag-and-drop studio with real-time animated packet flow, fault injection, and 1-click Mermaid / Docker Compose exporters.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    cyberAudio.play("warp");
+                    setIsTopologyModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#00FF41] text-black font-black text-xs hover:bg-[#00cc34] cursor-pointer shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all"
+                >
+                  <Network size={15} />
+                  <span>LAUNCH FULL TOPOLOGY STUDIO</span>
+                </button>
+              </div>
+            )}
+
+            {activeToolId === "shader_fx" && (
+              <div className="cyber-card p-6 bg-[#07070B]/95 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-4 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/30 flex items-center justify-center text-[#00FF41] shadow-[0_0_20px_rgba(0,255,65,0.2)]">
+                  <Sparkles size={28} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase">
+                    CYBERPUNK SHADER & MATRIX FX STUDIO
+                  </h3>
+                  <p className="text-xs text-slate-400 max-w-md mt-1">
+                    Real-time HTML5 Canvas rendering of CRT phosphor scanlines, RGB chromatic aberration glitches, Matrix digital rain, and Image-to-ASCII synthesizer.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    cyberAudio.play("warp");
+                    setIsShaderModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#00FF41] text-black font-black text-xs hover:bg-[#00cc34] cursor-pointer shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all"
+                >
+                  <Sparkles size={15} />
+                  <span>LAUNCH FULL SHADER STUDIO</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Network Topology Studio Modal */}
+      <NetworkTopologyStudioModal
+        isOpen={isTopologyModalOpen}
+        onClose={() => setIsTopologyModalOpen(false)}
+      />
+
+      {/* Cyberpunk Shader & Matrix FX Studio Modal */}
+      <CyberpunkShaderFxStudioModal
+        isOpen={isShaderModalOpen}
+        onClose={() => setIsShaderModalOpen(false)}
+      />
     </div>
   );
 }

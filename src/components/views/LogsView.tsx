@@ -38,6 +38,7 @@ import {
 import { cyberAudio } from "@/lib/cyberAudio";
 import { SystemLog, LogLevel, LogCategory } from "@/db";
 import LogAiExplainModal from "./logs/LogAiExplainModal";
+import LogHistogramBarChart from "./logs/LogHistogramBarChart";
 
 type SubTab = "stream" | "analytics" | "traces" | "security";
 type ViewMode = "table" | "raw";
@@ -578,6 +579,9 @@ export default function LogsView() {
           </div>
         )}
       </div>
+
+      {/* Real-time Ingestion Histogram */}
+      {subTab === "stream" && <LogHistogramBarChart logs={logs} />}
 
       {/* FILTER & SEARCH BAR */}
       <div className="flex flex-col gap-3 cyber-card p-3.5">

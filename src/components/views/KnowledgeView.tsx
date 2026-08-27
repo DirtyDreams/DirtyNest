@@ -39,9 +39,13 @@ import {
   ArrowUpRight,
   Sliders,
   Check,
+  Settings,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { useAppStore } from "@/stores/useAppStore";
 import SemanticRagTester from "./knowledge/SemanticRagTester";
+import KnowledgeGraphCanvas, { GraphNode } from "./knowledge/KnowledgeGraphCanvas";
+import CyberMarkdownViewer from "./knowledge/CyberMarkdownViewer";
 
 export interface KnowledgeDoc {
   id: string;
@@ -462,12 +466,15 @@ const CATEGORIES = [
 ] as const;
 
 export default function KnowledgeView() {
+  const { setActiveView } = useAppStore();
   const [docs, setDocs] = useState<KnowledgeDoc[]>(INITIAL_DOCS);
-  const [viewMode, setViewMode] = useState<"vault" | "obsidian" | "karpathy" | "config" | "rag_probe">("vault");
+  const [viewMode, setViewMode] = useState<"vault" | "obsidian" | "karpathy" | "graph_canvas" | "rag_probe">("vault");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL NODES");
   const [selectedDocId, setSelectedDocId] = useState<string>("skill-01");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"viewer" | "vectors" | "graph" | "backlinks">("viewer");
+  const [mobileTab, setMobileTab] = useState<"list" | "inspector">("inspector");
+  const [editorSplitMode, setEditorSplitMode] = useState<"preview" | "split" | "edit">("preview");
   const [obsidianVaultPath, setObsidianVaultPath] = useState("C:\\\\Users\\\\coyot\\\\Obsidian\\\\CyberVault");
   const [obsidianVaultName, setObsidianVaultName] = useState("CyberVault");
   const [isObsidianSyncing, setIsObsidianSyncing] = useState(false);
@@ -545,6 +552,55 @@ export default function KnowledgeView() {
     return docs.find((d) => d.id === selectedDocId) || filteredDocs[0] || docs[0];
   }, [docs, selectedDocId, filteredDocs]);
 
+  // Dynamic 2D Graph Nodes mapped from docs and backlinks
+  const graphNodes: GraphNode[] = useMemo(() => {
+    return docs.map((d) => {
+      const linkedIds: string[] = [];
+      if (d.wikiLinks) {
+        d.wikiLinks.forEach((wl) => {
+          const cleanName = wl.replace(/\[\[|\]\]/g, "").toLowerCase();
+          const target = docs.find((other) => other.title.toLowerCase().includes(cleanName));
+          if (target && target.id !== d.id && !linkedIds.includes(target.id)) linkedIds.push(target.id);
+        });
+      }
+      if (d.backlinks) {
+        d.backlinks.forEach((bl) => {
+          const target = docs.find((other) => other.title.toLowerCase().includes(bl.toLowerCase()));
+          if (target && target.id !== d.id && !linkedIds.includes(target.id)) linkedIds.push(target.id);
+        });
+      }
+
+      const color = d.isKarpathySkill
+        ? "#FFB800"
+        : d.category === "Threat Intel"
+        ? "#FF2A6D"
+        : d.category === "System Arch"
+        ? "#00FF41"
+        : "#BF40FF";
+
+      return {
+        id: d.id,
+        title: d.title,
+        category: d.category,
+        color,
+        radius: d.isKarpathySkill ? 7 : 5,
+        x: 0,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        links: linkedIds,
+      };
+    });
+  }, [docs]);
+
+  const handleUpdateDocContent = (id: string, newContentText: string) => {
+    const calculatedTokens = Math.ceil(newContentText.length / 4);
+    const updated = docs.map((d) =>
+      d.id === id ? { ...d, content: newContentText, tokens: calculatedTokens } : d
+    );
+    saveDocs(updated);
+  };
+
   // Aggregate Metrics
   const totalTokens = useMemo(() => docs.reduce((acc, d) => acc + d.tokens, 0), [docs]);
   const totalVectors = docs.length * 1536;
@@ -578,6 +634,25 @@ export default function KnowledgeView() {
     cyberAudio.play("click");
     setCopiedId(true);
     setTimeout(() => setCopiedId(false), 2000);
+  };
+
+  // Click WikiLink navigation
+  const handleWikiLinkClick = (linkName: string) => {
+    const cleanName = linkName.replace(/^\[\[|\]\]$/g, "").replace(/\.md$/, "").trim().toLowerCase();
+    const target = docs.find(
+      (d) =>
+        d.title.toLowerCase().includes(cleanName) ||
+        (d.obsidianPath && d.obsidianPath.toLowerCase().includes(cleanName)) ||
+        d.slug.toLowerCase().includes(cleanName)
+    );
+
+    if (target) {
+      cyberAudio.play("chime");
+      setSelectedDocId(target.id);
+      setActiveTab("viewer");
+    } else {
+      cyberAudio.play("click");
+    }
   };
 
   // Execute Karpathy Skill in Chatbot
@@ -943,6 +1018,21 @@ export default function KnowledgeView() {
           <button
             onClick={() => {
               cyberAudio.play("click");
+              setViewMode("graph_canvas");
+            }}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              viewMode === "graph_canvas"
+                ? "bg-[#00F0FF]/15 text-[#00F0FF] font-bold border border-[#00F0FF]/30 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
+                : "text-[#9499B3] hover:text-[#00F0FF]"
+            }`}
+          >
+            <Network size={13} />
+            <span>2D GRAPH MESH</span>
+          </button>
+
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
               setViewMode("rag_probe");
             }}
             className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
@@ -958,16 +1048,13 @@ export default function KnowledgeView() {
           <button
             onClick={() => {
               cyberAudio.play("click");
-              setViewMode("config");
+              setActiveView("settings");
             }}
-            className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-              viewMode === "config"
-                ? "bg-[#BF40FF]/15 text-[#BF40FF] font-bold border border-[#BF40FF]/30 shadow-[0_0_8px_rgba(191,64,255,0.2)]"
-                : "text-[#9499B3] hover:text-[#BF40FF]"
-            }`}
+            className="shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer text-[#9499B3] hover:text-[#BF40FF] hover:bg-[#BF40FF]/10 border border-white/5 hover:border-[#BF40FF]/30"
+            title="Configure Obsidian Vault and RAG in Settings"
           >
-            <Sliders size={13} />
-            <span>VAULT CONFIG</span>
+            <Settings size={13} />
+            <span>VAULT SETTINGS</span>
           </button>
         </div>
 
@@ -995,262 +1082,255 @@ export default function KnowledgeView() {
       {/* VIEW MODE: SEMANTIC RAG TESTER */}
       {viewMode === "rag_probe" && <SemanticRagTester />}
 
-      {/* VIEW MODE: CONFIGURATION PANEL */}
-      {viewMode === "config" && (
-        <div className="cyber-card p-6 flex flex-col gap-5 animate-fade-in">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <div className="flex items-center gap-2.5">
-              <FolderSync size={18} className="text-[#BF40FF]" />
-              <h3 className="text-sm font-black text-[#F1F3F9] uppercase tracking-wider">
-                Obsidian Vault & Knowledge Sync Configuration
-              </h3>
-            </div>
-            <span className="text-xs text-[#00FF41] font-bold">URI PROTOCOL: ENABLED</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="flex flex-col gap-2">
-              <label className="text-xs text-[#9499B3]">Obsidian Vault Name</label>
-              <input
-                type="text"
-                value={obsidianVaultName}
-                onChange={(e) => setObsidianVaultName(e.target.value)}
-                className="px-3 py-2 bg-black/50 border border-white/10 rounded-xl text-xs text-[#F1F3F9] outline-none focus:border-[#BF40FF]/50"
-              />
-              <span className="text-[10px] text-[#4F536E]">
-                Must match the Vault Name registered in your local Obsidian desktop client.
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-xs text-[#9499B3]">Local File System Path</label>
-              <input
-                type="text"
-                value={obsidianVaultPath}
-                onChange={(e) => {
-                  setObsidianVaultPath(e.target.value);
-                  localStorage.setItem("dirtynest_obsidian_path", e.target.value);
-                }}
-                className="px-3 py-2 bg-black/50 border border-white/10 rounded-xl text-xs text-[#F1F3F9] outline-none focus:border-[#BF40FF]/50"
-              />
-              <span className="text-[10px] text-[#4F536E]">
-                Target directory monitored for real-time markdown modifications and new recipes.
-              </span>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-2 text-xs text-[#9499B3]">
-            <span className="font-bold text-[#00FF41]">How the Obsidian & Karpathy Bridge Works:</span>
-            <p className="leading-relaxed">
-              1. <strong>Obsidian URI Integration</strong>: Clicking <em>&quot;OPEN IN OBSIDIAN&quot;</em> triggers the native <code className="text-[#BF40FF]">obsidian://open</code> scheme to launch your desktop Obsidian workspace directly to the active note.
-            </p>
-            <p className="leading-relaxed">
-              2. <strong>Karpathy Skills Framework</strong>: Encapsulates deep learning mental models, tokenizers, backprop engines, and autoresearch agent workflows into executable prompt cards for the DirtyNest Swarm and Chatbot.
-            </p>
-            <p className="leading-relaxed">
-              3. <strong>Bi-directional Wiki Graph</strong>: Automatically parses <code className="text-[#00F0FF]">[[WikiLinks]]</code> and YAML frontmatter headers to maintain cross-linking across system architecture and threat intel.
-            </p>
-          </div>
+      {/* VIEW MODE: 2D KNOWLEDGE GRAPH CANVAS */}
+      {viewMode === "graph_canvas" && (
+        <div className="flex flex-col gap-4 animate-fade-in">
+          <KnowledgeGraphCanvas
+            nodes={graphNodes}
+            selectedNodeId={selectedDocId}
+            onSelectNode={(id) => {
+              setSelectedDocId(id);
+              setViewMode("vault");
+            }}
+          />
         </div>
       )}
 
       {/* 3-PANE / MASTER-DETAIL VAULT MATRIX */}
-      {viewMode !== "config" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          {/* LEFT LIST: NODES & RECIPES (5 Cols) */}
-          <div className="lg:col-span-5 flex flex-col gap-3">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] font-bold text-[#4F536E] uppercase tracking-wider flex items-center gap-1.5">
-                <FolderOpen size={13} className="text-[#00FF41]" />
-                {viewMode === "karpathy"
-                  ? `KARPATHY SKILLS (${filteredDocs.length})`
-                  : viewMode === "obsidian"
-                  ? `OBSIDIAN WIKI NOTES (${filteredDocs.length})`
-                  : `VAULT NODES (${filteredDocs.length})`}
-              </span>
-              <span className="text-[10px] text-[#4F536E]">
-                {viewMode === "karpathy" ? "EXECUTABLE PROMPTS" : "COSINE: > 0.72"}
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-2 max-h-[640px] overflow-y-auto pr-1">
-              {filteredDocs.map((doc) => {
-                const isSelected = doc.id === selectedDocId;
-                const isKarpathy = doc.isKarpathySkill;
-                return (
-                  <div
-                    key={doc.id}
-                    onClick={() => {
-                      cyberAudio.play("click");
-                      setSelectedDocId(doc.id);
-                    }}
-                    className={`cyber-card p-3.5 transition-all cursor-pointer relative group ${
-                      isSelected
-                        ? isKarpathy
-                          ? "border-[#FFB800]/60 bg-[#FFB800]/[0.06] shadow-[0_0_15px_rgba(255,184,0,0.15)]"
-                          : "border-[#00FF41]/50 bg-[#00FF41]/[0.05] shadow-[0_0_15px_rgba(0,255,65,0.15)]"
-                        : "hover:border-white/20 bg-black/40"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-                            isKarpathy
-                              ? "bg-[#FFB800]/20 text-[#FFB800] border border-[#FFB800]/40"
-                              : doc.category === "Threat Intel"
-                              ? "bg-[#FF2A6D]/15 text-[#FF2A6D] border border-[#FF2A6D]/30"
-                              : doc.category === "System Arch"
-                              ? "bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30"
-                              : "bg-[#BF40FF]/15 text-[#BF40FF] border border-[#BF40FF]/30"
-                          }`}
-                        >
-                          {doc.category}
-                        </span>
-                        {doc.obsidianPath && (
-                          <span className="text-[9px] font-mono text-[#BF40FF] bg-[#BF40FF]/10 px-1 py-0.2 rounded border border-[#BF40FF]/20 truncate max-w-[140px]">
-                            {doc.obsidianPath}
-                          </span>
-                        )}
-                      </div>
-
-                      {doc.similarity && (
-                        <span className="text-[10px] font-bold text-[#00FF41] px-1.5 py-0.5 rounded bg-[#00FF41]/10 border border-[#00FF41]/30 shrink-0">
-                          {(doc.similarity * 100).toFixed(0)}% MATCH
-                        </span>
-                      )}
-                    </div>
-
-                    <h3
-                      className={`text-xs font-bold mt-2 line-clamp-1 transition-colors ${
-                        isSelected
-                          ? isKarpathy
-                            ? "text-[#FFB800]"
-                            : "text-[#00FF41]"
-                          : "text-[#F1F3F9] group-hover:text-[#00FF41]"
-                      }`}
-                    >
-                      {doc.title}
-                    </h3>
-
-                    <p className="text-[11px] text-[#9499B3] mt-1 line-clamp-2 leading-relaxed">
-                      {doc.content.replace(/[#*`]/g, "").slice(0, 120)}...
-                    </p>
-
-                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/5 text-[10px] text-[#4F536E]">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {doc.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="px-1.5 py-0.5 rounded bg-white/5 text-[#9499B3]">
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {doc.wikiLinks && doc.wikiLinks.length > 0 && (
-                          <span className="text-[#00F0FF]">{doc.wikiLinks.length} links</span>
-                        )}
-                        <span>{doc.tokens} tok</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {filteredDocs.length === 0 && (
-                <div className="text-center py-16 cyber-card bg-black/30 flex flex-col items-center justify-center gap-2">
-                  <BookOpen size={24} className="text-[#4F536E]" />
-                  <span className="text-xs text-[#9499B3]">NO MATCHING NOTES OR SKILLS</span>
-                  <span className="text-[10px] text-[#4F536E]">Try switching view mode or query.</span>
-                </div>
-              )}
-            </div>
+      {viewMode !== "graph_canvas" && (
+        <div className="flex flex-col gap-3">
+          {/* Mobile Pane Switcher (Small Screens Only) */}
+          <div className="lg:hidden flex items-center gap-1 p-1 bg-black/60 rounded-xl border border-white/10 text-xs w-full font-mono">
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setMobileTab("list");
+              }}
+              className={`flex-1 py-1.5 rounded-lg font-bold text-center transition-all cursor-pointer ${
+                mobileTab === "list"
+                  ? "bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/40 shadow-[0_0_10px_rgba(0,255,65,0.15)]"
+                  : "text-[#9499B3]"
+              }`}
+            >
+              📂 VAULT NODES ({filteredDocs.length})
+            </button>
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setMobileTab("inspector");
+              }}
+              className={`flex-1 py-1.5 rounded-lg font-bold text-center transition-all cursor-pointer ${
+                mobileTab === "inspector"
+                  ? "bg-[#BF40FF]/20 text-[#BF40FF] border border-[#BF40FF]/40 shadow-[0_0_10px_rgba(191,64,255,0.15)]"
+                  : "text-[#9499B3]"
+              }`}
+            >
+              👁️ NOTE INSPECTOR
+            </button>
           </div>
 
-          {/* RIGHT PANE: NEURAL INSPECTOR & OBSIDIAN READER (7 Cols) */}
-          <div className="lg:col-span-7 flex flex-col gap-3">
-            {selectedDoc ? (
-              <div className="cyber-card p-5 flex flex-col gap-4">
-                {/* Document Header Bar */}
-                <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-white/10">
-                  <div className="flex flex-col gap-1 max-w-lg">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
-                          selectedDoc.isKarpathySkill
-                            ? "text-[#FFB800] bg-[#FFB800]/15 border-[#FFB800]/40"
-                            : "text-[#00FF41] bg-[#00FF41]/10 border-[#00FF41]/30"
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* LEFT LIST: NODES & RECIPES (5 Cols) */}
+            <div className={`lg:col-span-5 flex-col gap-3 ${mobileTab === "inspector" ? "hidden lg:flex" : "flex"}`}>
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-bold text-[#4F536E] uppercase tracking-wider flex items-center gap-1.5">
+                  <FolderOpen size={13} className="text-[#00FF41]" />
+                  {viewMode === "karpathy"
+                    ? `KARPATHY SKILLS (${filteredDocs.length})`
+                    : viewMode === "obsidian"
+                    ? `OBSIDIAN WIKI NOTES (${filteredDocs.length})`
+                    : `VAULT NODES (${filteredDocs.length})`}
+                </span>
+                <span className="text-[10px] text-[#4F536E]">
+                  {viewMode === "karpathy" ? "EXECUTABLE PROMPTS" : "COSINE: > 0.72"}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2 max-h-[640px] overflow-y-auto pr-1 scrollbar-none">
+                {filteredDocs.map((doc) => {
+                  const isSelected = doc.id === selectedDocId;
+                  const isKarpathy = doc.isKarpathySkill;
+                  return (
+                    <div
+                      key={doc.id}
+                      onClick={() => {
+                        cyberAudio.play("click");
+                        setSelectedDocId(doc.id);
+                        setMobileTab("inspector");
+                      }}
+                      className={`cyber-card p-3.5 transition-all cursor-pointer relative group ${
+                        isSelected
+                          ? isKarpathy
+                            ? "border-[#FFB800]/60 bg-[#FFB800]/[0.06] shadow-[0_0_15px_rgba(255,184,0,0.15)]"
+                            : "border-[#00FF41]/50 bg-[#00FF41]/[0.05] shadow-[0_0_15px_rgba(0,255,65,0.15)]"
+                          : "hover:border-white/20 bg-black/40"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                              isKarpathy
+                                ? "bg-[#FFB800]/20 text-[#FFB800] border border-[#FFB800]/40"
+                                : doc.category === "Threat Intel"
+                                ? "bg-[#FF2A6D]/15 text-[#FF2A6D] border border-[#FF2A6D]/30"
+                                : doc.category === "System Arch"
+                                ? "bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30"
+                                : "bg-[#BF40FF]/15 text-[#BF40FF] border border-[#BF40FF]/30"
+                            }`}
+                          >
+                            {doc.category}
+                          </span>
+                          {doc.obsidianPath && (
+                            <span className="text-[9px] font-mono text-[#BF40FF] bg-[#BF40FF]/10 px-1 py-0.2 rounded border border-[#BF40FF]/20 truncate max-w-[140px]">
+                              {doc.obsidianPath}
+                            </span>
+                          )}
+                        </div>
+
+                        {doc.similarity && (
+                          <span className="text-[10px] font-bold text-[#00FF41] px-1.5 py-0.5 rounded bg-[#00FF41]/10 border border-[#00FF41]/30 shrink-0">
+                            {(doc.similarity * 100).toFixed(0)}% MATCH
+                          </span>
+                        )}
+                      </div>
+
+                      <h3
+                        className={`text-xs font-bold mt-2 line-clamp-1 transition-colors ${
+                          isSelected
+                            ? isKarpathy
+                              ? "text-[#FFB800]"
+                              : "text-[#00FF41]"
+                            : "text-[#F1F3F9] group-hover:text-[#00FF41]"
                         }`}
                       >
-                        {selectedDoc.category}
-                      </span>
-                      {selectedDoc.obsidianPath && (
-                        <span className="text-[10px] font-mono text-[#BF40FF] bg-[#BF40FF]/10 px-1.5 py-0.5 rounded border border-[#BF40FF]/25">
-                          {selectedDoc.obsidianPath}
+                        {doc.title}
+                      </h3>
+
+                      <p className="text-[11px] text-[#9499B3] mt-1 line-clamp-2 leading-relaxed">
+                        {doc.content.replace(/[#*`]/g, "").slice(0, 120)}...
+                      </p>
+
+                      <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/5 text-[10px] text-[#4F536E]">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {doc.tags.slice(0, 3).map((tag) => (
+                            <span key={tag} className="px-1.5 py-0.5 rounded bg-white/5 text-[#9499B3]">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {doc.wikiLinks && doc.wikiLinks.length > 0 && (
+                            <span className="text-[#00F0FF]">{doc.wikiLinks.length} links</span>
+                          )}
+                          <span>{doc.tokens} tok</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredDocs.length === 0 && (
+                  <div className="text-center py-16 cyber-card bg-black/30 flex flex-col items-center justify-center gap-2">
+                    <BookOpen size={24} className="text-[#4F536E]" />
+                    <span className="text-xs text-[#9499B3]">NO MATCHING NOTES OR SKILLS</span>
+                    <span className="text-[10px] text-[#4F536E]">Try switching view mode or query.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* RIGHT PANE: NEURAL INSPECTOR & OBSIDIAN READER (7 Cols) */}
+            <div className={`lg:col-span-7 flex-col gap-3 ${mobileTab === "list" ? "hidden lg:flex" : "flex"}`}>
+              {selectedDoc ? (
+                <div className="cyber-card p-5 flex flex-col gap-4">
+                  {/* Document Header Bar */}
+                  <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-white/10">
+                    <div className="flex flex-col gap-1 max-w-lg">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setMobileTab("list")}
+                          className="lg:hidden flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-[#00FF41] hover:bg-white/10"
+                        >
+                          ← LIST
+                        </button>
+                        <span
+                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
+                            selectedDoc.isKarpathySkill
+                              ? "text-[#FFB800] bg-[#FFB800]/15 border-[#FFB800]/40"
+                              : "text-[#00FF41] bg-[#00FF41]/10 border-[#00FF41]/30"
+                          }`}
+                        >
+                          {selectedDoc.category}
                         </span>
+                        {selectedDoc.obsidianPath && (
+                          <span className="text-[10px] font-mono text-[#BF40FF] bg-[#BF40FF]/10 px-1.5 py-0.5 rounded border border-[#BF40FF]/25 truncate max-w-[150px]">
+                            {selectedDoc.obsidianPath}
+                          </span>
+                        )}
+                      </div>
+                      <h2 className="text-base font-black text-[#F1F3F9] tracking-tight mt-1">
+                        {selectedDoc.title}
+                      </h2>
+                      <div className="flex items-center gap-3 text-[10px] text-[#9499B3] mt-0.5 flex-wrap">
+                        <span>AUTHOR: <strong className="text-[#00F0FF]">{selectedDoc.author}</strong></span>
+                        <span>•</span>
+                        <span>UPDATED: {selectedDoc.updatedAt}</span>
+                        <span>•</span>
+                        <span>SIZE: {selectedDoc.tokens} tokens</span>
+                      </div>
+                    </div>
+
+                    {/* Reader Action Controls */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {selectedDoc.isKarpathySkill && (
+                        <button
+                          onClick={() => handleExecuteSkillInChatbot(selectedDoc)}
+                          title="Execute Karpathy Skill in Chatbot AI Core"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFB800]/20 border border-[#FFB800]/40 text-[#FFB800] hover:bg-[#FFB800]/30 text-xs font-bold transition-all cursor-pointer shadow-[0_0_10px_rgba(255,184,0,0.2)] shrink-0"
+                        >
+                          <Play size={13} className={executedSkillId === selectedDoc.id ? "animate-spin" : ""} />
+                          <span>EXECUTE SKILL</span>
+                        </button>
                       )}
-                    </div>
-                    <h2 className="text-base font-black text-[#F1F3F9] tracking-tight mt-1">
-                      {selectedDoc.title}
-                    </h2>
-                    <div className="flex items-center gap-3 text-[10px] text-[#9499B3] mt-0.5">
-                      <span>AUTHOR: <strong className="text-[#00F0FF]">{selectedDoc.author}</strong></span>
-                      <span>•</span>
-                      <span>UPDATED: {selectedDoc.updatedAt}</span>
-                      <span>•</span>
-                      <span>SIZE: {selectedDoc.tokens} tokens</span>
-                    </div>
-                  </div>
 
-                  {/* Reader Action Controls */}
-                  <div className="flex items-center gap-1.5">
-                    {selectedDoc.isKarpathySkill && (
                       <button
-                        onClick={() => handleExecuteSkillInChatbot(selectedDoc)}
-                        title="Execute Karpathy Skill in Chatbot AI Core"
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFB800]/20 border border-[#FFB800]/40 text-[#FFB800] hover:bg-[#FFB800]/30 text-xs font-bold transition-all cursor-pointer shadow-[0_0_10px_rgba(255,184,0,0.2)]"
+                        onClick={() => handleOpenInObsidian(selectedDoc)}
+                        title="Open note directly in Obsidian Application"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#BF40FF]/15 border border-[#BF40FF]/40 text-[#BF40FF] hover:bg-[#BF40FF]/25 text-xs font-bold transition-all cursor-pointer shrink-0"
                       >
-                        <Play size={13} className={executedSkillId === selectedDoc.id ? "animate-spin" : ""} />
-                        <span>EXECUTE SKILL</span>
+                        <ArrowUpRight size={13} />
+                        <span className="hidden sm:inline">OBSIDIAN</span>
                       </button>
-                    )}
 
-                    <button
-                      onClick={() => handleOpenInObsidian(selectedDoc)}
-                      title="Open note directly in Obsidian Application"
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#BF40FF]/15 border border-[#BF40FF]/40 text-[#BF40FF] hover:bg-[#BF40FF]/25 text-xs font-bold transition-all cursor-pointer"
-                    >
-                      <ArrowUpRight size={13} />
-                      <span className="hidden sm:inline">OBSIDIAN</span>
-                    </button>
+                      <button
+                        onClick={handleCopyContent}
+                        title="Copy Markdown Source"
+                        className="p-2 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer shrink-0"
+                      >
+                        {copiedId ? <CheckCircle2 size={14} className="text-[#00FF41]" /> : <Copy size={14} />}
+                      </button>
 
-                    <button
-                      onClick={handleCopyContent}
-                      title="Copy Markdown Source"
-                      className="p-2 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
-                    >
-                      {copiedId ? <CheckCircle2 size={14} className="text-[#00FF41]" /> : <Copy size={14} />}
-                    </button>
-
-                    <button
-                      onClick={() => handleDeleteDoc(selectedDoc.id)}
-                      title="Delete Node from Vault"
-                      className="p-2 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#FF2A6D]/40 text-[#9499B3] hover:text-[#FF2A6D] transition-all cursor-pointer"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                      <button
+                        onClick={() => handleDeleteDoc(selectedDoc.id)}
+                        title="Delete Node from Vault"
+                        className="p-2 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#FF2A6D]/40 text-[#9499B3] hover:text-[#FF2A6D] transition-all cursor-pointer shrink-0"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
                 {/* Inspector Mode Tabs */}
-                <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                <div className="flex items-center gap-1.5 p-1 bg-black/40 rounded-xl border border-white/5 overflow-x-auto scrollbar-none max-w-full">
                   <button
                     onClick={() => {
                       cyberAudio.play("click");
                       setActiveTab("viewer");
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
                       activeTab === "viewer"
-                        ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30"
+                        ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                         : "text-[#9499B3] hover:text-[#F1F3F9]"
                     }`}
                   >
@@ -1263,9 +1343,9 @@ export default function KnowledgeView() {
                       cyberAudio.play("click");
                       setActiveTab("backlinks");
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
                       activeTab === "backlinks"
-                        ? "bg-[#BF40FF]/15 text-[#BF40FF] font-bold border border-[#BF40FF]/30"
+                        ? "bg-[#BF40FF]/15 text-[#BF40FF] font-bold border border-[#BF40FF]/30 shadow-[0_0_8px_rgba(191,64,255,0.2)]"
                         : "text-[#9499B3] hover:text-[#F1F3F9]"
                     }`}
                   >
@@ -1278,9 +1358,9 @@ export default function KnowledgeView() {
                       cyberAudio.play("click");
                       setActiveTab("vectors");
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
                       activeTab === "vectors"
-                        ? "bg-[#00F0FF]/15 text-[#00F0FF] font-bold border border-[#00F0FF]/30"
+                        ? "bg-[#00F0FF]/15 text-[#00F0FF] font-bold border border-[#00F0FF]/30 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
                         : "text-[#9499B3] hover:text-[#F1F3F9]"
                     }`}
                   >
@@ -1293,9 +1373,9 @@ export default function KnowledgeView() {
                       cyberAudio.play("click");
                       setActiveTab("graph");
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
                       activeTab === "graph"
-                        ? "bg-[#FFB800]/15 text-[#FFB800] font-bold border border-[#FFB800]/30"
+                        ? "bg-[#FFB800]/15 text-[#FFB800] font-bold border border-[#FFB800]/30 shadow-[0_0_8px_rgba(255,184,0,0.2)]"
                         : "text-[#9499B3] hover:text-[#F1F3F9]"
                     }`}
                   >
@@ -1304,11 +1384,104 @@ export default function KnowledgeView() {
                   </button>
                 </div>
 
-                {/* TAB 1: MARKDOWN VIEWER & WIKILINK HIGHLIGHTING */}
+                {/* TAB 1: MARKDOWN VIEWER & SPLIT EDITOR */}
                 {activeTab === "viewer" && (
-                  <div className="p-4 rounded-xl bg-black/40 border border-white/5 min-h-[460px] max-h-[620px] overflow-y-auto text-xs text-[#F1F3F9] leading-relaxed space-y-3 font-mono">
-                    <div className="whitespace-pre-wrap font-sans text-xs text-[#D1D5DB] leading-6 selection:bg-[#00FF41]/30 selection:text-[#00FF41]">
-                      {selectedDoc.content}
+                  <div className="flex flex-col gap-3">
+                    {/* Editor Toolbar */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-black/60 rounded-xl border border-white/10 text-xs">
+                      <div className="flex items-center gap-1 bg-black/40 p-1 rounded-lg border border-white/5 overflow-x-auto scrollbar-none">
+                        <button
+                          onClick={() => {
+                            cyberAudio.play("click");
+                            setEditorSplitMode("preview");
+                          }}
+                          className={`shrink-0 px-2.5 py-1 rounded text-[11px] font-bold transition-colors cursor-pointer ${
+                            editorSplitMode === "preview"
+                              ? "bg-[#00FF41] text-black shadow-[0_0_8px_rgba(0,255,65,0.3)]"
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          PREVIEW
+                        </button>
+                        <button
+                          onClick={() => {
+                            cyberAudio.play("click");
+                            setEditorSplitMode("split");
+                          }}
+                          className={`shrink-0 hidden sm:inline-block px-2.5 py-1 rounded text-[11px] font-bold transition-colors cursor-pointer ${
+                            editorSplitMode === "split"
+                              ? "bg-[#00F0FF] text-black shadow-[0_0_8px_rgba(0,240,255,0.3)]"
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          SPLIT 50/50
+                        </button>
+                        <button
+                          onClick={() => {
+                            cyberAudio.play("click");
+                            setEditorSplitMode("edit");
+                          }}
+                          className={`shrink-0 px-2.5 py-1 rounded text-[11px] font-bold transition-colors cursor-pointer ${
+                            editorSplitMode === "edit"
+                              ? "bg-[#BF40FF] text-black shadow-[0_0_8px_rgba(191,64,255,0.3)]"
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          EDIT SOURCE
+                        </button>
+                      </div>
+
+                      {/* Live Token, Word & Read-time Metrics */}
+                      <div className="flex items-center gap-2.5 text-[10px] text-slate-400 font-mono pr-2">
+                        <span>
+                          <strong className="text-emerald-400">{selectedDoc.tokens}</strong> tok
+                        </span>
+                        <span>•</span>
+                        <span>
+                          <strong className="text-cyan-400">
+                            {selectedDoc.content.trim().split(/\s+/).filter(Boolean).length}
+                          </strong> words
+                        </span>
+                        <span>•</span>
+                        <span>
+                          ~{Math.max(1, Math.ceil(selectedDoc.content.trim().split(/\s+/).filter(Boolean).length / 200))}m read
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Split View Container */}
+                    <div
+                      className={`grid gap-3 min-h-[420px] max-h-[620px] ${
+                        editorSplitMode === "split"
+                          ? "grid-cols-1 md:grid-cols-2"
+                          : "grid-cols-1"
+                      }`}
+                    >
+                      {/* Editor Textarea */}
+                      {(editorSplitMode === "edit" || editorSplitMode === "split") && (
+                        <div className="flex flex-col bg-black/60 rounded-xl border border-white/10 overflow-hidden">
+                          <div className="px-3 py-1.5 bg-black/80 border-b border-white/5 text-[10px] text-slate-400 flex items-center justify-between">
+                            <span>MARKDOWN SOURCE EDITOR</span>
+                            <span className="text-emerald-400">AUTO-SAVED TO VAULT</span>
+                          </div>
+                          <textarea
+                            value={selectedDoc.content}
+                            onChange={(e) => handleUpdateDocContent(selectedDoc.id, e.target.value)}
+                            className="w-full flex-1 p-3.5 bg-transparent text-xs text-slate-200 font-mono outline-none resize-none leading-relaxed selection:bg-emerald-500/30 min-h-[300px]"
+                            placeholder="Write Obsidian markdown with [[WikiLinks]]..."
+                          />
+                        </div>
+                      )}
+
+                      {/* Preview Pane */}
+                      {(editorSplitMode === "preview" || editorSplitMode === "split") && (
+                        <div className="p-4 rounded-xl bg-black/50 border border-white/10 overflow-y-auto max-h-[600px] min-h-[360px] scrollbar-none shadow-inner">
+                          <CyberMarkdownViewer
+                            content={selectedDoc.content}
+                            onWikiLinkClick={handleWikiLinkClick}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1391,11 +1564,14 @@ export default function KnowledgeView() {
 
                 {/* TAB 4: 2D MESH CANVAS */}
                 {activeTab === "graph" && (
-                  <div className="relative w-full rounded-xl overflow-hidden bg-black/50 border border-white/5 flex flex-col items-center">
-                    <div className="absolute top-3 left-3 text-[10px] font-bold text-[#BF40FF] bg-black/60 px-2 py-1 rounded border border-[#BF40FF]/30">
-                      OBSIDIAN & KARPATHY NEURAL TOPOLOGY // 2D CANVAS
-                    </div>
-                    <canvas ref={canvasRef} className="w-full h-[360px]" />
+                  <div className="w-full">
+                    <KnowledgeGraphCanvas
+                      nodes={graphNodes}
+                      selectedNodeId={selectedDoc.id}
+                      onSelectNode={(id) => {
+                        setSelectedDocId(id);
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -1406,6 +1582,7 @@ export default function KnowledgeView() {
             )}
           </div>
         </div>
+      </div>
       )}
 
       {/* INGESTION & NOTE CREATOR MODAL */}

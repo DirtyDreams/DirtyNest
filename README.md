@@ -1,8 +1,8 @@
-# 🦅 DirtyNest — Tactical Command Center v0.01
+# 🦅 DirtyNest — Tactical Command Center v0.02
 
 > Cyberpunk Developer Cockpit, AI Deep Research Hub, Multi-Agent Swarm Orchestrator & System Observability Matrix.
 
-Built with **Next.js 16 (Turbopack)**, **React 19**, **TypeScript**, **Tailwind CSS v4**, **SQLite (`sql.js`)**, and **Web Audio API**.
+Built with **Next.js 16 (Turbopack)**, **React 19**, **TypeScript**, **Tailwind CSS v4**, **SQLite (`sql.js`)**, **Web Audio API**, and **Web Speech API**.
 
 ---
 
@@ -15,7 +15,7 @@ npm install
 # Start development server
 npm run dev
 
-# Production build
+# Production build & type-check
 npm run build
 ```
 
@@ -29,10 +29,15 @@ Comprehensive system documentation, architectural diagrams, API references, and 
 
 👉 **[DOCUMENTATION.md](./DOCUMENTATION.md)**
 
-### Key Features Documented
-- 🛰️ **Primary Decks**: Overview, Neural Chatbot (Deep Research), Agent Control Room, AI Swarm, Knowledge Base, Docker Hub, DevTools, Prometheus Stats, **System Operations & Audit Logs**, Settings.
-- 📜 **System Operations Log Hub**: Live streaming console pipe, structured table view, latency percentiles, error/warning diagnostics, deep trace JSON inspector, security audit ledger, and event simulation.
-- 🧩 **Modular Dashboard Engine**: 5 One-click presets and customizable live widgets.
-- 📱 **Mobile HUD**: Fixed bottom nav bar, swipe drawer, and tactical bottom sheet with touch optimization.
-- 💾 **SQLite Storage & REST APIs**: Persistent todos, notes, bookmarks, operations calendar, and structured `system_logs`.
-- 🎵 **Web Audio Synthesizer**: Click feedback, interval chimes, and ambient theta focus drone.
+### Key Workspaces (16 Decks)
+- 🛰️ **Overview Bento Grid**: 32+ modular tactical widgets, one-click presets, and layout customizer.
+- 🧠 **Hermes Master Brain & Neural Chat**: Deep research, multi-model selection (Gemini, Claude, GPT, DeepSeek, Local), and XML Tool-Call parser.
+- 🎛️ **Control Room**: Autonomous AI cockpit, Multi-Feed Cyber Stream, HITL approval gateways, and thought stream.
+- 🤖 **AI Agents Swarm**: Paperclip Company Autonomous Control Plane, Swarm DAG pipeline, and CPU/Memory quota metrics.
+- 📚 **Knowledge Vault**: 2D/3D Force-Directed Knowledge Graph Canvas, Cyber Markdown Viewer, and Karpathy AI Skills Matrix.
+- 🐳 **Docker Hub**: Container lifecycle manager, Compose Designer modal, and live log stream.
+- 🎨 **Image & Sound Studios**: Latent diffusion image studio modal and Web Audio theta drone / FX generator.
+- 👤 **Persona Nexus**: Real-time viseme speech avatar studio with browser-native speech synthesis.
+- 🌐 **Social Media Command**: Multi-network live engagement manager (X, Discord, Telegram, LinkedIn, Reddit).
+- 🛡️ **Threat Intel & Security Logs**: CVE vulnerability radar, live console pipe, structured audit ledger, and histogram charts.
+- 🛠️ **Dev Tools Suite**: 15+ interactive clientside tools (Diff Viewer, JWT Debugger, Palette Converter, Tokenizer, Zod Synthesizer, etc.).

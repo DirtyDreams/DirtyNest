@@ -178,13 +178,13 @@ export default function RssFeed() {
       </div>
 
       {/* Feed Status Summary Strip */}
-      <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-[#4F536E]">
-        <div className="flex items-center gap-2">
-          <span>SOURCES: <strong className="text-[#BF40FF]">VERCEL LAB · DEEPMIND · HN · WIREGUARD</strong></span>
+      <div className="mt-3 pt-2.5 border-t border-white/5 flex flex-wrap items-center justify-between gap-1.5 text-[9px] sm:text-[10px] font-mono text-[#4F536E]">
+        <div className="flex items-center gap-1.5 truncate max-w-full">
+          <span className="truncate">SOURCES: <strong className="text-[#BF40FF]">VERCEL LAB · DEEPMIND · HN</strong></span>
         </div>
-        <div className="flex items-center gap-1 text-[#00FF41]">
+        <div className="flex items-center gap-1 text-[#00FF41] shrink-0 ml-auto">
           <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-ping" />
-          <span>STREAM AUTO-POLL: 60s</span>
+          <span>AUTO-POLL: 60s</span>
         </div>
       </div>
     </div>

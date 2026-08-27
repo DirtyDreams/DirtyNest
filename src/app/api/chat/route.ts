@@ -5,9 +5,11 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, apiKey, model = "gemini-2.5-pro", mode } = await req.json();
 
-    if (!apiKey) {
+    const effectiveApiKey = apiKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
+    if (!effectiveApiKey) {
       return NextResponse.json(
-        { error: "API key is required. Configure it in Settings > API Keys." },
+        { error: "API key is required. Configure it in Settings > API Keys or set GEMINI_API_KEY on the server." },
         { status: 401 }
       );
     }
@@ -41,7 +43,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: effectiveApiKey });
 
     // Format messages for @google/genai
     // The gemini API expects a history and then we call sendMessage

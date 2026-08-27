@@ -26,6 +26,8 @@ interface ScheduleEvent {
   time: string; // HH:MM
   priority: "CRITICAL" | "HIGH" | "NORMAL";
   description: string;
+  recurrence?: "ONCE" | "HOURLY" | "DAILY" | "WEEKLY";
+  lastRun?: string;
 }
 
 const INITIAL_EVENTS: ScheduleEvent[] = [
@@ -75,6 +77,9 @@ export default function ScheduleView() {
   const [currentMonthOffset, setCurrentMonthOffset] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
 
+  const [viewMode, setViewMode] = useState<"calendar" | "gantt">("calendar");
+  const [runningJobId, setRunningJobId] = useState<string | null>(null);
+
   // New Event Form State
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -82,6 +87,7 @@ export default function ScheduleView() {
   const [newDate, setNewDate] = useState(selectedDate);
   const [newTime, setNewTime] = useState("12:00");
   const [newPriority, setNewPriority] = useState<ScheduleEvent["priority"]>("HIGH");
+  const [newRecurrence, setNewRecurrence] = useState<ScheduleEvent["recurrence"]>("DAILY");
   const [newDesc, setNewDesc] = useState("");
 
   const handleAddEvent = (e: React.FormEvent) => {
@@ -96,6 +102,7 @@ export default function ScheduleView() {
       date: newDate,
       time: newTime,
       priority: newPriority,
+      recurrence: newRecurrence,
       description: newDesc,
     };
 
@@ -103,6 +110,22 @@ export default function ScheduleView() {
     setShowAddModal(false);
     setNewTitle("");
     setNewDesc("");
+  };
+
+  const handleTriggerCronJob = (id: string) => {
+    cyberAudio.play("click");
+    setRunningJobId(id);
+    setTimeout(() => {
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === id
+            ? { ...e, lastRun: new Date().toLocaleTimeString("en-US", { hour12: false }) }
+            : e
+        )
+      );
+      setRunningJobId(null);
+      cyberAudio.play("chime");
+    }, 1200);
   };
 
   const handleDeleteEvent = (id: string) => {
@@ -194,6 +217,35 @@ export default function ScheduleView() {
           </div>
 
           <div className="flex items-center gap-2">
+            <div className="flex items-center bg-black/40 p-1 rounded-xl border border-white/10 text-xs font-bold">
+              <button
+                onClick={() => {
+                  cyberAudio.play("click");
+                  setViewMode("calendar");
+                }}
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                  viewMode === "calendar"
+                    ? "bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/40 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                CALENDAR GRID
+              </button>
+              <button
+                onClick={() => {
+                  cyberAudio.play("click");
+                  setViewMode("gantt");
+                }}
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                  viewMode === "gantt"
+                    ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                TIMELINE GANTT
+              </button>
+            </div>
+
             <button
               onClick={() => {
                 cyberAudio.play("click");
@@ -223,8 +275,63 @@ export default function ScheduleView() {
         </div>
       </div>
 
+      {/* VIEW: GANTT TIMELINE */}
+      {viewMode === "gantt" && (
+        <div className="cyber-card p-5 flex flex-col gap-4 animate-fade-in font-mono">
+          <div className="flex flex-wrap items-center justify-between pb-3 border-b border-white/10 gap-2">
+            <div className="flex items-center gap-2">
+              <Clock size={16} className="text-cyan-400" />
+              <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                24-HOUR OPERATIONAL GANTT TIMELINE ({selectedDate})
+              </h3>
+            </div>
+            <span className="text-[10px] text-cyan-400 font-bold">HOURLY RESOLUTION (00:00 - 23:59 UTC)</span>
+          </div>
+
+          {/* 24 Hour Column Grid */}
+          <div className="overflow-x-auto">
+            <div className="min-w-[700px] space-y-3">
+              {/* Hour Header Scale */}
+              <div className="grid grid-cols-12 gap-1 text-[9px] text-slate-500 font-bold border-b border-white/5 pb-1 text-center">
+                {["00:00", "02:00", "04:00", "06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"].map((h) => (
+                  <span key={h}>{h}</span>
+                ))}
+              </div>
+
+              {/* Event Milestone Gantt Bars */}
+              <div className="space-y-2 pt-1">
+                {events.map((evt) => {
+                  const hour = parseInt(evt.time.split(":")[0] || "12", 10);
+                  const leftPct = Math.max(2, Math.min(85, (hour / 24) * 100));
+                  const color = getCategoryColor(evt.category);
+
+                  return (
+                    <div key={evt.id} className="relative h-11 bg-black/40 rounded-xl border border-white/5 flex items-center px-3 overflow-hidden group">
+                      <div
+                        className="absolute h-8 rounded-lg flex items-center px-3 border shadow-lg transition-all"
+                        style={{
+                          left: `${leftPct}%`,
+                          backgroundColor: `${color}20`,
+                          borderColor: `${color}60`,
+                          color: color,
+                        }}
+                      >
+                        <span className="text-[10px] font-black truncate max-w-[200px]">
+                          [{evt.time}] {evt.title}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CALENDAR GRID & EVENT TIMELINE */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      {viewMode === "calendar" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Calendar Month Grid (7 cols) */}
         <div className="lg:col-span-7 cyber-card p-5 flex flex-col gap-4">
           <div className="flex items-center justify-between pb-3 border-b border-white/10">
@@ -416,23 +523,34 @@ export default function ScheduleView() {
 
             <div className="space-y-2 text-xs font-mono">
               {[
-                { name: "Postgres Snapshot", cron: "0 4 * * *", next: "In 7h 24m" },
-                { name: "Vector Index Rebuild", cron: "0 2 * * 0", next: "In 3d 5h" },
-                { name: "SSL Cert Validation", cron: "0 0 1 * *", next: "In 5d 12h" },
-                { name: "Node Telemetry Rollup", cron: "*/15 * * * *", next: "In 9m" },
+                { id: "cron-1", name: "Postgres Snapshot", cron: "0 4 * * *", next: "In 7h 24m" },
+                { id: "cron-2", name: "Vector Index Rebuild", cron: "0 2 * * 0", next: "In 3d 5h" },
+                { id: "cron-3", name: "SSL Cert Validation", cron: "0 0 1 * *", next: "In 5d 12h" },
+                { id: "cron-4", name: "Node Telemetry Rollup", cron: "*/15 * * * *", next: "In 9m" },
               ].map((cron) => (
-                <div key={cron.name} className="flex items-center justify-between p-2 rounded-lg bg-black/30 border border-white/5">
-                  <div className="flex flex-col">
-                    <span className="font-bold text-[#F1F3F9]">{cron.name}</span>
-                    <span className="text-[9px] text-[#4F536E]">{cron.cron}</span>
+                <div key={cron.id} className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-white/5 gap-2">
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-bold text-[#F1F3F9] text-xs truncate">{cron.name}</span>
+                    <span className="text-[9px] text-[#4F536E] font-mono">{cron.cron}</span>
                   </div>
-                  <span className="text-[10px] text-[#00F0FF] font-bold">{cron.next}</span>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-[#00F0FF] font-bold">{cron.next}</span>
+                    <button
+                      onClick={() => handleTriggerCronJob(cron.id)}
+                      disabled={runningJobId === cron.id}
+                      className="px-2.5 py-1 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-300 hover:bg-purple-500/25 text-[10px] font-bold transition-all shadow-[0_0_8px_rgba(191,64,255,0.2)] cursor-pointer disabled:opacity-50"
+                    >
+                      {runningJobId === cron.id ? "RUNNING..." : "RUN NOW"}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
       </div>
+      )}
 
       {/* NEW EVENT CREATION MODAL */}
       {showAddModal && (
@@ -491,7 +609,7 @@ export default function ScheduleView() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] text-[#4F536E] uppercase font-bold">Date</label>
                   <input
@@ -499,7 +617,7 @@ export default function ScheduleView() {
                     required
                     value={newDate}
                     onChange={(e) => setNewDate(e.target.value)}
-                    className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none"
+                    className="px-2.5 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none text-[11px]"
                   />
                 </div>
 
@@ -510,8 +628,22 @@ export default function ScheduleView() {
                     required
                     value={newTime}
                     onChange={(e) => setNewTime(e.target.value)}
-                    className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none"
+                    className="px-2.5 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none text-[11px]"
                   />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-[#4F536E] uppercase font-bold">Recurrence</label>
+                  <select
+                    value={newRecurrence}
+                    onChange={(e) => setNewRecurrence(e.target.value as any)}
+                    className="px-2.5 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none text-[11px]"
+                  >
+                    <option value="ONCE">Once</option>
+                    <option value="HOURLY">Hourly</option>
+                    <option value="DAILY">Daily</option>
+                    <option value="WEEKLY">Weekly</option>
+                  </select>
                 </div>
               </div>
 

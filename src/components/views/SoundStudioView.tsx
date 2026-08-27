@@ -1,17 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Mic, Sliders, AudioLines, Sparkles, Volume2, Radio, Zap } from "lucide-react";
+import { Mic, Sliders, AudioLines, Sparkles, Volume2, Radio, Zap, VolumeX, Music } from "lucide-react";
 import VoiceCloningMatrix, { VOICE_MODELS, VoiceModel } from "./sound_studio/VoiceCloningMatrix";
 import TtsScriptEditor, { VocalSynthesisParams } from "./sound_studio/TtsScriptEditor";
 import DspVoiceChanger from "./sound_studio/DspVoiceChanger";
 import AudioTakesVault, { AudioTake, SAMPLE_TAKES } from "./sound_studio/AudioTakesVault";
+import AgentVoiceSynthesizerModal from "./sound/AgentVoiceSynthesizerModal";
+import WebAudioTrackerDawModal from "./sound/WebAudioTrackerDawModal";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function SoundStudioView() {
   const [selectedVoice, setSelectedVoice] = useState<VoiceModel>(VOICE_MODELS[0]);
   const [takes, setTakes] = useState<AudioTake[]>(SAMPLE_TAKES);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [isTtsModalOpen, setIsTtsModalOpen] = useState(false);
+  const [isDawModalOpen, setIsDawModalOpen] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<"tts" | "dsp" | "takes">("tts");
 
   const handleSynthesize = (params: VocalSynthesisParams) => {
@@ -64,10 +68,42 @@ export default function SoundStudioView() {
           </div>
         </div>
 
-        <span className="text-[10px] font-bold text-[#00FF41] px-2.5 py-1 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
-          WEB AUDIO DSP ENGINE: 48kHz 24-BIT
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              cyberAudio.play("warp");
+              setIsDawModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#BF40FF]/15 text-[#BF40FF] border border-[#BF40FF]/40 font-bold hover:bg-[#BF40FF]/25 cursor-pointer shadow-[0_0_15px_rgba(191,64,255,0.2)] text-xs transition-all"
+          >
+            <Music size={14} />
+            <span>CYBER DAW TRACKER</span>
+          </button>
+
+          <button
+            onClick={() => {
+              cyberAudio.play("warp");
+              setIsTtsModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/40 font-bold hover:bg-[#00FF41]/25 cursor-pointer shadow-[0_0_15px_rgba(0,255,65,0.2)] text-xs transition-all"
+          >
+            <Radio size={14} />
+            <span>AGENT VOICE TTS STUDIO</span>
+          </button>
+        </div>
       </div>
+
+      {/* Agent Voice TTS Modal */}
+      <AgentVoiceSynthesizerModal
+        isOpen={isTtsModalOpen}
+        onClose={() => setIsTtsModalOpen(false)}
+      />
+
+      {/* Web Audio Tracker DAW Modal */}
+      <WebAudioTrackerDawModal
+        isOpen={isDawModalOpen}
+        onClose={() => setIsDawModalOpen(false)}
+      />
 
       {/* Sub-Navigation Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">

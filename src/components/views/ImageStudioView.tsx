@@ -15,11 +15,15 @@ import PromptMatrixGenerator, { GenerationParams } from "./image_studio/PromptMa
 import ImageCanvasPreview from "./image_studio/ImageCanvasPreview";
 import GeneratedAssetsGallery, { AssetItem, SAMPLE_ASSETS } from "./image_studio/GeneratedAssetsGallery";
 import ImageToolboxDrawer from "./image_studio/ImageToolboxDrawer";
+import LatentDiffusionStudioModal from "./image_studio/LatentDiffusionStudioModal";
+import CyberpunkShaderFxStudioModal from "./tools/CyberpunkShaderFxStudioModal";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function ImageStudioView() {
   const [activeAsset, setActiveAsset] = useState<AssetItem>(SAMPLE_ASSETS[0]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showLatentModal, setShowLatentModal] = useState(false);
+  const [showShaderModal, setShowShaderModal] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<"generator" | "gallery" | "toolbox">("generator");
 
   const handleGenerate = (params: GenerationParams) => {
@@ -65,9 +69,35 @@ export default function ImageStudioView() {
           </div>
         </div>
 
-        <span className="text-[10px] font-bold text-[#00FF41] px-2.5 py-1 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
-          RTX 4090 VRAM: 18.2 GB FREE
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              cyberAudio.play("warp");
+              setShowShaderModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#00FF41]/15 border border-[#00FF41]/40 text-[#00FF41] font-bold text-xs hover:bg-[#00FF41]/25 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,255,65,0.2)]"
+          >
+            <Sparkles size={14} />
+            <span>SHADER & ASCII FX</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              cyberAudio.play("click");
+              setShowLatentModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 font-bold text-xs hover:bg-cyan-500/30 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,240,255,0.2)]"
+          >
+            <Sparkles size={14} />
+            <span>LATENT WORKBENCH</span>
+          </button>
+
+          <span className="text-[10px] font-bold text-[#00FF41] px-2.5 py-2 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30">
+            RTX 4090 VRAM: 18.2 GB FREE
+          </span>
+        </div>
       </div>
 
       {/* Sub-Navigation Tabs */}
@@ -148,6 +178,20 @@ export default function ImageStudioView() {
           />
         </div>
       )}
+
+      {/* Latent Diffusion Studio Modal */}
+      {showLatentModal && (
+        <LatentDiffusionStudioModal
+          isOpen={showLatentModal}
+          onClose={() => setShowLatentModal(false)}
+        />
+      )}
+
+      {/* Cyberpunk Shader & Matrix FX Studio Modal */}
+      <CyberpunkShaderFxStudioModal
+        isOpen={showShaderModal}
+        onClose={() => setShowShaderModal(false)}
+      />
     </div>
   );
 }

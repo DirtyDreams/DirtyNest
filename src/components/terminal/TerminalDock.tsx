@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Terminal as TerminalIcon, X, Maximize2, Minimize2, CornerDownLeft } from "lucide-react";
+import { Terminal as TerminalIcon, X, Maximize2, Minimize2, CornerDownLeft, PlayCircle } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
+import CliSessionPlayerModal from "@/components/terminal/CliSessionPlayerModal";
 
 interface HistoryEntry {
   type: "input" | "output" | "error" | "system";
@@ -19,6 +20,7 @@ export default function TerminalDock({
 }) {
   const [input, setInput] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([
     { type: "system", text: "DIRTYNEST KERNEL v2.4.0 (x86_64-node-wasm)" },
     { type: "system", text: "Type 'help' for available directives or 'clear' to purge buffer." },
@@ -270,7 +272,18 @@ export default function TerminalDock({
           <span className="text-[10px] text-[#4F536E]">TTY/1 // SESSION ACTIVE</span>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => {
+              cyberAudio.play("warp");
+              setIsPlayerModalOpen(true);
+            }}
+            className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#00FF41]/10 text-[#00FF41] hover:bg-[#00FF41]/20 border border-[#00FF41]/30 text-[10px] font-bold cursor-pointer transition-all"
+            title="Asciinema CLI Session Replay & Recorder"
+          >
+            <PlayCircle size={11} />
+            <span>REPLAY SESSIONS</span>
+          </button>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-1 rounded hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41]"
@@ -285,6 +298,12 @@ export default function TerminalDock({
           </button>
         </div>
       </div>
+
+      {/* Asciinema CLI Session Replay & Recorder Modal */}
+      <CliSessionPlayerModal
+        isOpen={isPlayerModalOpen}
+        onClose={() => setIsPlayerModalOpen(false)}
+      />
 
       {/* Terminal Stream */}
       <div className="flex-1 overflow-y-auto p-4 space-y-1.5 font-mono text-xs">

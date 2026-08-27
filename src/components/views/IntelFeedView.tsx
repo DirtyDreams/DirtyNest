@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Rss,
   ExternalLink,
@@ -18,8 +18,11 @@ import {
   Tag,
   Clock,
   CheckCircle2,
+  Settings,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { useAppStore } from "@/stores/useAppStore";
+import MitreAttackMatrixModal from "./intel/MitreAttackMatrixModal";
 
 interface IntelItem {
   id: string;
@@ -104,12 +107,27 @@ const INITIAL_INTEL: IntelItem[] = [
 ];
 
 export default function IntelFeedView() {
+  const { setActiveView } = useAppStore();
   const [intelList, setIntelList] = useState<IntelItem[]>(INITIAL_INTEL);
   const [channelFilter, setChannelFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [newFeedUrl, setNewFeedUrl] = useState("");
-  const [feedAddedMessage, setFeedAddedMessage] = useState("");
+  const [showMitreModal, setShowMitreModal] = useState(false);
+  const [syncedFeeds, setSyncedFeeds] = useState<Array<{ name: string; url: string; enabled: boolean }>>([
+    { name: "CISA Cybersecurity Alerts", url: "https://www.cisa.gov/uscert/ncas/all.xml", enabled: true },
+    { name: "Hacker News Frontpage", url: "https://news.ycombinator.com/rss", enabled: true },
+    { name: "BleepingComputer News", url: "https://www.bleepingcomputer.com/feed/", enabled: true },
+    { name: "GitHub Engineering Blog", url: "https://github.blog/feed/", enabled: true },
+  ]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("dirtynest_rss_feeds");
+      if (saved) {
+        setSyncedFeeds(JSON.parse(saved));
+      }
+    } catch {}
+  }, []);
 
   const handleToggleSave = (id: string) => {
     cyberAudio.play("chime");
@@ -125,15 +143,6 @@ export default function IntelFeedView() {
       setIsRefreshing(false);
       cyberAudio.play("chime");
     }, 800);
-  };
-
-  const handleAddFeed = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFeedUrl) return;
-    cyberAudio.play("click");
-    setFeedAddedMessage(`Subscribed to ${newFeedUrl}! Stream synced.`);
-    setNewFeedUrl("");
-    setTimeout(() => setFeedAddedMessage(""), 3000);
   };
 
   const filteredItems = intelList.filter((item) => {
@@ -179,6 +188,29 @@ export default function IntelFeedView() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setActiveView("settings");
+              }}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FF8800]/15 border border-[#FF8800]/40 text-[#FF8800] hover:bg-[#FF8800]/25 text-xs font-bold transition-all shadow-[0_0_12px_rgba(255,136,0,0.2)] cursor-pointer"
+              title="Configure RSS sources and alert filters in Settings"
+            >
+              <Settings size={14} />
+              <span>MANAGE WIRE FEEDS</span>
+            </button>
+
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setShowMitreModal(true);
+              }}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-400 hover:bg-rose-500/25 text-xs font-bold transition-all shadow-[0_0_12px_rgba(255,0,60,0.2)] cursor-pointer"
+            >
+              <ShieldAlert size={14} />
+              <span>MITRE ATT&CK MATRIX</span>
+            </button>
+
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
@@ -325,79 +357,74 @@ export default function IntelFeedView() {
           </div>
         </div>
 
-        {/* Feed Channels & Custom URL Subscriber (4 cols) */}
+        {/* Feed Channels & Synced Wire Feeds Hub (4 cols) */}
         <div className="lg:col-span-4 flex flex-col gap-4">
-          {/* Custom Feed Subscriber */}
-          <div className="cyber-card p-5 flex flex-col gap-3">
-            <div className="flex items-center gap-2 pb-2 border-b border-white/10">
-              <Plus size={16} className="text-[#00FF41]" />
-              <h3 className="text-xs font-black text-[#F1F3F9] tracking-wider uppercase">
-                Subscribe Custom RSS
-              </h3>
-            </div>
-
-            <p className="text-[10px] text-[#9499B3] leading-relaxed">
-              Add external RSS, Atom, or webhook intelligence feeds directly into DirtyNest.
-            </p>
-
-            <form onSubmit={handleAddFeed} className="flex flex-col gap-2 mt-1">
-              <input
-                type="url"
-                value={newFeedUrl}
-                onChange={(e) => setNewFeedUrl(e.target.value)}
-                placeholder="https://hnrss.org/frontpage"
-                className="w-full px-3 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-xs font-mono text-[#F1F3F9] outline-none"
-              />
-
-              <button
-                type="submit"
-                className="w-full py-2 rounded-xl bg-[#00FF41]/15 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/25 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_10px_rgba(0,255,65,0.15)]"
-              >
-                <Plus size={14} />
-                <span>SUBSCRIBE FEED</span>
-              </button>
-            </form>
-
-            {feedAddedMessage && (
-              <div className="p-2.5 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-xs text-[#00FF41] flex items-center gap-2 animate-fade-in">
-                <CheckCircle2 size={13} />
-                <span>{feedAddedMessage}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Active Synced Feed Sources */}
+          {/* Active Synced Wire Feeds */}
           <div className="cyber-card p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <Radio size={16} className="text-[#BF40FF]" />
+                <Radio size={16} className="text-[#00FF41]" />
                 <h3 className="text-xs font-black text-[#F1F3F9] tracking-wider uppercase">
-                  Connected Wire Feeds
+                  Active Wire Feeds
                 </h3>
               </div>
-              <span className="text-[9px] text-[#00FF41] font-bold">5 ACTIVE</span>
+              <span className="text-[10px] text-[#00FF41] font-bold">
+                {syncedFeeds.filter((f) => f.enabled !== false).length} ACTIVE
+              </span>
             </div>
 
+            <p className="text-[10px] text-[#9499B3] leading-relaxed">
+              Real-time cyber telemetry and preprints auto-polled across registered sources.
+            </p>
+
             <div className="space-y-2 text-xs font-mono">
-              {[
-                { name: "Hacker News Ops", interval: "Every 5m", status: "SYNCED" },
-                { name: "ArXiv AI Preprints", interval: "Every 15m", status: "SYNCED" },
-                { name: "NIST NVD CVE Bulletins", interval: "Every 10m", status: "SYNCED" },
-                { name: "GitHub Trending Rust/Go", interval: "Every 1h", status: "SYNCED" },
-                { name: "Vercel & Next.js Releases", interval: "Realtime", status: "SYNCED" },
-              ].map((feed) => (
-                <div key={feed.name} className="flex items-center justify-between p-2 rounded-lg bg-black/30 border border-white/5">
-                  <div className="flex flex-col">
-                    <span className="font-bold text-[#F1F3F9]">{feed.name}</span>
-                    <span className="text-[9px] text-[#4F536E]">{feed.interval}</span>
+              {syncedFeeds.map((feed) => (
+                <div
+                  key={feed.name}
+                  className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+                    feed.enabled !== false
+                      ? "bg-black/30 border-white/5"
+                      : "bg-black/20 border-white/5 opacity-50"
+                  }`}
+                >
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <span className="font-bold text-[#F1F3F9] truncate text-xs">{feed.name}</span>
+                    <span className="text-[9px] text-[#4F536E] truncate font-mono">{feed.url}</span>
                   </div>
-                  <span className="text-[10px] text-[#00FF41] font-bold">{feed.status}</span>
+                  <span
+                    className={`text-[9px] font-bold px-2 py-0.5 rounded shrink-0 ${
+                      feed.enabled !== false
+                        ? "bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30"
+                        : "bg-white/5 text-[#4F536E]"
+                    }`}
+                  >
+                    {feed.enabled !== false ? "SYNCED" : "PAUSED"}
+                  </span>
                 </div>
               ))}
             </div>
+
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setActiveView("settings");
+              }}
+              className="w-full mt-2 py-2.5 rounded-xl bg-[#FF8800]/15 border border-[#FF8800]/40 text-[#FF8800] hover:bg-[#FF8800]/25 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_12px_rgba(255,136,0,0.15)]"
+            >
+              <Settings size={14} />
+              <span>CONFIGURE FEEDS IN SETTINGS</span>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* MITRE ATT&CK Matrix Modal */}
+      {showMitreModal && (
+        <MitreAttackMatrixModal
+          isOpen={showMitreModal}
+          onClose={() => setShowMitreModal(false)}
+        />
+      )}
     </div>
   );
 }

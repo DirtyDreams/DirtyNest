@@ -44,6 +44,8 @@ import AudioMixerModal from "@/components/modals/AudioMixerModal";
 import HermesQuickCommandModal from "@/components/modals/HermesQuickCommandModal";
 import HermesMasterStatusBadge from "@/components/common/HermesMasterStatusBadge";
 import TerminalDock from "@/components/terminal/TerminalDock";
+import CyberWindowManager from "@/components/desktop/CyberWindowManager";
+import KeyboardHotkeyStudioModal from "@/components/views/tools/KeyboardHotkeyStudioModal";
 import dynamic from "next/dynamic";
 import ViewLoadingSkeleton from "@/components/common/ViewLoadingSkeleton";
 import { loadWidgetLayout, type WidgetLayoutItem, DEFAULT_LAYOUT } from "@/lib/widgetLayout";
@@ -147,6 +149,7 @@ import {
   Image as ImageIcon,
   Mic,
   Share2,
+  Square,
 } from "lucide-react";
 
 export default function Home() {
@@ -181,7 +184,18 @@ export default function Home() {
   } = useAppStore();
 
   const [isHermesCommandModalOpen, setIsHermesCommandModalOpen] = useState(false);
+  const [isFloatingOsOpen, setIsFloatingOsOpen] = useState(false);
+  const [isHotkeyModalOpen, setIsHotkeyModalOpen] = useState(false);
   const { isAuthenticated, isLocked, recordActivity, lockSession } = useAuthStore();
+
+  useEffect(() => {
+    const handleCustomToggleHotkeys = () => {
+      cyberAudio.play("warp");
+      setIsHotkeyModalOpen((prev) => !prev);
+    };
+    window.addEventListener("dirtynest-toggle-hotkeys", handleCustomToggleHotkeys);
+    return () => window.removeEventListener("dirtynest-toggle-hotkeys", handleCustomToggleHotkeys);
+  }, []);
 
   useEffect(() => {
     // Sync initial view from URL hash if provided
@@ -266,11 +280,21 @@ export default function Home() {
       e.preventDefault();
       toggleRightPanel();
     }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "p" && !isInput) {
+      e.preventDefault();
+      cyberAudio.play("warp");
+      handleSelectView("agents");
+    }
+    if ((e.key === "?" || (e.shiftKey && e.key === "/")) && !isInput) {
+      e.preventDefault();
+      cyberAudio.play("warp");
+      setIsHotkeyModalOpen((prev) => !prev);
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "l" && !isInput) {
       e.preventDefault();
       lockSession();
     }
-  }, [toggleTerminal, toggleRightPanel, lockSession, setIsHermesCommandModalOpen]);
+  }, [toggleTerminal, toggleRightPanel, lockSession, setIsHermesCommandModalOpen, setIsHotkeyModalOpen]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -441,21 +465,14 @@ export default function Home() {
       <TerminalDock isOpen={isTerminalOpen} onClose={() => setTerminalOpen(false)} />
 
       {/* Main Responsive Grid Layout */}
-      <div className="flex min-h-screen bg-[#07070B] text-[#F1F3F9] font-sans antialiased selection:bg-[#00FF41]/20 selection:text-[#00FF41]">
-        {/* Left Interactive Nav Sidebar */}
-        <Sidebar
-          activeView={activeView}
-          onSelectView={handleSelectView}
-          onOpenSettingsModal={() => setSettingsOpen(true)}
-        />
-
-        {/* Central Tactical Workspace */}
-        <main className={`flex-1 min-w-0 max-w-full ml-0 md:ml-[68px] ${isRightPanelOpen ? "xl:mr-[340px]" : "xl:mr-[52px]"} px-3 sm:px-5 py-3 sm:py-4 pb-40 flex flex-col transition-all duration-300`}>
-          {/* Top Operational Breadcrumb HUD Bar */}
-          <header className="flex flex-col gap-2.5 mb-4 pb-3 border-b border-white/5 relative z-30">
-            {/* Row 1: Brand & Node Status (Left) + Identity + Compact Non-wrapping HUD Toolbar (Right) */}
-            <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-4 w-full h-10 shrink-0">
-              {/* Left: Brand & Mobile Trigger */}
+      <div className="h-[100dvh] md:h-auto md:min-h-screen bg-[#07070B] text-[#F1F3F9] font-sans antialiased selection:bg-[#00FF41]/20 selection:text-[#00FF41] flex flex-col md:block overflow-hidden md:overflow-visible">
+        {/* Top Operational Breadcrumb HUD Bar (Persistent Global Header) */}
+        <header
+          className={`sticky md:fixed top-0 left-0 right-0 md:left-[68px] ${isRightPanelOpen ? "xl:right-[340px]" : "xl:right-[52px]"} z-40 shrink-0 flex flex-col gap-2 px-3 sm:px-5 pt-safe pt-2 sm:pt-3 pb-2 bg-[#07070B]/98 backdrop-blur-2xl border-b border-white/10 shadow-[0_4px_25px_rgba(0,0,0,0.85)] transition-all duration-300`}
+        >
+          {/* Row 1: Brand & Node Status (Left) + Identity + Compact Non-wrapping HUD Toolbar (Right) */}
+          <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-4 w-full h-10 shrink-0">
+            {/* Left: Brand & Mobile Trigger */}
               <div className="flex items-center gap-2 sm:gap-3 shrink-0 h-9">
                 <button
                   onClick={() => {
@@ -512,6 +529,24 @@ export default function Home() {
                     <span className="hidden 2xl:inline">CUSTOMIZE</span>
                   </button>
                 )}
+
+                {/* Floating Multi-Window Desktop OS Toggle */}
+                <button
+                  onClick={() => {
+                    cyberAudio.play("warp");
+                    setIsFloatingOsOpen((prev) => !prev);
+                  }}
+                  className={`h-9 px-2.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
+                    isFloatingOsOpen
+                      ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/50 shadow-[0_0_12px_rgba(0,255,65,0.3)] animate-pulse"
+                      : "bg-white/[0.03] border-white/10 text-slate-300 hover:text-[#00FF41] hover:border-[#00FF41]/40"
+                  }`}
+                  title="Toggle Cyberpunk Floating Multi-Window Desktop OS"
+                  aria-label="Toggle Floating Multi-Window Desktop OS"
+                >
+                  <Square size={13} className={isFloatingOsOpen ? "text-[#00FF41]" : "text-slate-400"} />
+                  <span className="hidden sm:inline">FLOAT OS</span>
+                </button>
 
                 {/* Tactical Deck Toggle Button (Desktop & Mobile) */}
                 <button
@@ -838,11 +873,57 @@ export default function Home() {
             </div>
           </header>
 
-          {/* ACTIVE VIEW RENDERING WITH ERROR BOUNDARIES & PROTECTED ACCESS GATES */}
+          {/* Left Interactive Nav Sidebar */}
+          <Sidebar
+            activeView={activeView}
+            onSelectView={handleSelectView}
+            onOpenSettingsModal={() => setSettingsOpen(true)}
+          />
+
+          {/* Central Tactical Workspace */}
+          <main className={`flex-1 overflow-y-auto md:overflow-visible min-w-0 max-w-full ml-0 md:ml-[68px] ${isRightPanelOpen ? "xl:mr-[340px]" : "xl:mr-[52px]"} px-3 sm:px-5 py-3 md:pt-[112px] md:sm:pt-[118px] pb-24 md:pb-40 flex flex-col transition-all duration-300`}>
+            {/* ACTIVE VIEW RENDERING WITH ERROR BOUNDARIES & PROTECTED ACCESS GATES */}
           {activeView === "dashboard" && (
             <ProtectedAccessGate minClearance={1} viewName="Overview Dashboard">
               <ErrorBoundary fallbackTitle="DASHBOARD WIDGET GRID ERROR">
                 <div className="flex flex-col gap-4 sm:gap-5 pb-6 animate-fade-in">
+                  {/* Tactical Preset Quick Toolbar */}
+                  <div className="cyber-card p-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                    <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold shrink-0">BENTO PRESET:</span>
+                      {[
+                        { id: "all_widgets", label: "ALL WIDGETS" },
+                        { id: "tactical_sre", label: "TACTICAL SRE" },
+                        { id: "ai_researcher", label: "AI RESEARCH" },
+                        { id: "cyber_ops", label: "CYBER OPS" },
+                        { id: "developer_docker", label: "DEV & DOCKER" },
+                        { id: "minimalist", label: "MINIMAL" },
+                      ].map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            cyberAudio.play("chime");
+                            setCustomizeOpen(true);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-[#00FF41]/10 text-slate-300 hover:text-[#00FF41] border border-white/10 hover:border-[#00FF41]/30 transition-all font-bold cursor-pointer text-[10px] shrink-0"
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        cyberAudio.play("click");
+                        setCustomizeOpen(true);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25 text-[11px] font-bold transition-all shadow-[0_0_8px_rgba(0,255,65,0.2)] cursor-pointer shrink-0"
+                    >
+                      <Sliders size={12} />
+                      <span>EDIT TILES ({dashboardLayout.filter((w) => w.enabled).length})</span>
+                    </button>
+                  </div>
+
                   {/* Top North Star DORA Metrics Bar */}
                   {customWidgets.dora_metrics !== false && (
                     <div id="dora-widget">
@@ -1146,6 +1227,18 @@ export default function Home() {
       <HermesQuickCommandModal
         isOpen={isHermesCommandModalOpen}
         onClose={() => setIsHermesCommandModalOpen(false)}
+      />
+
+      {/* Cyberpunk Multi-Window Floating Desktop Manager */}
+      <CyberWindowManager
+        isOpen={isFloatingOsOpen}
+        onClose={() => setIsFloatingOsOpen(false)}
+      />
+
+      {/* Cyberpunk Keyboard Macro & Hotkey Studio Modal */}
+      <KeyboardHotkeyStudioModal
+        isOpen={isHotkeyModalOpen}
+        onClose={() => setIsHotkeyModalOpen(false)}
       />
 
       {/* Persistent Bottom HUD Status Bar (Desktop) */}

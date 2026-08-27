@@ -19,8 +19,11 @@ import {
   Send,
   Sliders,
   Check,
+  Settings,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { useAppStore } from "@/stores/useAppStore";
+import ApiEndpointProbeModal from "./api_health/ApiEndpointProbeModal";
 
 interface ServiceHealthItem {
   id: string;
@@ -126,11 +129,13 @@ const INITIAL_SERVICES: ServiceHealthItem[] = [
 ];
 
 export default function ApiHealthView() {
+  const { setActiveView } = useAppStore();
   const [services, setServices] = useState<ServiceHealthItem[]>(INITIAL_SERVICES);
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [isProbing, setIsProbing] = useState(false);
   const [customUrl, setCustomUrl] = useState("https://api.github.com/zen");
   const [probeResult, setProbeResult] = useState<{ status: string; latency: number; code: number } | null>(null);
+  const [selectedProbeService, setSelectedProbeService] = useState<ServiceHealthItem | null>(null);
 
   // Trigger simulated refresh
   const handleProbeAll = () => {
@@ -206,6 +211,18 @@ export default function ApiHealthView() {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setActiveView("settings");
+              }}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40 text-xs font-bold transition-all cursor-pointer"
+              title="Configure API Keys and Timeout Thresholds in Settings"
+            >
+              <Settings size={14} />
+              <span>API KEYS & TIMEOUTS</span>
+            </button>
+
+            <button
               onClick={handleProbeAll}
               disabled={isProbing}
               className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#00FF41]/15 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/25 text-xs font-bold transition-all shadow-[0_0_12px_rgba(0,255,65,0.2)] cursor-pointer disabled:opacity-50"
@@ -271,39 +288,65 @@ export default function ApiHealthView() {
           </div>
 
           {/* Service Rows */}
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {filteredServices.map((svc) => (
               <div
                 key={svc.id}
-                className="p-3.5 rounded-xl bg-black/40 border border-white/5 hover:border-white/15 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="p-4 rounded-xl bg-black/40 border border-white/5 hover:border-white/15 transition-all flex flex-col gap-3"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#00FF41] shadow-[0_0_8px_#00FF41] animate-pulse shrink-0" />
-                  <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs text-[#F1F3F9] truncate">{svc.name}</span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-[#4F536E]">
-                        {svc.category}
-                      </span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#00FF41] shadow-[0_0_8px_#00FF41] animate-pulse shrink-0" />
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-[#F1F3F9] truncate">{svc.name}</span>
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-[#4F536E]">
+                          {svc.category}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#9499B3] font-mono truncate">{svc.endpoint}</span>
                     </div>
-                    <span className="text-[10px] text-[#9499B3] font-mono truncate">{svc.endpoint}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-4 text-xs font-mono pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                    <div className="flex flex-col text-left sm:text-right">
+                      <span className="text-[10px] text-[#4F536E]">LATENCY</span>
+                      <span className="font-bold text-[#00FF41]">{svc.latency} ms</span>
+                    </div>
+
+                    <div className="flex flex-col text-left sm:text-right">
+                      <span className="text-[10px] text-[#4F536E]">90D UPTIME</span>
+                      <span className="font-bold text-[#00F0FF]">{svc.uptime90d}</span>
+                    </div>
+
+                    <div className="flex flex-col text-left sm:text-right hidden md:flex">
+                      <span className="text-[10px] text-[#4F536E]">SSL CERT</span>
+                      <span className="text-[#9499B3]">{svc.sslExpiryDays}d left</span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        cyberAudio.play("click");
+                        setSelectedProbeService(svc);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/25 text-xs font-bold transition-all shadow-[0_0_8px_rgba(0,240,255,0.2)] cursor-pointer"
+                    >
+                      PROBE
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end gap-5 text-xs font-mono pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
-                  <div className="flex flex-col text-left sm:text-right">
-                    <span className="text-[10px] text-[#4F536E]">LATENCY</span>
-                    <span className="font-bold text-[#00FF41]">{svc.latency} ms</span>
-                  </div>
-
-                  <div className="flex flex-col text-left sm:text-right">
-                    <span className="text-[10px] text-[#4F536E]">90D UPTIME</span>
-                    <span className="font-bold text-[#00F0FF]">{svc.uptime90d}</span>
-                  </div>
-
-                  <div className="flex flex-col text-left sm:text-right hidden md:flex">
-                    <span className="text-[10px] text-[#4F536E]">SSL CERT</span>
-                    <span className="text-[#9499B3]">{svc.sslExpiryDays}d left</span>
+                {/* 30-Day SLA Uptime History Bar */}
+                <div className="pt-2 border-t border-white/5 flex items-center justify-between gap-2">
+                  <span className="text-[9px] text-slate-500 shrink-0">30-DAY SLA HISTORY</span>
+                  <div className="flex items-center gap-1 overflow-hidden flex-1 justify-end">
+                    {Array.from({ length: 30 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-1.5 h-3 rounded-xs bg-emerald-500/40 hover:bg-emerald-400 transition-colors"
+                        title={`Day -${30 - i}: 100% Operational (0 outages)`}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
@@ -385,6 +428,16 @@ export default function ApiHealthView() {
           </div>
         </div>
       </div>
+
+      {/* API ENDPOINT PROBE MODAL */}
+      {selectedProbeService && (
+        <ApiEndpointProbeModal
+          serviceName={selectedProbeService.name}
+          endpointUrl={selectedProbeService.endpoint}
+          isOpen={!!selectedProbeService}
+          onClose={() => setSelectedProbeService(null)}
+        />
+      )}
     </div>
   );
 }

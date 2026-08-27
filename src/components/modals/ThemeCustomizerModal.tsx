@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useMemo } from "react";
 import {
@@ -26,6 +26,7 @@ import {
   applyThemePreset,
 } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";
+import CyberpunkShaderFxStudioModal from "@/components/views/tools/CyberpunkShaderFxStudioModal";
 
 interface Props {
   isOpen: boolean;
@@ -56,6 +57,7 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
   const [activeTab, setActiveTab] = useState<ModalTab>("all");
   const [themes, setThemes] = useState<ThemePreset[]>(DEFAULT_THEMES);
   const [currentThemeId, setCurrentThemeId] = useState("matrix");
+  const [isShaderModalOpen, setIsShaderModalOpen] = useState(false);
   
   // Editor state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -297,6 +299,18 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
               <span>Import / Export</span>
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              cyberAudio.play("warp");
+              setIsShaderModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/40 font-bold hover:bg-[#00FF41]/25 text-xs transition-all shadow-[0_0_10px_rgba(0,255,65,0.2)] cursor-pointer"
+          >
+            <Sparkles size={13} />
+            <span>SHADER & MATRIX FX</span>
+          </button>
 
           <button
             type="button"
@@ -699,6 +713,12 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
           </div>
         )}
       </div>
+
+      {/* Cyberpunk Shader & Matrix FX Studio Modal */}
+      <CyberpunkShaderFxStudioModal
+        isOpen={isShaderModalOpen}
+        onClose={() => setIsShaderModalOpen(false)}
+      />
     </div>
   );
 }

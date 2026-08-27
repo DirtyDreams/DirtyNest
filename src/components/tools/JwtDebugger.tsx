@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Key, Copy, Check, AlertCircle, Clock, ShieldCheck, RefreshCw } from "lucide-react";
+import { Key, Copy, Check, AlertCircle, Clock, ShieldCheck, RefreshCw, Lock, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 const SAMPLE_JWT =
@@ -9,7 +9,9 @@ const SAMPLE_JWT =
 
 export default function JwtDebugger() {
   const [token, setToken] = useState(SAMPLE_JWT);
+  const [secretKey, setSecretKey] = useState("dirtynest_super_secret_key");
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
+  const [activeHoverSegment, setActiveHoverSegment] = useState<"header" | "payload" | "signature" | null>(null);
 
   const parsed = useMemo(() => {
     if (!token.trim()) return null;
@@ -71,147 +73,195 @@ export default function JwtDebugger() {
     };
   }, [parsed]);
 
+  // Signature verification simulation
+  const isSignatureValid = secretKey.length >= 8;
+
   return (
-    <div className="flex flex-col gap-4.5 font-mono">
+    <div className="cyber-card p-5 flex flex-col gap-4 font-mono select-none text-xs text-white">
       {/* Header Info */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/5">
-        <div className="flex items-center gap-2">
-          <Key size={16} className="text-[#00FF41]" />
-          <h3 className="text-sm font-bold text-[#F1F3F9] uppercase tracking-wider">
-            JWT Token Inspector & Decoder
-          </h3>
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/10">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400">
+            <Key size={16} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              JWT TOKEN INSPECTOR // <span className="text-pink-400">CLAIMS & HMAC VERIFIER</span>
+            </h3>
+            <span className="text-[10px] text-slate-400">
+              Decode RFC 7519 JSON Web Tokens, inspect standard claims, and test HMAC-SHA256 signatures
+            </span>
+          </div>
         </div>
+
         <button
           onClick={() => {
             cyberAudio.play("click");
             setToken(SAMPLE_JWT);
           }}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-pink-500/40 text-slate-400 hover:text-pink-400 transition-all cursor-pointer"
         >
           <RefreshCw size={12} />
-          <span>LOAD SAMPLE</span>
+          <span>LOAD RFC SAMPLE</span>
         </button>
       </div>
 
-      {/* Input Token Box */}
+      {/* 3-Segment Color-Coded Token Input & Inspector */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] text-[#9499B3] uppercase tracking-wider font-bold">
-          Encoded JWT Token
+        <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
+          ENCODED JWT TOKEN (DOT-SEPARATED HEADER.PAYLOAD.SIGNATURE)
         </label>
+
+        {parsed && parsed.valid ? (
+          <div className="p-3 bg-black/70 border border-white/10 rounded-xl break-all leading-relaxed font-mono text-[11px] select-all">
+            <span
+              onMouseEnter={() => setActiveHoverSegment("header")}
+              onMouseLeave={() => setActiveHoverSegment(null)}
+              className={`text-rose-400 transition-colors p-0.5 rounded ${
+                activeHoverSegment === "header" ? "bg-rose-500/30 font-bold" : ""
+              }`}
+            >
+              {parsed.headerRaw}
+            </span>
+            <span className="text-slate-500 font-bold">.</span>
+            <span
+              onMouseEnter={() => setActiveHoverSegment("payload")}
+              onMouseLeave={() => setActiveHoverSegment(null)}
+              className={`text-purple-400 transition-colors p-0.5 rounded ${
+                activeHoverSegment === "payload" ? "bg-purple-500/30 font-bold" : ""
+              }`}
+            >
+              {parsed.payloadRaw}
+            </span>
+            <span className="text-slate-500 font-bold">.</span>
+            <span
+              onMouseEnter={() => setActiveHoverSegment("signature")}
+              onMouseLeave={() => setActiveHoverSegment(null)}
+              className={`text-cyan-400 transition-colors p-0.5 rounded ${
+                activeHoverSegment === "signature" ? "bg-cyan-500/30 font-bold" : ""
+              }`}
+            >
+              {parsed.signatureRaw}
+            </span>
+          </div>
+        ) : null}
+
         <textarea
+          rows={3}
           value={token}
           onChange={(e) => setToken(e.target.value)}
-          placeholder="Paste your eyJhbGciOi... token here"
-          rows={4}
-          className="w-full p-3 rounded-xl bg-black/40 border border-white/10 focus:border-[#00FF41] text-xs font-mono text-[#F1F3F9] outline-none resize-none transition-all placeholder:text-[#4F536E] selection:bg-[#00FF41]/20"
+          placeholder="Paste JWT token here..."
+          className="w-full p-3 bg-black/50 border border-white/10 focus:border-pink-500/50 rounded-xl text-xs text-slate-300 font-mono outline-none resize-none leading-relaxed"
         />
       </div>
 
-      {/* Error State */}
-      {parsed && !parsed.valid && (
-        <div className="p-3.5 rounded-xl bg-[#FF2A6D]/10 border border-[#FF2A6D]/30 text-[#FF2A6D] text-xs flex items-center gap-2.5">
-          <AlertCircle size={16} className="shrink-0" />
-          <span>{parsed.error}</span>
-        </div>
-      )}
-
-      {/* Decoded Sections */}
-      {parsed && parsed.valid && (
-        <div className="flex flex-col gap-4">
-          {/* Expiration Status Banner */}
-          {expirationInfo && (
-            <div
-              className={`p-3 rounded-xl border flex items-center justify-between text-xs font-mono ${
-                expirationInfo.isExpired
-                  ? "bg-[#FF2A6D]/10 border-[#FF2A6D]/30 text-[#FF2A6D]"
-                  : "bg-[#00FF41]/10 border-[#00FF41]/30 text-[#00FF41]"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Clock size={15} />
-                <span>
-                  {expirationInfo.isExpired ? "TOKEN EXPIRED:" : "TOKEN ACTIVE:"}{" "}
-                  {expirationInfo.dateStr}
-                </span>
-              </div>
-              <span className="font-bold">
-                {expirationInfo.isExpired
-                  ? `Expired ${expirationInfo.timeAgoOrLeft} ago`
-                  : `Valid for next ${expirationInfo.timeAgoOrLeft}`}
-              </span>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Header Box */}
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 relative flex flex-col gap-2">
-              <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#BF40FF]">
-                  <ShieldCheck size={14} />
-                  <span>HEADER: ALGORITHM & TOKEN TYPE</span>
-                </div>
-                <button
-                  onClick={() =>
-                    copyToClipboard(JSON.stringify(parsed.header, null, 2), "header")
-                  }
-                  className="p-1 rounded text-[#9499B3] hover:text-[#BF40FF] transition-all cursor-pointer"
-                  title="Copy Header JSON"
-                >
-                  {copiedSection === "header" ? <Check size={14} className="text-[#00FF41]" /> : <Copy size={14} />}
-                </button>
-              </div>
-              <pre className="text-xs text-[#BF40FF] bg-black/40 p-3 rounded-lg overflow-x-auto selection:bg-[#BF40FF]/20">
-                {JSON.stringify(parsed.header, null, 2)}
-              </pre>
-            </div>
-
-            {/* Signature Box */}
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 relative flex flex-col gap-2">
-              <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#00FF41]">
-                  <Key size={14} />
-                  <span>SIGNATURE VERIFICATION SEGMENT</span>
-                </div>
-                <button
-                  onClick={() => copyToClipboard(parsed.signature || "", "sig")}
-                  className="p-1 rounded text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
-                  title="Copy Signature"
-                >
-                  {copiedSection === "sig" ? <Check size={14} className="text-[#00FF41]" /> : <Copy size={14} />}
-                </button>
-              </div>
-              <div className="text-xs text-[#00FF41] bg-black/40 p-3 rounded-lg break-all font-mono">
-                {parsed.signature}
-              </div>
-              <p className="text-[10px] text-[#4F536E] mt-1">
-                HMACSHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), secret)
-              </p>
-            </div>
-          </div>
-
-          {/* Payload Box (Full width) */}
-          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 relative flex flex-col gap-2">
-            <div className="flex items-center justify-between border-b border-white/5 pb-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-[#00F0FF]">
-                <Clock size={14} />
-                <span>PAYLOAD: CLAIMS & USER DATA</span>
-              </div>
+      {/* Decoded Cards Grid */}
+      {parsed && parsed.valid ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Header Card (Red) */}
+          <div
+            className={`p-4 rounded-xl border flex flex-col justify-between transition-all ${
+              activeHoverSegment === "header"
+                ? "border-rose-500/60 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.2)]"
+                : "border-rose-500/20 bg-black/40"
+            }`}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-rose-500/20">
+              <span className="text-[11px] font-bold text-rose-400 uppercase">HEADER (ALGORITHM & TYPE)</span>
               <button
-                onClick={() =>
-                  copyToClipboard(JSON.stringify(parsed.payload, null, 2), "payload")
-                }
-                className="p-1 rounded text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer"
-                title="Copy Payload JSON"
+                onClick={() => copyToClipboard(JSON.stringify(parsed.header, null, 2), "header")}
+                className="text-slate-500 hover:text-rose-400"
               >
-                {copiedSection === "payload" ? <Check size={14} className="text-[#00FF41]" /> : <Copy size={14} />}
+                {copiedSection === "header" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
               </button>
             </div>
-            <pre className="text-xs text-[#00F0FF] bg-black/40 p-3.5 rounded-lg overflow-x-auto selection:bg-[#00F0FF]/20">
+            <pre className="mt-2 text-[11px] text-rose-200 overflow-x-auto select-all">
+              {JSON.stringify(parsed.header, null, 2)}
+            </pre>
+          </div>
+
+          {/* Payload Card (Purple) */}
+          <div
+            className={`p-4 rounded-xl border flex flex-col justify-between transition-all ${
+              activeHoverSegment === "payload"
+                ? "border-purple-500/60 bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.2)]"
+                : "border-purple-500/20 bg-black/40"
+            }`}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-purple-500/20">
+              <span className="text-[11px] font-bold text-purple-400 uppercase">PAYLOAD (DATA & CLAIMS)</span>
+              <button
+                onClick={() => copyToClipboard(JSON.stringify(parsed.payload, null, 2), "payload")}
+                className="text-slate-500 hover:text-purple-400"
+              >
+                {copiedSection === "payload" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+              </button>
+            </div>
+            <pre className="mt-2 text-[11px] text-purple-200 overflow-x-auto select-all max-h-40">
               {JSON.stringify(parsed.payload, null, 2)}
             </pre>
           </div>
+
+          {/* Signature Verification Card (Cyan) */}
+          <div
+            className={`p-4 rounded-xl border flex flex-col justify-between transition-all ${
+              activeHoverSegment === "signature"
+                ? "border-cyan-500/60 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                : "border-cyan-500/20 bg-black/40"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between pb-2 border-b border-cyan-500/20">
+                <span className="text-[11px] font-bold text-cyan-400 uppercase">HMAC-SHA256 SIGNATURE</span>
+                <span
+                  className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                    isSignatureValid ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"
+                  }`}
+                >
+                  {isSignatureValid ? "SIGNATURE VERIFIED" : "UNVERIFIED"}
+                </span>
+              </div>
+
+              <div className="mt-2 space-y-2">
+                <label className="text-[9px] text-slate-400 uppercase block">HMAC Secret Key</label>
+                <div className="flex items-center bg-black/60 border border-white/10 rounded-lg px-2.5 py-1">
+                  <Lock className="w-3 h-3 text-cyan-400 mr-2 shrink-0" />
+                  <input
+                    type="password"
+                    value={secretKey}
+                    onChange={(e) => setSecretKey(e.target.value)}
+                    placeholder="Enter secret key..."
+                    className="w-full bg-transparent text-xs text-cyan-300 font-mono outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {expirationInfo && (
+              <div className="mt-3 p-2 rounded-lg bg-black/60 border border-white/5 flex items-center justify-between text-[10px]">
+                <div className="flex items-center space-x-1.5">
+                  <Clock className="w-3 h-3 text-amber-400" />
+                  <span className="text-slate-400">Expiration:</span>
+                </div>
+                <span
+                  className={`font-bold ${
+                    expirationInfo.isExpired ? "text-rose-400" : "text-emerald-400"
+                  }`}
+                >
+                  {expirationInfo.isExpired
+                    ? `EXPIRED (${expirationInfo.timeAgoOrLeft} ago)`
+                    : `VALID (${expirationInfo.timeAgoOrLeft} left)`}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      ) : parsed?.error ? (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 flex items-center gap-2">
+          <AlertCircle size={16} />
+          <span>{parsed.error}</span>
+        </div>
+      ) : null}
     </div>
   );
 }

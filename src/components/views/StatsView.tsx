@@ -32,8 +32,10 @@ import {
   Pause,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import PromQlQueryBuilder from "./stats/PromQlQueryBuilder";
+import CpuCoreHeatmap from "./stats/CpuCoreHeatmap";
 
-type TelemetryTab = "cluster" | "llm" | "api" | "agents" | "security";
+type TelemetryTab = "cluster" | "promql" | "llm" | "api" | "agents" | "security";
 
 export default function StatsView() {
   const [activeTab, setActiveTab] = useState<TelemetryTab>("cluster");
@@ -233,6 +235,21 @@ export default function StatsView() {
           >
             <Server size={14} />
             <span>CLUSTER HARDWARE</span>
+          </button>
+
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setActiveTab("promql");
+            }}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border ${
+              activeTab === "promql"
+                ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 shadow-[0_0_10px_rgba(0,255,65,0.2)]"
+                : "bg-white/[0.02] border-white/5 text-[#9499B3] hover:text-[#00FF41]"
+            }`}
+          >
+            <Activity size={14} />
+            <span>PROMQL SIMULATOR</span>
           </button>
 
           <button
@@ -453,6 +470,18 @@ export default function StatsView() {
               </div>
             </div>
           </div>
+
+          {/* PER-CORE THERMAL & VOLTAGE HEATMAP MATRIX */}
+          <CpuCoreHeatmap />
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* TAB: PROMQL INTERACTIVE VECTOR QUERY LAB                  */}
+      {/* ========================================================= */}
+      {activeTab === "promql" && (
+        <div className="flex flex-col gap-4 animate-fade-in">
+          <PromQlQueryBuilder />
         </div>
       )}
 

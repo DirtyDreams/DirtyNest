@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Terminal, Shield, Activity, Radio, Cpu, Headphones } from "lucide-react";
+import { Terminal, Shield, Activity, Radio, Cpu, Headphones, Keyboard } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
 
@@ -86,6 +86,19 @@ export default function StatusBar({
         >
           <Terminal size={11} />
           <span>CLI [`]</span>
+        </button>
+
+        {/* Keyboard Hotkey HUD Pill */}
+        <button
+          onClick={() => {
+            cyberAudio.play("warp");
+            window.dispatchEvent(new CustomEvent("dirtynest-toggle-hotkeys"));
+          }}
+          className="flex items-center gap-1 px-2 py-0.5 rounded cursor-pointer hover:bg-white/5 text-[#9499B3] hover:text-[#00F0FF] transition-colors"
+          title="Open Keyboard Macro & Hotkey Studio HUD (? / Shift+?)"
+        >
+          <Keyboard size={11} />
+          <span>KEYS [?]</span>
         </button>
 
         <span className="text-[#4F536E] hidden sm:inline">|</span>

@@ -17,6 +17,7 @@ import {
 import { applyThemePreset, getAllThemes, type ThemePreset } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
+import CyberAudioMixer from "./CyberAudioMixer";
 
 const TABLES_METRIC = [
   { name: "todos", rows: 14, desc: "Backlog, active tasks & sprint priorities" },
@@ -220,37 +221,11 @@ export default function CoreSystemSettingsTab() {
         </div>
       </div>
 
-      {/* Audio Synthesizer & CRT Scanlines */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Audio Volume */}
-        <div className="space-y-3 p-4 rounded-xl bg-white/[0.02] border border-white/5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Volume2 size={14} className="text-[#00F0FF]" />
-              <label className="text-xs text-[#F1F3F9] uppercase font-bold">
-                Cyber Web Audio Volume
-              </label>
-            </div>
-            <button
-              onClick={testAudioChime}
-              className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-[10px] text-[#00F0FF] border border-white/10 cursor-pointer"
-            >
-              TEST
-            </button>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="5"
-            value={soundVolume}
-            onChange={(e) => handleVolumeChange(e.target.value)}
-            className="w-full accent-[#00F0FF] cursor-pointer"
-          />
-        </div>
+      {/* Audio Synthesizer & Multi-Track DSP Mixer */}
+      <CyberAudioMixer />
 
-        {/* CRT Scanlines */}
-        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
+      {/* CRT Scanlines Display Toggle */}
+      <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 font-bold text-xs text-[#F1F3F9] uppercase">
               <Monitor size={14} className="text-[#00FF41]" />
@@ -270,7 +245,6 @@ export default function CoreSystemSettingsTab() {
             {scanlinesActive ? "ENABLED" : "DISABLED"}
           </button>
         </div>
-      </div>
 
       {/* SQLite Database & Snapshot Backups */}
       <div className="space-y-3 p-4 rounded-xl bg-white/[0.02] border border-white/5">

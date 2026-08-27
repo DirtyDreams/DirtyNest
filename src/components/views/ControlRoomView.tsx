@@ -26,6 +26,8 @@ import MultiAgentDiffViewer from "./control_room/MultiAgentDiffViewer";
 import ResourceAllocationGauges from "./control_room/ResourceAllocationGauges";
 import HermesSkillBrowser from "./control_room/HermesSkillBrowser";
 import HermesMemoryInspector from "./control_room/HermesMemoryInspector";
+import HitlApprovalModal, { PendingApproval } from "./control_room/HitlApprovalModal";
+import MultiFeedCyberStreamGrid from "./control_room/MultiFeedCyberStreamGrid";
 
 export type HarnessId = "hermes" | "pi" | "opencode";
 
@@ -166,7 +168,7 @@ const INITIAL_SESSIONS: AgentSession[] = [
   },
 ];
 
-type ControlRoomSubTab = "trace" | "telemetry" | "skills_memory" | "topology";
+type ControlRoomSubTab = "trace" | "telemetry" | "skills_memory" | "topology" | "stream";
 
 export default function ControlRoomView() {
   const [selectedHarnessId, setSelectedHarnessId] = useState<HarnessId>("hermes");
@@ -176,9 +178,119 @@ export default function ControlRoomView() {
   const [promptInjection, setPromptInjection] = useState("");
   const [isKillswitchActive, setIsKillswitchActive] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<ControlRoomSubTab>("trace");
+  const [pendingModalApproval, setPendingModalApproval] = useState<PendingApproval | null>(null);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
   const activeHarness = HARNESSES.find((h) => h.id === selectedHarnessId) || HARNESSES[0];
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0];
+
+  const handleStepForward = () => {
+    cyberAudio.play("click");
+    setSessions((prev) =>
+      prev.map((sess) => {
+        if (sess.id === activeSessionId) {
+          const nextStepNum = sess.steps.length + 1;
+          const simulatedSteps: CognitiveStep[] = [
+            {
+              step: nextStepNum,
+              title: `AST Transformation & Verification #${nextStepNum}`,
+              thought: "Synthesizing safe memory boundary constraints and linting against React 19 compiler rules.",
+              output: `Generated optimized AST delta. Verification status: PASS (0 errors, 42ms runtime).`,
+            },
+            {
+              step: nextStepNum,
+              title: `Execute Runtime Security Clearance Check`,
+              thought: "Requesting clearance for elevated database connection pool expansion.",
+              toolCall: {
+                name: "sqlite_pool_expand",
+                args: '{"max_connections": 16, "wal_mode": true, "timeout_ms": 5000}',
+                requiresApproval: true,
+                status: "pending",
+              },
+            },
+          ];
+          const newStep = simulatedSteps[(nextStepNum - 1) % simulatedSteps.length];
+          newStep.step = nextStepNum;
+          return {
+            ...sess,
+            currentTokens: Math.min(sess.maxTokens, sess.currentTokens + 1420),
+            steps: [...sess.steps, newStep],
+          };
+        }
+        return sess;
+      })
+    );
+  };
+
+  const handleResetSteps = () => {
+    cyberAudio.play("click");
+    setSessions((prev) =>
+      prev.map((sess) => {
+        if (sess.id === activeSessionId) {
+          return {
+            ...sess,
+            currentTokens: 12400,
+            steps: sess.steps.slice(0, 1),
+          };
+        }
+        return sess;
+      })
+    );
+  };
+
+  const handleOpenApprovalModal = (stepIdx: number, toolCall: NonNullable<CognitiveStep["toolCall"]>) => {
+    cyberAudio.play("click");
+    setPendingModalApproval({
+      id: `${activeSessionId}-${stepIdx}`,
+      stepIdx,
+      agent: activeHarness.name,
+      toolName: toolCall.name,
+      argsJson: toolCall.args,
+      risk: toolCall.requiresApproval ? "CRITICAL" : "STANDARD",
+      description: `Autonomous agent ${activeHarness.name} requested execution of tool ${toolCall.name} in session ${activeSession.name}.`,
+    });
+  };
+
+  const handleModalApprove = (id: string, modifiedArgs?: string) => {
+    if (!pendingModalApproval || pendingModalApproval.stepIdx === undefined) return;
+    const stepIdx = pendingModalApproval.stepIdx;
+    setSessions((prev) =>
+      prev.map((sess) => {
+        if (sess.id === activeSessionId) {
+          const updatedSteps = [...sess.steps];
+          if (updatedSteps[stepIdx]?.toolCall) {
+            updatedSteps[stepIdx].toolCall!.status = "approved";
+            if (modifiedArgs) {
+              updatedSteps[stepIdx].toolCall!.args = modifiedArgs;
+            }
+            updatedSteps[stepIdx].output = `[APPROVED BY OPERATOR${modifiedArgs ? " (MODIFIED ARGS)" : ""}] Tool executed successfully · returncode=0 · telemetry verified.`;
+          }
+          return { ...sess, status: "STREAMING", steps: updatedSteps };
+        }
+        return sess;
+      })
+    );
+    setPendingModalApproval(null);
+  };
+
+  const handleModalDeny = (id: string, reason: string) => {
+    if (!pendingModalApproval || pendingModalApproval.stepIdx === undefined) return;
+    const stepIdx = pendingModalApproval.stepIdx;
+    setSessions((prev) =>
+      prev.map((sess) => {
+        if (sess.id === activeSessionId) {
+          const updatedSteps = [...sess.steps];
+          if (updatedSteps[stepIdx]?.toolCall) {
+            updatedSteps[stepIdx].toolCall!.status = "denied";
+            updatedSteps[stepIdx].output = `[DENIED BY OPERATOR] ${reason}`;
+          }
+          return { ...sess, status: "PAUSED", steps: updatedSteps };
+        }
+        return sess;
+      })
+    );
+    setPendingModalApproval(null);
+  };
 
   const handleApproveTool = (stepIdx: number) => {
     cyberAudio.play("chime");
@@ -399,6 +511,7 @@ export default function ControlRoomView() {
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {[
           { id: "trace" as const, label: "Cognitive Trace & Sessions", icon: Activity },
+          { id: "stream" as const, label: "Tactical Feeds & Broadcast Overlays", icon: Radio },
           { id: "telemetry" as const, label: "Token Burndown & Hardware Gauges", icon: Zap },
           { id: "skills_memory" as const, label: "Hermes Skills & Persistent Memory", icon: Brain },
           { id: "topology" as const, label: "DAG Topology & HITL Approvals", icon: Layers },
@@ -526,14 +639,33 @@ export default function ControlRoomView() {
 
             {/* Right Cognitive Trace & Injection (8 cols) */}
             <div className="lg:col-span-8 cyber-card p-5 flex flex-col gap-4">
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <Activity size={18} style={{ color: activeHarness.color }} />
-                  <h3 className="text-sm font-black text-[#F1F3F9]">COGNITIVE TRACE & REASONING SCRATCHPAD</h3>
+                  <h3 className="text-sm font-black text-[#F1F3F9]">COGNITIVE TRACE & STEP DEBUGGER</h3>
                 </div>
-                <span className="text-xs font-bold" style={{ color: activeHarness.color }}>
-                  SESSION: {activeSession.id.toUpperCase()}
-                </span>
+
+                {/* Cognitive Step Playback Controls */}
+                <div className="flex items-center bg-black/60 border border-white/10 rounded-xl p-1 text-xs gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleStepForward}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 font-bold transition-colors flex items-center gap-1"
+                    title="Step Forward Single Cognitive Tick"
+                  >
+                    <Zap size={12} />
+                    <span>STEP NEXT</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResetSteps}
+                    className="px-2 py-1 rounded-lg bg-white/5 text-slate-400 hover:text-white transition-colors"
+                    title="Rewind to Step 1"
+                  >
+                    RESET
+                  </button>
+                </div>
               </div>
 
               {/* Reasoning Steps Stream */}
@@ -550,7 +682,7 @@ export default function ControlRoomView() {
                       <span className="text-[10px] text-[#4F536E] font-mono">TRACE_OK</span>
                     </div>
 
-                    <p className="text-xs text-[#9499B3] leading-relaxed italic bg-black/30 p-2.5 rounded-lg border border-white/5">
+                    <p className="text-xs text-[#9499B3] leading-relaxed italic bg-black/30 p-2.5 rounded-lg border border-white/5 font-mono">
                       &quot;{step.thought}&quot;
                     </p>
 
@@ -590,19 +722,26 @@ export default function ControlRoomView() {
                           <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
                             <button
                               type="button"
+                              onClick={() => handleOpenApprovalModal(idx, step.toolCall!)}
+                              className="px-3 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 text-xs font-bold transition-colors cursor-pointer"
+                            >
+                              INSPECT & EDIT PAYLOAD
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => handleDenyTool(idx)}
-                              className="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-[#FF2A6D]/15 border border-[#FF2A6D]/40 text-[#FF2A6D] hover:bg-[#FF2A6D]/25 text-xs font-bold cursor-pointer"
+                              className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-[#FF2A6D]/15 border border-[#FF2A6D]/40 text-[#FF2A6D] hover:bg-[#FF2A6D]/25 text-xs font-bold cursor-pointer"
                             >
                               <XCircle size={12} />
-                              <span>DENY INVOCATION</span>
+                              <span>DENY</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => handleApproveTool(idx)}
-                              className="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-4 py-1.5 rounded-lg bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 text-xs font-bold shadow-[0_0_8px_rgba(0,255,65,0.2)] cursor-pointer"
+                              className="flex items-center justify-center gap-1 px-4 py-1.5 rounded-lg bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 text-xs font-bold shadow-[0_0_8px_rgba(0,255,65,0.2)] cursor-pointer"
                             >
                               <CheckCircle2 size={12} />
-                              <span>APPROVE & DISPATCH</span>
+                              <span>APPROVE</span>
                             </button>
                           </div>
                         )}
@@ -645,6 +784,13 @@ export default function ControlRoomView() {
         </div>
       )}
 
+      {/* TAB: MULTI-FEED TACTICAL BROADCAST STREAMS */}
+      {activeSubTab === "stream" && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          <MultiFeedCyberStreamGrid />
+        </div>
+      )}
+
       {/* TAB 2: TOKEN BURNDOWN & HARDWARE GAUGES */}
       {activeSubTab === "telemetry" && (
         <div className="flex flex-col gap-5 animate-fade-in">
@@ -671,6 +817,15 @@ export default function ControlRoomView() {
           <HitlApprovalQueue />
         </div>
       )}
+
+      {/* Interactive HITL Clearance Gate Modal */}
+      <HitlApprovalModal
+        approval={pendingModalApproval}
+        isOpen={!!pendingModalApproval}
+        onClose={() => setPendingModalApproval(null)}
+        onApprove={handleModalApprove}
+        onDeny={handleModalDeny}
+      />
     </div>
   );
 }

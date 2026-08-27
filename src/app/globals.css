@@ -40,8 +40,6 @@
 }
 
 html {
-  overflow-x: hidden;
-  overflow-y: scroll;
   min-height: 100%;
 }
 
@@ -49,8 +47,6 @@ body {
   background-color: var(--bg-deep);
   color: var(--text-primary);
   font-family: var(--font-inter, 'Inter', system-ui, -apple-system, sans-serif);
-  overflow-x: hidden;
-  overflow-y: visible;
   min-height: 100vh;
   margin: 0;
   padding: 0;

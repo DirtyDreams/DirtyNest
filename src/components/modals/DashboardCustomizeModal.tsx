@@ -34,6 +34,7 @@ import {
   Terminal,
   Droplets,
   Clock,
+  Brain,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -59,6 +60,7 @@ export type DashboardPreset =
 export const DEFAULT_WIDGETS: DashboardWidgetConfig[] = [
   { id: "dora_metrics", name: "DORA Engineering Health Metrics", description: "Deployment frequency, lead time, failure rate, and MTTR", icon: TrendingUp, enabled: true, gridSpan: "full", category: "SYSTEM" },
   { id: "ai_insight", name: "Tactical AI Operations Briefing", description: "Natural language cluster synthesis & autonomous recommendations", icon: Sparkles, enabled: true, gridSpan: "full", category: "AI & AGENTS" },
+  { id: "hermes_brain", name: "Hermes Master Brain & Skills HUD", description: "Live cognitive activity, active memory count, and running skills", icon: Brain, enabled: true, gridSpan: "half", category: "AI & AGENTS" },
   { id: "ai_quota", name: "AI Model Quotas & Burndown", description: "Multi-LLM rate limits (TPM/RPM) and token cost telemetry", icon: Zap, enabled: true, gridSpan: "half", category: "AI & AGENTS" },
   { id: "aws_cloud_burn", name: "FinOps Cloud Spend & Burn", description: "AWS & GCP monthly forecast, circular burn rate & idle termination", icon: DollarSign, enabled: true, gridSpan: "half", category: "SYSTEM" },
   { id: "agent_security_beacon", name: "Agent Security Beacon & Audit", description: "Zero-trust local audit logging for AI agent shell/file mutations", icon: ShieldCheck, enabled: true, gridSpan: "half", category: "AI & AGENTS" },
@@ -103,7 +105,14 @@ export default function DashboardCustomizeModal({
     try {
       const saved = localStorage.getItem("dirtynest_dashboard_layout");
       if (saved) {
-        setWidgets(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const merged = DEFAULT_WIDGETS.map((def) => {
+            const match = parsed.find((p: any) => p.id === def.id);
+            return match ? { ...def, ...match } : def;
+          });
+          setWidgets(merged);
+        }
       }
     } catch {
       // ignore
@@ -134,6 +143,46 @@ export default function DashboardCustomizeModal({
   const toggleWidget = (id: string) => {
     cyberAudio.play("click");
     const updated = widgets.map((w) => (w.id === id ? { ...w, enabled: !w.enabled } : w));
+    setSelectedPreset("custom");
+    saveLayout(updated);
+  };
+
+  const handleMoveUp = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (index === 0) return;
+    cyberAudio.play("click");
+    const updated = [...widgets];
+    const temp = updated[index - 1];
+    updated[index - 1] = updated[index];
+    updated[index] = temp;
+    setSelectedPreset("custom");
+    saveLayout(updated);
+  };
+
+  const handleMoveDown = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (index === widgets.length - 1) return;
+    cyberAudio.play("click");
+    const updated = [...widgets];
+    const temp = updated[index + 1];
+    updated[index + 1] = updated[index];
+    updated[index] = temp;
+    setSelectedPreset("custom");
+    saveLayout(updated);
+  };
+
+  const handleToggleSpan = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    cyberAudio.play("click");
+    const updated = widgets.map((w) => {
+      if (w.id === id) {
+        return {
+          ...w,
+          gridSpan: (w.gridSpan === "full" ? "half" : "full") as "full" | "half",
+        };
+      }
+      return w;
+    });
     setSelectedPreset("custom");
     saveLayout(updated);
   };
@@ -302,6 +351,43 @@ export default function DashboardCustomizeModal({
                     <span className="text-[9px] text-[#4F536E] font-bold mt-1">
                       {w.category} • {w.gridSpan.toUpperCase()}
                     </span>
+
+                    {/* In-Card Quick Controls */}
+                    <div className="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-white/5">
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleSpan(w.id, e)}
+                        className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all cursor-pointer ${
+                          w.gridSpan === "full"
+                            ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
+                            : "bg-white/5 text-slate-400 hover:text-white"
+                        }`}
+                        title="Toggle 1-Column vs Full 2-Column Span"
+                      >
+                        {w.gridSpan === "full" ? "SPAN: 2-COL" : "SPAN: 1-COL"}
+                      </button>
+
+                      <div className="flex items-center gap-1 ml-auto">
+                        <button
+                          type="button"
+                          onClick={(e) => handleMoveUp(widgets.indexOf(w), e)}
+                          disabled={widgets.indexOf(w) === 0}
+                          className="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 disabled:opacity-30 cursor-pointer text-[9px]"
+                          title="Move Widget Higher"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleMoveDown(widgets.indexOf(w), e)}
+                          disabled={widgets.indexOf(w) === widgets.length - 1}
+                          className="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 disabled:opacity-30 cursor-pointer text-[9px]"
+                          title="Move Widget Lower"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

@@ -25,6 +25,11 @@ export default function KnowledgeSettingsTab() {
   const [autoSyncWatcher, setAutoSyncWatcher] = useState(true);
   const [isReindexing, setIsReindexing] = useState(false);
 
+  // Obsidian Vault Specific Parameters
+  const [obsidianVaultName, setObsidianVaultName] = useState("CyberVault");
+  const [obsidianVaultPath, setObsidianVaultPath] = useState("C:/Users/coyot/Documents/CyberVault");
+  const [obsidianUriEnabled, setObsidianUriEnabled] = useState(true);
+
   useEffect(() => {
     try {
       const savedEngine = localStorage.getItem("dirtynest_rag_engine");
@@ -39,6 +44,14 @@ export default function KnowledgeSettingsTab() {
       if (savedSim) setSimilarityMetric(savedSim);
       const savedWatch = localStorage.getItem("dirtynest_rag_autosync");
       if (savedWatch) setAutoSyncWatcher(savedWatch !== "false");
+
+      // Obsidian Vault parameters
+      const savedVaultName = localStorage.getItem("dirtynest_obsidian_vault_name");
+      if (savedVaultName) setObsidianVaultName(savedVaultName);
+      const savedVaultPath = localStorage.getItem("dirtynest_obsidian_path");
+      if (savedVaultPath) setObsidianVaultPath(savedVaultPath);
+      const savedUri = localStorage.getItem("dirtynest_obsidian_uri_enabled");
+      if (savedUri) setObsidianUriEnabled(savedUri !== "false");
     } catch {}
   }, []);
 
@@ -51,8 +64,13 @@ export default function KnowledgeSettingsTab() {
       localStorage.setItem("dirtynest_rag_model", embeddingModel);
       localStorage.setItem("dirtynest_rag_metric", similarityMetric);
       localStorage.setItem("dirtynest_rag_autosync", String(autoSyncWatcher));
+
+      // Save Obsidian Vault parameters
+      localStorage.setItem("dirtynest_obsidian_vault_name", obsidianVaultName);
+      localStorage.setItem("dirtynest_obsidian_path", obsidianVaultPath);
+      localStorage.setItem("dirtynest_obsidian_uri_enabled", String(obsidianUriEnabled));
     } catch {}
-    toast.success("Knowledge & RAG Saved", "Vector pipeline parameters stored.");
+    toast.success("Knowledge & Vault Saved", "Obsidian and Vector RAG configurations stored.");
   };
 
   const handleRebuildIndex = async () => {
@@ -223,6 +241,62 @@ export default function KnowledgeSettingsTab() {
             <RefreshCw size={13} className={isReindexing ? "animate-spin" : ""} />
             <span>{isReindexing ? "INDEXING..." : "REBUILD INDEX"}</span>
           </button>
+        </div>
+      </div>
+
+      {/* Obsidian Vault & Knowledge Sync Configuration Block */}
+      <div className="space-y-4 p-5 rounded-2xl bg-black/40 border border-[#BF40FF]/25 shadow-[0_0_20px_rgba(191,64,255,0.08)]">
+        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
+            <FolderSync size={16} className="text-[#BF40FF]" />
+            <h4 className="text-xs font-bold text-[#F1F3F9] uppercase tracking-wider">
+              Obsidian Vault & Knowledge Sync Configuration
+            </h4>
+          </div>
+          <span className="text-[10px] text-[#00FF41] font-bold">URI PROTOCOL: ENABLED</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-[#9499B3] uppercase">Obsidian Vault Name</label>
+            <input
+              type="text"
+              value={obsidianVaultName}
+              onChange={(e) => setObsidianVaultName(e.target.value)}
+              placeholder="e.g. CyberVault"
+              className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-xl text-xs text-[#F1F3F9] outline-none focus:border-[#BF40FF]/50 font-mono"
+            />
+            <span className="text-[9px] text-[#4F536E]">
+              Must match the Vault Name registered in your local Obsidian desktop client.
+            </span>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-[#9499B3] uppercase">Local File System Path</label>
+            <input
+              type="text"
+              value={obsidianVaultPath}
+              onChange={(e) => setObsidianVaultPath(e.target.value)}
+              placeholder="e.g. C:/Users/name/Documents/Vault"
+              className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-xl text-xs text-[#F1F3F9] outline-none focus:border-[#BF40FF]/50 font-mono"
+            />
+            <span className="text-[9px] text-[#4F536E]">
+              Target directory monitored for real-time markdown modifications and new recipes.
+            </span>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-2 text-[11px] text-[#9499B3]">
+          <span className="font-bold text-[#00FF41] text-xs">How the Obsidian & Karpathy Bridge Works:</span>
+          <p className="leading-relaxed">
+            1. <strong>Obsidian URI Integration</strong>: Clicking <em>&quot;OPEN IN OBSIDIAN&quot;</em> triggers the native <code className="text-[#BF40FF]">obsidian://open</code> scheme to launch your desktop Obsidian workspace directly to the active note.
+          </p>
+          <p className="leading-relaxed">
+            2. <strong>Karpathy Skills Framework</strong>: Encapsulates deep learning mental models, tokenizers, backprop engines, and autoresearch agent workflows into executable prompt cards for the DirtyNest Swarm and Chatbot.
+          </p>
+          <p className="leading-relaxed">
+            3. <strong>Bi-directional Wiki Graph</strong>: Automatically parses <code className="text-[#00F0FF]">[[WikiLinks]]</code> and YAML frontmatter headers to maintain cross-linking across system architecture and threat intel.
+          </p>
         </div>
       </div>
     </div>

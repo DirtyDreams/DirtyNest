@@ -50,24 +50,24 @@ export default function HermesStatusWidget() {
         </div>
 
         {/* Model Spec */}
-        <div className="flex items-center justify-between text-[10px] text-[#4F536E] mt-2">
-          <span>Model: <strong className="text-white">{config.model.modelId}</strong></span>
-          <span className="text-[#00F0FF]">ACP v2 Stdio</span>
+        <div className="flex items-center justify-between gap-2 text-[9px] sm:text-[10px] text-[#4F536E] mt-2 overflow-hidden">
+          <span className="truncate">Model: <strong className="text-white truncate">{config.model.modelId}</strong></span>
+          <span className="text-[#00F0FF] shrink-0">ACP v2</span>
         </div>
 
         {/* Stats 3-Column */}
-        <div className="grid grid-cols-3 gap-2 text-center py-2.5 my-2 bg-black/40 rounded-xl border border-white/5">
-          <div>
-            <span className="text-[9px] text-[#4F536E] uppercase block">Skills</span>
-            <span className="text-xs font-black text-[#00FF41]">{skills.length} Loaded</span>
+        <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center py-2 px-1 my-2 bg-black/40 rounded-xl border border-white/5 overflow-hidden">
+          <div className="truncate">
+            <span className="text-[8px] sm:text-[9px] text-[#4F536E] uppercase block truncate">Skills</span>
+            <span className="text-[11px] sm:text-xs font-black text-[#00FF41] block truncate">{skills.length} Loaded</span>
           </div>
-          <div>
-            <span className="text-[9px] text-[#4F536E] uppercase block">Memories</span>
-            <span className="text-xs font-black text-[#00F0FF]">{memories.length} Stored</span>
+          <div className="truncate">
+            <span className="text-[8px] sm:text-[9px] text-[#4F536E] uppercase block truncate">Memories</span>
+            <span className="text-[11px] sm:text-xs font-black text-[#00F0FF] block truncate">{memories.length} Stored</span>
           </div>
-          <div>
-            <span className="text-[9px] text-[#4F536E] uppercase block">Recall</span>
-            <span className="text-xs font-black text-[#BF40FF]">99.8%</span>
+          <div className="truncate">
+            <span className="text-[8px] sm:text-[9px] text-[#4F536E] uppercase block truncate">Recall</span>
+            <span className="text-[11px] sm:text-xs font-black text-[#BF40FF] block truncate">99.8%</span>
           </div>
         </div>
 

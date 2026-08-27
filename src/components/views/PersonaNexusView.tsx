@@ -32,6 +32,7 @@ import LorebookManagerModal, { LorebookEntry, DEFAULT_LOREBOOK_ENTRIES } from ".
 import InfluencerProfileModal, { VirtualInfluencer } from "./nexus/InfluencerProfileModal";
 import LivestreamSimulatorModal from "./nexus/LivestreamSimulatorModal";
 import CreateInfluencerModal from "./nexus/CreateInfluencerModal";
+import PersonaVisemeAvatarStudio from "./nexus/PersonaVisemeAvatarStudio";
 
 const INITIAL_INFLUENCERS: VirtualInfluencer[] = [
   {
@@ -531,6 +532,9 @@ export default function PersonaNexusView() {
           <span className="text-[9px] text-[#BF40FF] font-mono mt-1">3.2x Above Industry Avg</span>
         </div>
       </div>
+
+      {/* Live Metahuman Viseme Studio */}
+      <PersonaVisemeAvatarStudio />
 
       {/* Niche Categories Filter & Search / Sort Strip */}
       <div className="cyber-card p-4 bg-[#07070B]/95 border border-white/10 rounded-2xl flex flex-col gap-3">

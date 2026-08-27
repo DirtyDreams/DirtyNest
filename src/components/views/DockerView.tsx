@@ -29,10 +29,16 @@ import {
   ArrowDownToLine,
   Filter,
   ShieldAlert,
+  Network,
+  Settings,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { useAppStore } from "@/stores/useAppStore";
 import DockerTerminalModal from "./docker/DockerTerminalModal";
 import DockerCveScannerModal from "./docker/DockerCveScannerModal";
+import DockerComposeDesignerModal from "./docker/DockerComposeDesignerModal";
+import DockerLogsStreamModal from "./docker/DockerLogsStreamModal";
+import NetworkTopologyStudioModal from "./tools/NetworkTopologyStudioModal";
 
 interface DockerContainerItem {
   id: string;
@@ -162,6 +168,7 @@ const COMPOSE_STACKS: ComposeStack[] = [
 ];
 
 export default function DockerView() {
+  const { setActiveView } = useAppStore();
   const [activeSubTab, setActiveSubTab] = useState<"containers" | "images" | "compose" | "logs">("containers");
   const [containers, setContainers] = useState<DockerContainerItem[]>(INITIAL_CONTAINERS);
   const [images, setImages] = useState<DockerImageItem[]>(INITIAL_IMAGES);
@@ -173,6 +180,11 @@ export default function DockerView() {
   const [isPulling, setIsPulling] = useState(false);
   const [terminalContainer, setTerminalContainer] = useState<DockerContainerItem | null>(null);
   const [cveImage, setCveImage] = useState<string | null>(null);
+  const [showComposeModal, setShowComposeModal] = useState(false);
+  const [showTopologyModal, setShowTopologyModal] = useState(false);
+  const [streamingLogsContainer, setStreamingLogsContainer] = useState<string | null>(null);
+  const [showPruneModal, setShowPruneModal] = useState(false);
+  const [isPruning, setIsPruning] = useState(false);
 
   // Live Logs Simulation
   const [logs, setLogs] = useState<string[]>([
@@ -251,6 +263,18 @@ export default function DockerView() {
     }, 2000);
   };
 
+  const handlePruneSystem = () => {
+    cyberAudio.play("click");
+    setIsPruning(true);
+    setTimeout(() => {
+      setIsPruning(false);
+      setShowPruneModal(false);
+      setImages((prev) => prev.filter((img) => img.inUse));
+      setContainers((prev) => prev.filter((c) => c.status === "running"));
+      cyberAudio.play("chime");
+    }, 1500);
+  };
+
   const selectedContainer = containers.find((c) => c.id === selectedContainerId) || containers[0];
   const runningCount = containers.filter((c) => c.status === "running").length;
 
@@ -293,6 +317,28 @@ export default function DockerView() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
+                cyberAudio.play("warp");
+                setShowTopologyModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#00FF41]/15 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/25 text-xs font-bold transition-all shadow-[0_0_12px_rgba(0,255,65,0.2)] cursor-pointer"
+            >
+              <Network size={14} />
+              <span>TOPOLOGY STUDIO</span>
+            </button>
+
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setShowComposeModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-500/15 border border-purple-500/40 text-purple-400 hover:bg-purple-500/25 text-xs font-bold transition-all shadow-[0_0_12px_rgba(191,64,255,0.2)] cursor-pointer"
+            >
+              <Boxes size={14} />
+              <span>COMPOSE ARCHITECT</span>
+            </button>
+
+            <button
+              onClick={() => {
                 cyberAudio.play("click");
                 setShowPullModal(true);
               }}
@@ -300,6 +346,29 @@ export default function DockerView() {
             >
               <ArrowDownToLine size={14} />
               <span>PULL IMAGE</span>
+            </button>
+
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setActiveView("settings");
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40 text-xs font-bold transition-all cursor-pointer"
+              title="Configure Docker Socket Daemon in Settings"
+            >
+              <Settings size={14} />
+              <span>DAEMON SETTINGS</span>
+            </button>
+
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setShowPruneModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-400 hover:bg-rose-500/25 text-xs font-bold transition-all cursor-pointer"
+            >
+              <Trash2 size={14} />
+              <span>PRUNE SYSTEM</span>
             </button>
           </div>
         </div>
@@ -502,6 +571,17 @@ export default function DockerView() {
                           title="Open In-Browser Exec Terminal"
                         >
                           <TerminalIcon size={13} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            cyberAudio.play("click");
+                            setStreamingLogsContainer(c.name);
+                          }}
+                          className="p-1.5 rounded-lg bg-black/60 border border-white/10 hover:border-emerald-500/40 text-[#9499B3] hover:text-emerald-400 cursor-pointer"
+                          title="Live Streaming Logs Pipe"
+                        >
+                          <FileText size={13} />
                         </button>
                         <button
                           onClick={(e) => {
@@ -803,6 +883,72 @@ export default function DockerView() {
           onClose={() => setCveImage(null)}
         />
       )}
+
+      {/* DOCKER COMPOSE STACK DESIGNER MODAL */}
+      <DockerComposeDesignerModal
+        isOpen={showComposeModal}
+        onClose={() => setShowComposeModal(false)}
+      />
+
+      {/* STREAMING CONTAINER LOGS MODAL */}
+      {streamingLogsContainer && (
+        <DockerLogsStreamModal
+          containerName={streamingLogsContainer}
+          isOpen={!!streamingLogsContainer}
+          onClose={() => setStreamingLogsContainer(null)}
+        />
+      )}
+
+      {/* PRUNE SYSTEM CONFIRMATION MODAL */}
+      {showPruneModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
+          onClick={() => setShowPruneModal(false)}
+        >
+          <div
+            className="w-full max-w-md bg-[#090a10] border border-rose-500/40 rounded-2xl p-6 flex flex-col gap-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                <Trash2 size={20} />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                  PRUNE DOCKER SYSTEM
+                </h3>
+                <span className="text-[11px] text-slate-400">Remove stopped containers & unused images</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed bg-black/40 p-3 rounded-xl border border-white/5">
+              This will execute <code className="text-rose-400">docker system prune -a --volumes</code>, reclaiming disk space by wiping stopped containers and dangling images.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/5">
+              <button
+                onClick={() => setShowPruneModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 hover:text-white"
+              >
+                CANCEL
+              </button>
+              <button
+                disabled={isPruning}
+                onClick={handlePruneSystem}
+                className="px-5 py-2 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 hover:bg-rose-500/30 text-xs font-bold transition-all shadow-[0_0_12px_rgba(255,42,109,0.3)] disabled:opacity-40"
+              >
+                {isPruning ? "PRUNING SYSTEM..." : "CONFIRM PRUNE"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Network & Microservice Topology Canvas Modal */}
+      <NetworkTopologyStudioModal
+        isOpen={showTopologyModal}
+        onClose={() => setShowTopologyModal(false)}
+      />
     </div>
   );
 }

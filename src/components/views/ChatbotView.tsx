@@ -47,8 +47,10 @@ import {
   Eye,
   GitFork,
   DollarSign,
+  Settings,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { useAppStore } from "@/stores/useAppStore";
 import { useToast } from "@/components/common/ToastProvider";
 import ArtifactsCanvas from "./chatbot/ArtifactsCanvas";
 import HermesMessageBlock from "./chatbot/HermesMessageBlock";
@@ -114,6 +116,7 @@ const DEEP_RESEARCH_TEMPLATES = [
 ];
 
 export default function ChatbotView() {
+  const { setActiveView } = useAppStore();
   const [activeMode, setActiveMode] = useState<ChatMode>("deep_research");
   const [selectedModel, setSelectedModel] = useState("gemini-2.5-pro");
   const [researchDepth, setResearchDepth] = useState<"fast" | "standard" | "exhaustive">("standard");
@@ -612,6 +615,17 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
             >
               <BookOpen size={13} />
               <span>SOURCES ({activeResearchSources.length})</span>
+            </button>
+
+            <button
+              onClick={() => {
+                cyberAudio.play("click");
+                setActiveView("settings");
+              }}
+              className="p-2 rounded-xl bg-white/5 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
+              title="Open AI Models & Inference Settings"
+            >
+              <Settings size={15} />
             </button>
 
             <button

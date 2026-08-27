@@ -256,18 +256,18 @@ function SystemStats() {
       </div>
 
       {/* GPU & Thermal Quick Metrics Strip */}
-      <div className="pt-3 border-t border-white/5 grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
-        <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5">
-          <span className="text-[#4F536E] block">GPU VRAM</span>
-          <span className="font-bold text-[#BF40FF] mt-0.5 block">18.2 / 24 GB</span>
+      <div className="pt-2.5 sm:pt-3 border-t border-white/5 grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-[9px] sm:text-[10px] font-mono">
+        <div className="p-1.5 sm:p-2 rounded-lg bg-white/[0.02] border border-white/5 overflow-hidden">
+          <span className="text-[#4F536E] block truncate text-[8px] sm:text-[9px]">GPU VRAM</span>
+          <span className="font-bold text-[#BF40FF] mt-0.5 block truncate">18.2/24G</span>
         </div>
-        <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5">
-          <span className="text-[#4F536E] block">DIE TEMP</span>
-          <span className="font-bold text-[#00FF41] mt-0.5 block">54°C OPTIMAL</span>
+        <div className="p-1.5 sm:p-2 rounded-lg bg-white/[0.02] border border-white/5 overflow-hidden">
+          <span className="text-[#4F536E] block truncate text-[8px] sm:text-[9px]">DIE TEMP</span>
+          <span className="font-bold text-[#00FF41] mt-0.5 block truncate">54°C OPT</span>
         </div>
-        <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5">
-          <span className="text-[#4F536E] block">SWAP LOAD</span>
-          <span className="font-bold text-[#00F0FF] mt-0.5 block">0.8 / 8.0 GB</span>
+        <div className="p-1.5 sm:p-2 rounded-lg bg-white/[0.02] border border-white/5 overflow-hidden">
+          <span className="text-[#4F536E] block truncate text-[8px] sm:text-[9px]">SWAP LOAD</span>
+          <span className="font-bold text-[#00F0FF] mt-0.5 block truncate">0.8/8.0G</span>
         </div>
       </div>
     </div>

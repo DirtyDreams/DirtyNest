@@ -25,6 +25,7 @@ import {
   Trophy,
   GitMerge,
   ShieldCheck,
+  Users,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import AgentMemoryInspector from "./agents/AgentMemoryInspector";
@@ -33,21 +34,11 @@ import AgentBlueprintDesigner from "./agents/AgentBlueprintDesigner";
 import SwarmOrchestrationTimeline from "./agents/SwarmOrchestrationTimeline";
 import AgentPerformanceLeaderboard from "./agents/AgentPerformanceLeaderboard";
 import ToolPermissionMatrix from "./agents/ToolPermissionMatrix";
+import AgentDetailDrawer, { SwarmAgent } from "./agents/AgentDetailDrawer";
+import SwarmDagPipelineModal from "./agents/SwarmDagPipelineModal";
+import PaperclipCompanyControlPlane from "./agents/PaperclipCompanyControlPlane";
 
-interface Agent {
-  id: string;
-  name: string;
-  role: string;
-  type: string;
-  status: "active" | "executing" | "idle" | "paused";
-  cpuUsage: number;
-  memoryMb: number;
-  tasksCompleted: number;
-  successRate: number;
-  lastAction: string;
-  tags: string[];
-  color: string;
-}
+type Agent = SwarmAgent;
 
 const INITIAL_AGENTS: Agent[] = [
   {
@@ -144,15 +135,19 @@ interface LogEntry {
   message: string;
 }
 
-type AgentsSubTab = "fleet" | "blueprint" | "orchestration" | "permissions";
+type AgentsSubTab = "fleet" | "blueprint" | "orchestration" | "permissions" | "company";
 
 export default function AiAgentsView() {
   const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
   const [isSwarmActive, setIsSwarmActive] = useState(true);
+  const [swarmSpeed, setSwarmSpeed] = useState<number>(1);
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [filterTag, setFilterTag] = useState("ALL");
   const [missionInput, setMissionInput] = useState("");
   const [inspectingAgent, setInspectingAgent] = useState<Agent | null>(null);
+  const [selectedDetailAgent, setSelectedDetailAgent] = useState<Agent | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [showDagModal, setShowDagModal] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<AgentsSubTab>("fleet");
   const [logs, setLogs] = useState<LogEntry[]>([
     { id: "l-1", time: "23:40:10", agent: "SENTINEL-01", level: "PASS", message: "Port 3000 boundary isolation verified. Zero open vulnerabilities." },
@@ -163,10 +158,11 @@ export default function AiAgentsView() {
 
   const logEndRef = useRef<HTMLDivElement>(null);
 
-  // Periodic simulation of agent telemetry updates
+  // Periodic simulation of agent telemetry updates with speed multiplier
   useEffect(() => {
     if (!isSwarmActive) return;
 
+    const intervalTime = Math.max(500, 2800 / swarmSpeed);
     const interval = setInterval(() => {
       setAgents((prev) =>
         prev.map((ag) => {
@@ -204,10 +200,10 @@ export default function AiAgentsView() {
           },
         ]);
       }
-    }, 2800);
+    }, intervalTime);
 
     return () => clearInterval(interval);
-  }, [isSwarmActive]);
+  }, [isSwarmActive, swarmSpeed]);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -216,6 +212,40 @@ export default function AiAgentsView() {
   const toggleSwarm = () => {
     cyberAudio.play("toggle");
     setIsSwarmActive(!isSwarmActive);
+  };
+
+  const handleStepTick = () => {
+    cyberAudio.play("click");
+    setAgents((prev) =>
+      prev.map((ag) => ({
+        ...ag,
+        tasksCompleted: ag.tasksCompleted + 1,
+        cpuUsage: Math.min(98, Math.max(10, ag.cpuUsage + Math.floor(Math.random() * 8 - 4))),
+      }))
+    );
+  };
+
+  const handleStatusChange = (id: string, newStatus: SwarmAgent["status"]) => {
+    setAgents((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
+    );
+    if (selectedDetailAgent?.id === id) {
+      setSelectedDetailAgent((prev) => (prev ? { ...prev, status: newStatus } : null));
+    }
+  };
+
+  const handleFlushMemory = (id: string) => {
+    const timeNow = new Date().toLocaleTimeString("en-US", { hour12: false });
+    setLogs((prev) => [
+      ...prev,
+      {
+        id: `flush-${Date.now()}`,
+        time: timeNow,
+        agent: id,
+        level: "WARN",
+        message: `FLUSH_MEMORY triggered: Cleared active context buffer for ${id}`,
+      },
+    ]);
   };
 
   const toggleAgentStatus = (id: string) => {
@@ -277,7 +307,37 @@ export default function AiAgentsView() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Swarm Speed Selector */}
+          <div className="flex items-center bg-black/50 border border-white/10 rounded-xl p-1 text-[10px] font-bold">
+            <span className="px-2 text-[#4F536E]">SPEED:</span>
+            {[0.5, 1, 2, 5].map((spd) => (
+              <button
+                key={spd}
+                type="button"
+                onClick={() => {
+                  cyberAudio.play("click");
+                  setSwarmSpeed(spd);
+                }}
+                className={`px-2 py-0.5 rounded-lg transition-colors ${
+                  swarmSpeed === spd
+                    ? "bg-[#00FF41] text-black font-black"
+                    : "text-[#9499B3] hover:text-white"
+                }`}
+              >
+                {spd}x
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={handleStepTick}
+              className="ml-1 px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 transition-colors"
+              title="Execute Single Step Tick"
+            >
+              STEP
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={toggleSwarm}
@@ -289,6 +349,18 @@ export default function AiAgentsView() {
           >
             {isSwarmActive ? <Pause size={14} /> : <Play size={14} />}
             <span>{isSwarmActive ? "SWARM ACTIVE" : "SWARM PAUSED"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              cyberAudio.play("click");
+              setShowDagModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 font-bold text-xs hover:bg-cyan-500/30 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,240,255,0.2)]"
+          >
+            <GitMerge size={14} />
+            <span>DAG PIPELINE</span>
           </button>
 
           <button
@@ -322,36 +394,64 @@ export default function AiAgentsView() {
         </div>
       </div>
 
-      {/* SUB-NAVIGATION TABS */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        {[
-          { id: "fleet" as const, label: "Swarm Fleet & Live Telemetry", icon: Bot },
-          { id: "blueprint" as const, label: "Hermes Blueprint Forge", icon: Sparkles },
-          { id: "orchestration" as const, label: "Gantt Timeline & Leaderboard", icon: GitMerge },
-          { id: "permissions" as const, label: "Zero-Trust Tool Permissions", icon: ShieldCheck },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeSubTab === tab.id;
+      {/* SUB-NAVIGATION TABS & STATUS FILTER */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {[
+            { id: "fleet" as const, label: "Swarm Fleet & Live Telemetry", icon: Bot },
+            { id: "company" as const, label: "Paperclip Teams Control Plane", icon: Users },
+            { id: "blueprint" as const, label: "Hermes Blueprint Forge", icon: Sparkles },
+            { id: "orchestration" as const, label: "Gantt Timeline & Leaderboard", icon: GitMerge },
+            { id: "permissions" as const, label: "Zero-Trust Tool Permissions", icon: ShieldCheck },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeSubTab === tab.id;
 
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => {
-                cyberAudio.play("click");
-                setActiveSubTab(tab.id);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                isActive
-                  ? "bg-[#00FF41] text-black shadow-[0_0_12px_rgba(0,255,65,0.3)]"
-                  : "bg-white/5 text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/10"
-              }`}
-            >
-              <Icon size={14} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  cyberAudio.play("click");
+                  setActiveSubTab(tab.id);
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  isActive
+                    ? "bg-[#00FF41] text-black shadow-[0_0_12px_rgba(0,255,65,0.3)]"
+                    : "bg-white/5 text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/10"
+                }`}
+              >
+                <Icon size={14} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Status Filter Badges */}
+        {activeSubTab === "fleet" && (
+          <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/5 text-[10px] font-bold">
+            {["ALL", "ACTIVE", "EXECUTING", "IDLE", "PAUSED"].map((st) => {
+              const active = statusFilter === st;
+              const count = st === "ALL" ? agents.length : agents.filter((a) => a.status.toUpperCase() === st).length;
+              return (
+                <button
+                  key={st}
+                  onClick={() => {
+                    cyberAudio.play("click");
+                    setStatusFilter(st);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 ${
+                    active ? "bg-white/15 text-[#00FF41] border border-[#00FF41]/30" : "text-[#9499B3] hover:text-white"
+                  }`}
+                >
+                  <span>{st}</span>
+                  <span className="text-[9px] text-[#4F536E]">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* TAB 1: FLEET & LIVE TELEMETRY */}
@@ -376,16 +476,19 @@ export default function AiAgentsView() {
 
           {/* Agents Card Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {agents.map((agent) => (
+            {agents
+              .filter((a) => statusFilter === "ALL" || a.status.toUpperCase() === statusFilter)
+              .map((agent) => (
               <div
                 key={agent.id}
-                className="cyber-card p-4 flex flex-col justify-between gap-3 hover:border-white/20 transition-all"
+                onClick={() => setSelectedDetailAgent(agent)}
+                className="cyber-card p-4 flex flex-col justify-between gap-3 hover:border-emerald-500/40 cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(0,255,65,0.15)] group"
               >
                 <div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: agent.color }} />
-                      <h4 className="text-xs font-black text-[#F1F3F9]">{agent.name}</h4>
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse" style={{ background: agent.color }} />
+                      <h4 className="text-xs font-black text-[#F1F3F9] group-hover:text-emerald-400 transition-colors">{agent.name}</h4>
                     </div>
 
                     <span
@@ -401,7 +504,7 @@ export default function AiAgentsView() {
 
                   <span className="text-[10px] text-[#4F536E] block mt-0.5">{agent.role}</span>
 
-                  <p className="text-[11px] text-[#9499B3] mt-2 p-2 rounded bg-black/40 border border-white/5 line-clamp-2">
+                  <p className="text-[11px] text-[#9499B3] mt-2 p-2 rounded bg-black/40 border border-white/5 line-clamp-2 font-mono">
                     {agent.lastAction}
                   </p>
                 </div>
@@ -424,14 +527,14 @@ export default function AiAgentsView() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
-                      onClick={() => setInspectingAgent(agent)}
+                      onClick={() => setSelectedDetailAgent(agent)}
                       className="text-[10px] text-[#00F0FF] hover:underline cursor-pointer flex items-center gap-1 font-bold"
                     >
                       <Database size={11} />
-                      <span>INSPECT MEMORY</span>
+                      <span>INSPECT HUD</span>
                     </button>
 
                     <button
@@ -471,6 +574,13 @@ export default function AiAgentsView() {
         </div>
       )}
 
+      {/* TAB: PAPERCLIP AGENT TEAMS CONTROL PLANE */}
+      {activeSubTab === "company" && (
+        <div className="animate-fade-in">
+          <PaperclipCompanyControlPlane />
+        </div>
+      )}
+
       {/* TAB 2: HERMES BLUEPRINT FORGE */}
       {activeSubTab === "blueprint" && (
         <div className="animate-fade-in">
@@ -497,6 +607,15 @@ export default function AiAgentsView() {
         </div>
       )}
 
+      {/* Agent Detail HUD Drawer */}
+      <AgentDetailDrawer
+        agent={selectedDetailAgent}
+        isOpen={!!selectedDetailAgent}
+        onClose={() => setSelectedDetailAgent(null)}
+        onStatusChange={handleStatusChange}
+        onFlushMemory={handleFlushMemory}
+      />
+
       {/* Memory Inspector Modal */}
       {inspectingAgent && (
         <AgentMemoryInspector
@@ -512,6 +631,15 @@ export default function AiAgentsView() {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onAddAgent={() => setIsCreateModalOpen(false)}
+        />
+      )}
+
+      {/* Swarm DAG Pipeline Modal */}
+      {showDagModal && (
+        <SwarmDagPipelineModal
+          agents={agents}
+          isOpen={showDagModal}
+          onClose={() => setShowDagModal(false)}
         />
       )}
     </div>

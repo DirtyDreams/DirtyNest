@@ -107,6 +107,12 @@ export function loadWidgetLayout(): WidgetLayoutItem[] {
     if (raw) {
       const parsed: WidgetLayoutItem[] = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        const enabledCount = parsed.filter((item) => item.enabled).length;
+        // If an old broken session saved only 2 widgets enabled, recover to DEFAULT_LAYOUT with all enabled
+        if (enabledCount < 6) {
+          saveWidgetLayout(DEFAULT_LAYOUT);
+          return DEFAULT_LAYOUT;
+        }
         const existingIds = new Set(parsed.map((item) => item.id));
         const missing = ALL_WIDGETS_METADATA.filter((w) => !existingIds.has(w.id)).map((w) => ({
           id: w.id,
