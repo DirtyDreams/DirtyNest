@@ -1074,7 +1074,7 @@ export default function Home() {
 
                         if (!widgetNode) return null;
                         return (
-                          <div key={w.id} id={`${w.id}-widget`} className="w-full">
+                          <div key={w.id} id={`${w.id}-widget`} className="w-full h-full flex flex-col">
                             {widgetNode}
                           </div>
                         );
@@ -1106,6 +1106,19 @@ export default function Home() {
                           return (
                             <div key={`sec-wide-${secIdx}`} className="w-full">
                               {renderWidgetNode(sec.items[0])}
+                            </div>
+                          );
+                        }
+
+                        // If exactly 2 items in this section, stretch them equally in height
+                        if (sec.items.length === 2) {
+                          return (
+                            <div
+                              key={`sec-pair-${secIdx}`}
+                              className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-stretch"
+                            >
+                              <div className="w-full min-w-0 flex flex-col h-full">{renderWidgetNode(sec.items[0])}</div>
+                              <div className="w-full min-w-0 flex flex-col h-full">{renderWidgetNode(sec.items[1])}</div>
                             </div>
                           );
                         }

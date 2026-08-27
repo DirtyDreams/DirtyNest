@@ -29,8 +29,8 @@ function MiniSparkline({ data, color }: { data: number[]; color: string }) {
   const max = Math.max(...data, 1);
   const min = Math.min(...data, 0);
   const range = max - min || 1;
-  const width = 36;
-  const height = 12;
+  const width = 42;
+  const height = 14;
 
   const points = data
     .map((v, i) => {
@@ -67,14 +67,14 @@ function LiveMeshTopologyVisualizer() {
 
   // Node positions in normalized coordinate space
   const nodes = [
-    { id: "auth", x: 30, y: 35, label: "AUTH", col: "#00FF41" },
-    { id: "gql", x: 110, y: 25, label: "GQL", col: "#00F0FF" },
-    { id: "pg", x: 190, y: 30, label: "POSTGRES", col: "#BF40FF" },
-    { id: "redis", x: 270, y: 35, label: "REDIS", col: "#FFB800" },
-    { id: "vector", x: 50, y: 75, label: "QDRANT", col: "#FF2A6D" },
-    { id: "ai", x: 130, y: 80, label: "RTX 4090", col: "#00FF41" },
-    { id: "cdn", x: 210, y: 75, label: "EDGE CDN", col: "#00F0FF" },
-    { id: "ws", x: 280, y: 80, label: "WS MESH", col: "#3B82F6" },
+    { id: "auth", x: 30, y: 38, label: "AUTH", col: "#00FF41" },
+    { id: "gql", x: 110, y: 26, label: "GQL", col: "#00F0FF" },
+    { id: "pg", x: 195, y: 30, label: "POSTGRES", col: "#BF40FF" },
+    { id: "redis", x: 275, y: 38, label: "REDIS", col: "#FFB800" },
+    { id: "vector", x: 45, y: 92, label: "QDRANT", col: "#FF2A6D" },
+    { id: "ai", x: 125, y: 96, label: "RTX 4090", col: "#00FF41" },
+    { id: "cdn", x: 205, y: 92, label: "EDGE CDN", col: "#00F0FF" },
+    { id: "ws", x: 280, y: 96, label: "WS MESH", col: "#3B82F6" },
   ];
 
   const links = [
@@ -82,17 +82,17 @@ function LiveMeshTopologyVisualizer() {
   ];
 
   return (
-    <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-2 relative overflow-hidden">
+    <div className="p-3 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-2 relative overflow-hidden flex-1">
       <div className="flex items-center justify-between text-[10px]">
         <div className="flex items-center gap-1.5 text-[#00F0FF] font-bold">
-          <Network size={12} className="animate-spin" style={{ animationDuration: "12s" }} />
+          <Network size={13} className="animate-spin" style={{ animationDuration: "12s" }} />
           <span>INTER-SERVICE SYNAPSE MESH TOPOLOGY</span>
         </div>
-        <span className="text-[#4F536E] text-[9px]">PULSE FREQ: 20Hz</span>
+        <span className="text-[#4F536E] text-[9px]">PULSE FREQ: 20Hz • DUPLEX</span>
       </div>
 
-      <div className="w-full h-24 relative bg-black/60 rounded-lg border border-white/5 overflow-hidden">
-        <svg viewBox="0 0 310 105" className="w-full h-full">
+      <div className="w-full h-32 sm:h-36 relative bg-black/60 rounded-lg border border-white/5 overflow-hidden flex items-center justify-center">
+        <svg viewBox="0 0 310 120" className="w-full h-full">
           {/* Synapse Lines */}
           {links.map(([srcIdx, tgtIdx], i) => {
             const p1 = nodes[srcIdx];
@@ -104,16 +104,16 @@ function LiveMeshTopologyVisualizer() {
                   y1={p1.y}
                   x2={p2.x}
                   y2={p2.y}
-                  stroke="rgba(255, 255, 255, 0.08)"
-                  strokeWidth="1.2"
+                  stroke="rgba(255, 255, 255, 0.09)"
+                  strokeWidth="1.3"
                 />
                 {/* Flowing Laser Photons */}
                 <circle
                   cx={p1.x + (p2.x - p1.x) * (((pulseOffset * 1.2 + i * 15) % 100) / 100)}
                   cy={p1.y + (p2.y - p1.y) * (((pulseOffset * 1.2 + i * 15) % 100) / 100)}
-                  r="1.8"
+                  r="2"
                   fill={p1.col}
-                  style={{ filter: `drop-shadow(0 0 3px ${p1.col})` }}
+                  style={{ filter: `drop-shadow(0 0 4px ${p1.col})` }}
                 />
               </g>
             );
@@ -125,18 +125,18 @@ function LiveMeshTopologyVisualizer() {
               <circle
                 cx={n.x}
                 cy={n.y}
-                r="4.5"
+                r="5"
                 fill="#0A0E17"
                 stroke={n.col}
-                strokeWidth="1.5"
-                style={{ filter: `drop-shadow(0 0 5px ${n.col})` }}
+                strokeWidth="1.75"
+                style={{ filter: `drop-shadow(0 0 6px ${n.col})` }}
               />
               <circle cx={n.x} cy={n.y} r="2" fill={n.col} />
               <text
                 x={n.x}
-                y={n.y > 50 ? n.y + 12 : n.y - 7}
+                y={n.y > 60 ? n.y + 14 : n.y - 8}
                 textAnchor="middle"
-                fontSize="6.5"
+                fontSize="7"
                 fontFamily="monospace"
                 fontWeight="bold"
                 fill="#9499B3"
@@ -176,9 +176,9 @@ function ServiceStatusCompact() {
   };
 
   return (
-    <div className="cyber-card p-5 flex flex-col justify-between gap-3.5 select-none font-mono h-full min-h-[380px]">
+    <div className="cyber-card p-5 flex flex-col justify-between gap-4 select-none font-mono h-full min-h-[460px]">
       {/* Header */}
-      <div className="flex items-center justify-between pb-2.5 border-b border-white/10">
+      <div className="flex items-center justify-between pb-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-[#00F0FF]/10 border border-[#00F0FF]/30">
             <Server size={16} className="text-[#00F0FF]" />
@@ -192,14 +192,14 @@ function ServiceStatusCompact() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1 font-bold">
+          <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1.5 font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>8/8 NODES</span>
+            <span>8/8 NODES ONLINE</span>
           </span>
 
           <button
             onClick={handleNavigateToApi}
-            className="text-[10px] text-[#00F0FF] hover:text-white bg-[#00F0FF]/10 hover:bg-[#00F0FF]/25 border border-[#00F0FF]/30 px-2 py-0.5 rounded-lg flex items-center gap-1 cursor-pointer font-bold transition-all"
+            className="text-[10px] text-[#00F0FF] hover:text-white bg-[#00F0FF]/10 hover:bg-[#00F0FF]/25 border border-[#00F0FF]/30 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer font-bold transition-all shadow-[0_0_8px_rgba(0,240,255,0.2)]"
           >
             <span>FULL RADAR</span>
             <ArrowRight size={10} />
@@ -212,7 +212,7 @@ function ServiceStatusCompact() {
         {services.map((svc) => (
           <div
             key={svc.id}
-            className="p-2 rounded-xl bg-black/40 border border-white/5 flex flex-col justify-between gap-1 hover:border-[#00F0FF]/30 hover:bg-white/[0.02] transition-all"
+            className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col justify-between gap-1.5 hover:border-[#00F0FF]/30 hover:bg-white/[0.02] transition-all"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 min-w-0">
@@ -221,9 +221,9 @@ function ServiceStatusCompact() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-1 border-t border-white/5">
+            <div className="flex items-center justify-between pt-1.5 border-t border-white/5">
               <span className="text-[8px] text-[#9499B3] uppercase font-bold">{svc.category}</span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <MiniSparkline data={svc.history} color="#00FF41" />
                 <span className="font-bold text-[10px] text-[#00FF41] font-mono">{svc.latency}ms</span>
               </div>
@@ -279,20 +279,20 @@ function ServiceStatusCompact() {
       </div>
 
       {/* Cluster Health & Mesh Telemetry Footer */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/10 text-[10px]">
-        <div className="bg-black/30 p-1.5 rounded-lg border border-white/5 flex flex-col">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-white/10 text-[10px]">
+        <div className="bg-black/30 p-2 rounded-lg border border-white/5 flex flex-col">
           <span className="text-slate-500 text-[8px]">THROUGHPUT</span>
           <span className="text-emerald-400 font-bold font-mono">14.2k req/s</span>
         </div>
-        <div className="bg-black/30 p-1.5 rounded-lg border border-white/5 flex flex-col">
+        <div className="bg-black/30 p-2 rounded-lg border border-white/5 flex flex-col">
           <span className="text-slate-500 text-[8px]">GLOBAL P99</span>
           <span className="text-cyan-400 font-bold font-mono">8.4ms OPT</span>
         </div>
-        <div className="bg-black/30 p-1.5 rounded-lg border border-white/5 flex flex-col">
+        <div className="bg-black/30 p-2 rounded-lg border border-white/5 flex flex-col">
           <span className="text-slate-500 text-[8px]">EDGE HIT</span>
           <span className="text-purple-400 font-bold font-mono">96.8%</span>
         </div>
-        <div className="bg-black/30 p-1.5 rounded-lg border border-white/5 flex flex-col">
+        <div className="bg-black/30 p-2 rounded-lg border border-white/5 flex flex-col">
           <span className="text-slate-500 text-[8px]">CLUSTER</span>
           <span className="text-emerald-400 font-bold font-mono">99.98%</span>
         </div>
