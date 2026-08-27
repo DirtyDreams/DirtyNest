@@ -539,9 +539,12 @@ export default function Home() {
                   <span>NODE://ROOT/MAIN</span>
                   <span>•</span>
                   <UptimeBadge />
-                  <span>•</span>
-                  <HermesMasterStatusBadge onOpenCommandDrawer={() => setIsHermesCommandModalOpen(true)} />
                 </div>
+              </div>
+
+              {/* Center: Hermes Master Brain Status HUD Badge (Centered) */}
+              <div className="hidden lg:flex items-center justify-center flex-1 min-w-0 px-2 pointer-events-auto">
+                <HermesMasterStatusBadge onOpenCommandDrawer={() => setIsHermesCommandModalOpen(true)} />
               </div>
 
               {/* Right: Quick Action HUD Controls (Strictly Non-Wrapping, Locked Height) */}
