@@ -13,6 +13,13 @@ import {
   Code2,
   Key,
 } from "lucide-react";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 
 interface DevToolsModalProps {
   isOpen: boolean;
@@ -22,7 +29,7 @@ interface DevToolsModalProps {
 type TabType = "base64" | "uuid" | "epoch" | "json" | "hash";
 
 export default function DevToolsModal({ isOpen, onClose }: DevToolsModalProps) {
-  const [activeTab, setActiveTab] = useState<TabType>("base64");
+  const [activeTab, setActiveTab] = useState<string>("base64");
   const [copied, setCopied] = useState<string | null>(null);
 
   // Base64 state
@@ -47,8 +54,6 @@ export default function DevToolsModal({ isOpen, onClose }: DevToolsModalProps) {
   const [hashInput, setHashInput] = useState("");
   const [hashOutput, setHashOutput] = useState("");
 
-  if (!isOpen) return null;
-
   const copyToClipboard = (text: string, id: string) => {
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -58,6 +63,7 @@ export default function DevToolsModal({ isOpen, onClose }: DevToolsModalProps) {
       // ignore
     }
     setCopied(id);
+    toast.success("COPIED TO CLIPBOARD");
     setTimeout(() => setCopied(null), 1500);
   };
 
@@ -101,226 +107,192 @@ export default function DevToolsModal({ isOpen, onClose }: DevToolsModalProps) {
     setUuids(list);
   };
 
-  // Epoch converter
+  // Epoch handler
   const handleConvertEpoch = () => {
-    const num = Number(epochInput);
-    if (isNaN(num)) {
-      setEpochResult("Invalid numerical timestamp");
-      return;
+    try {
+      const num = parseInt(epochInput, 10);
+      if (isNaN(num)) {
+        setEpochResult("Invalid Epoch timestamp");
+        return;
+      }
+      const ms = epochInput.length <= 10 ? num * 1000 : num;
+      const date = new Date(ms);
+      setEpochResult(
+        `UTC: ${date.toUTCString()}\nLOCAL: ${date.toLocaleString()}\nISO: ${date.toISOString()}`
+      );
+    } catch {
+      setEpochResult("Error parsing timestamp");
     }
-    // Check if seconds or milliseconds
-    const date = new Date(num > 100000000000 ? num : num * 1000);
-    setEpochResult(
-      `UTC: ${date.toUTCString()}\nISO: ${date.toISOString()}\nLocal: ${date.toLocaleString()}`
-    );
   };
 
-  // JSON format
+  // JSON Formatter handler
   const handleFormatJson = (minify = false) => {
     try {
       const parsed = JSON.parse(jsonInput);
-      setJsonInput(JSON.stringify(parsed, null, minify ? 0 : 2));
+      setJsonInput(minify ? JSON.stringify(parsed) : JSON.stringify(parsed, null, 2));
       setJsonError(null);
     } catch (e: any) {
-      setJsonError(`JSON Syntax Error: ${e.message}`);
+      setJsonError(e.message || "Invalid JSON syntax");
     }
   };
 
-  // Hash SHA-256
+  // Hash SHA-256 handler
   const handleHash = async () => {
-    if (!hashInput) return;
-    const msgBuffer = new TextEncoder().encode(hashInput);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-    setHashOutput(hashHex);
+    try {
+      if (typeof crypto !== "undefined" && crypto.subtle) {
+        const msgUint8 = new TextEncoder().encode(hashInput);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+        setHashOutput(hashHex);
+      } else {
+        setHashOutput("Web Crypto API unavailable");
+      }
+    } catch {
+      setHashOutput("Error generating hash");
+    }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{
-        background: "rgba(0, 0, 0, 0.82)",
-        backdropFilter: "blur(12px)",
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-2xl max-h-[90vh] flex flex-col cyber-card overflow-hidden animate-modal-pop shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)]"
-        style={{
-          border: "1px solid rgba(0, 255, 65, 0.3)",
-          background: "rgba(11, 12, 20, 0.95)",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-white/10 shrink-0">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-2xl bg-[#090B14] border-[#00F0FF]/30 text-[#F1F3F9] font-mono p-0 overflow-hidden shadow-2xl">
+        <DialogHeader className="p-4 sm:p-5 border-b border-white/10 pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-[#00FF41]/10 text-[#00FF41]">
+            <div className="p-1.5 rounded-lg bg-[#00F0FF]/10 text-[#00F0FF]">
               <Wrench size={16} />
             </div>
             <div>
-              <h2 className="text-sm font-mono font-bold text-[#F1F3F9] uppercase tracking-wider">
-                Developer Utilities Matrix
-              </h2>
-              <p className="text-[10px] font-mono text-[#4F536E]">
-                DIRTYNEST // CORE DEVTOOL SUITE
+              <DialogTitle className="text-sm font-bold text-[#F1F3F9] uppercase tracking-wider">
+                Tactical Developer Utilities
+              </DialogTitle>
+              <p className="text-[10px] text-[#4F536E]">
+                DIRTYNEST // RAPID CIPHER, UUID & SERIALIZER SUITE
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-[#9499B3] hover:text-[#FF2A6D] transition-colors cursor-pointer"
-          >
-            <X size={18} />
-          </button>
-        </div>
+        </DialogHeader>
 
-        {/* Tab Selector */}
-        <div className="flex items-center border-b border-white/5 bg-black/20 px-3 overflow-x-auto scrollbar-none text-[11px] font-mono shrink-0">
-          {[
-            { id: "base64", label: "Base64", icon: Binary },
-            { id: "uuid", label: "UUID Generator", icon: Key },
-            { id: "epoch", label: "Epoch Converter", icon: Clock },
-            { id: "json", label: "JSON Formatter", icon: Code2 },
-            { id: "hash", label: "SHA-256 Hash", icon: Hash },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabType)}
-                className={`flex items-center gap-2 px-3 py-2.5 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? "border-[#00FF41] text-[#00FF41] font-bold bg-white/[0.02]"
-                    : "border-transparent text-[#9499B3] hover:text-[#F1F3F9]"
-                }`}
-              >
-                <Icon size={13} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col">
+          <TabsList className="w-full justify-start rounded-none border-b border-white/5 bg-black/40 px-3 h-10 gap-1">
+            <TabsTrigger value="base64" className="text-xs data-[state=active]:bg-[#00F0FF]/20 data-[state=active]:text-[#00F0FF]">
+              <Binary size={13} className="mr-1.5" /> Base64
+            </TabsTrigger>
+            <TabsTrigger value="uuid" className="text-xs data-[state=active]:bg-[#00F0FF]/20 data-[state=active]:text-[#00F0FF]">
+              <Key size={13} className="mr-1.5" /> UUIDs
+            </TabsTrigger>
+            <TabsTrigger value="epoch" className="text-xs data-[state=active]:bg-[#00F0FF]/20 data-[state=active]:text-[#00F0FF]">
+              <Clock size={13} className="mr-1.5" /> Epoch
+            </TabsTrigger>
+            <TabsTrigger value="json" className="text-xs data-[state=active]:bg-[#00F0FF]/20 data-[state=active]:text-[#00F0FF]">
+              <Code2 size={13} className="mr-1.5" /> JSON
+            </TabsTrigger>
+            <TabsTrigger value="hash" className="text-xs data-[state=active]:bg-[#00F0FF]/20 data-[state=active]:text-[#00F0FF]">
+              <Hash size={13} className="mr-1.5" /> SHA-256
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Tab Content */}
-        <div className="p-4 sm:p-5 flex-1 overflow-y-auto">
-          {/* Base64 Tab */}
-          {activeTab === "base64" && (
-            <div className="space-y-3">
-              <textarea
+          <div className="p-4 sm:p-5 max-h-[60vh] overflow-y-auto space-y-4 text-xs">
+            {/* Base64 */}
+            <TabsContent value="base64" className="space-y-3 mt-0">
+              <Textarea
                 value={b64Input}
                 onChange={(e) => setB64Input(e.target.value)}
-                placeholder="Enter string to encode or Base64 to decode..."
-                className="w-full h-24 bg-[#07070B] rounded-xl p-3 text-xs font-mono text-[#F1F3F9] border border-white/10 focus:border-[#00FF41] outline-none resize-none"
+                placeholder="Plain text or Base64 string..."
+                className="h-24 bg-[#07070B] border-white/10 text-xs text-[#F1F3F9]"
               />
               <div className="flex gap-2">
-                <button
+                <Button
                   onClick={handleEncodeB64}
-                  className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25 transition-all"
+                  size="sm"
+                  className="bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25 font-bold"
                 >
                   ENCODE BASE64
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleDecodeB64}
-                  className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-[#BF40FF]/15 text-[#BF40FF] border border-[#BF40FF]/30 hover:bg-[#BF40FF]/25 transition-all"
+                  size="sm"
+                  variant="outline"
+                  className="border-white/10 text-[#9499B3]"
                 >
                   DECODE BASE64
-                </button>
+                </Button>
               </div>
               {b64Output && (
                 <div className="relative mt-2">
-                  <div className="p-3 bg-[#07070B] rounded-xl border border-white/10 text-xs font-mono text-[#00F0FF] break-all">
+                  <div className="p-3 bg-[#07070B] rounded-xl border border-white/10 text-xs font-mono text-[#00FF41] break-all max-h-36 overflow-y-auto">
                     {b64Output}
                   </div>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => copyToClipboard(b64Output, "b64")}
-                    className="absolute top-2 right-2 p-1.5 rounded-md bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41]"
+                    className="absolute top-2 right-2 h-7 w-7 text-[#9499B3] hover:text-[#00FF41]"
                   >
                     {copied === "b64" ? <Check size={13} className="text-[#00FF41]" /> : <Copy size={13} />}
-                  </button>
+                  </Button>
                 </div>
               )}
-            </div>
-          )}
+            </TabsContent>
 
-          {/* UUID Tab */}
-          {activeTab === "uuid" && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-mono text-[#9499B3]">Generate count:</span>
-                {[1, 3, 5].map((cnt) => (
-                  <button
-                    key={cnt}
-                    onClick={() => setUuidCount(cnt)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-mono ${
-                      uuidCount === cnt
-                        ? "bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/40 font-bold"
-                        : "bg-white/5 text-[#9499B3]"
-                    }`}
-                  >
-                    {cnt}
-                  </button>
-                ))}
-                <button
+            {/* UUID */}
+            <TabsContent value="uuid" className="space-y-3 mt-0">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#9499B3]">GENERATE RFC4122 V4 UUIDs:</span>
+                <Button
                   onClick={generateUuids}
-                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25 transition-all"
+                  size="sm"
+                  className="gap-1.5 bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30 hover:bg-[#00F0FF]/25 font-bold"
                 >
                   <RefreshCw size={12} />
-                  <span>GENERATE</span>
-                </button>
+                  <span>REGENERATE</span>
+                </Button>
               </div>
 
-              <div className="space-y-2 mt-3">
-                {uuids.map((id, idx) => (
+              <div className="space-y-1.5">
+                {uuids.map((u, i) => (
                   <div
-                    key={idx}
-                    className="flex items-center justify-between p-2.5 bg-[#07070B] rounded-xl border border-white/10 text-xs font-mono text-[#00FF41]"
+                    key={i}
+                    className="flex items-center justify-between p-2.5 bg-[#07070B] rounded-xl border border-white/5 group hover:border-[#00F0FF]/30 transition-all"
                   >
-                    <span>{id}</span>
-                    <button
-                      onClick={() => copyToClipboard(id, `uuid-${idx}`)}
-                      className="p-1 rounded hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41]"
+                    <span className="text-xs text-[#F1F3F9] font-mono select-all">{u}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => copyToClipboard(u, `uuid-${i}`)}
+                      className="h-6 w-6 text-[#9499B3] hover:text-[#00F0FF]"
                     >
-                      {copied === `uuid-${idx}` ? (
-                        <Check size={13} className="text-[#00FF41]" />
-                      ) : (
-                        <Copy size={13} />
-                      )}
-                    </button>
+                      {copied === `uuid-${i}` ? <Check size={12} className="text-[#00FF41]" /> : <Copy size={12} />}
+                    </Button>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            </TabsContent>
 
-          {/* Epoch Tab */}
-          {activeTab === "epoch" && (
-            <div className="space-y-3">
+            {/* Epoch */}
+            <TabsContent value="epoch" className="space-y-3 mt-0">
               <div className="flex gap-2">
-                <input
+                <Input
                   type="text"
                   value={epochInput}
                   onChange={(e) => setEpochInput(e.target.value)}
                   placeholder="Unix timestamp in seconds or ms..."
-                  className="flex-1 bg-[#07070B] rounded-xl px-3 py-2 text-xs font-mono text-[#F1F3F9] border border-white/10 focus:border-[#00FF41] outline-none"
+                  className="flex-1 bg-[#07070B] text-xs"
                 />
-                <button
-                  onClick={() => {
-                    const now = Math.floor(Date.now() / 1000).toString();
-                    setEpochInput(now);
-                  }}
-                  className="px-3 py-2 rounded-xl text-xs font-mono bg-white/5 hover:bg-white/10 text-[#9499B3]"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEpochInput(Math.floor(Date.now() / 1000).toString())}
+                  className="text-xs"
                 >
                   NOW
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="sm"
                   onClick={handleConvertEpoch}
-                  className="px-3 py-2 rounded-xl text-xs font-mono font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25"
+                  className="bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25 font-bold"
                 >
                   CONVERT
-                </button>
+                </Button>
               </div>
 
               {epochResult && (
@@ -328,81 +300,85 @@ export default function DevToolsModal({ isOpen, onClose }: DevToolsModalProps) {
                   {epochResult}
                 </pre>
               )}
-            </div>
-          )}
+            </TabsContent>
 
-          {/* JSON Formatter */}
-          {activeTab === "json" && (
-            <div className="space-y-3">
-              <textarea
+            {/* JSON */}
+            <TabsContent value="json" className="space-y-3 mt-0">
+              <Textarea
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
                 placeholder="Paste raw JSON here..."
-                className="w-full h-44 bg-[#07070B] rounded-xl p-3 text-xs font-mono text-[#F1F3F9] border border-white/10 focus:border-[#00FF41] outline-none resize-none"
+                className="h-44 bg-[#07070B] text-xs font-mono resize-none"
               />
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  size="sm"
                   onClick={() => handleFormatJson(false)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25"
+                  className="bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25 font-bold"
                 >
                   PRETTIFY (2 SPACES)
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleFormatJson(true)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-white/5 hover:bg-white/10 text-[#9499B3]"
+                  className="text-xs"
                 >
                   MINIFY
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
                   onClick={() => copyToClipboard(jsonInput, "json")}
-                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41]"
+                  className="ml-auto text-xs text-[#9499B3] hover:text-[#00FF41]"
                 >
-                  {copied === "json" ? <Check size={12} className="text-[#00FF41]" /> : <Copy size={12} />}
+                  {copied === "json" ? <Check size={12} className="text-[#00FF41] mr-1" /> : <Copy size={12} className="mr-1" />}
                   <span>COPY JSON</span>
-                </button>
+                </Button>
               </div>
               {jsonError && (
                 <div className="p-2.5 rounded-lg bg-[#FF2A6D]/10 border border-[#FF2A6D]/30 text-xs font-mono text-[#FF2A6D]">
                   {jsonError}
                 </div>
               )}
-            </div>
-          )}
+            </TabsContent>
 
-          {/* Hash SHA-256 */}
-          {activeTab === "hash" && (
-            <div className="space-y-3">
-              <input
+            {/* SHA-256 */}
+            <TabsContent value="hash" className="space-y-3 mt-0">
+              <Input
                 type="text"
                 value={hashInput}
                 onChange={(e) => setHashInput(e.target.value)}
                 placeholder="String to hash with SHA-256..."
-                className="w-full bg-[#07070B] rounded-xl px-3 py-2 text-xs font-mono text-[#F1F3F9] border border-white/10 focus:border-[#00FF41] outline-none"
+                className="bg-[#07070B] text-xs"
                 onKeyDown={(e) => e.key === "Enter" && handleHash()}
               />
-              <button
+              <Button
+                size="sm"
                 onClick={handleHash}
-                className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25"
+                className="bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25 font-bold"
               >
                 COMPUTE SHA-256
-              </button>
+              </Button>
               {hashOutput && (
                 <div className="relative mt-2">
                   <div className="p-3 bg-[#07070B] rounded-xl border border-white/10 text-xs font-mono text-[#BF40FF] break-all">
                     {hashOutput}
                   </div>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => copyToClipboard(hashOutput, "hash")}
-                    className="absolute top-2 right-2 p-1.5 rounded-md bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41]"
+                    className="absolute top-2 right-2 h-7 w-7 text-[#9499B3] hover:text-[#00FF41]"
                   >
                     {copied === "hash" ? <Check size={13} className="text-[#00FF41]" /> : <Copy size={13} />}
-                  </button>
+                  </Button>
                 </div>
               )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+            </TabsContent>
+          </div>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
   );
 }

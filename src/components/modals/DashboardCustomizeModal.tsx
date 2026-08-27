@@ -36,7 +36,13 @@ import {
   Clock,
   Brain,
 } from "lucide-react";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { cn } from "@/lib/utils";
 
 export interface DashboardWidgetConfig {
   id: string;
@@ -119,8 +125,6 @@ export default function DashboardCustomizeModal({
     }
   }, []);
 
-  if (!isOpen) return null;
-
   const saveLayout = (newWidgets: DashboardWidgetConfig[]) => {
     setWidgets(newWidgets);
     try {
@@ -199,13 +203,13 @@ export default function DashboardCustomizeModal({
         ...w,
         enabled: [
           "dora_metrics",
-          "ai_insight",
           "service_status",
+          "sql_slow_queries",
+          "ebpf_kernel_heat",
           "system_stats",
           "api_health",
-          "ebpf_kernel_heat",
-          "sql_slow_queries",
-          "calendar",
+          "aws_cloud_burn",
+          "pipeline_queue",
         ].includes(w.id),
       }));
     } else if (preset === "ai_researcher") {
@@ -213,10 +217,11 @@ export default function DashboardCustomizeModal({
         ...w,
         enabled: [
           "ai_insight",
+          "hermes_brain",
           "ai_quota",
           "agent_security_beacon",
-          "pipeline_queue",
-          "system_stats",
+          "clipboard_manager",
+          "cyber_soundscape",
         ].includes(w.id),
       }));
     } else if (preset === "cyber_ops") {
@@ -224,10 +229,11 @@ export default function DashboardCustomizeModal({
         ...w,
         enabled: [
           "cve_radar",
-          "agent_security_beacon",
           "crypto_hash_verifier",
-          "global_dns_ssl",
+          "agent_security_beacon",
           "rss_feed",
+          "global_dns_ssl",
+          "matrix_rain",
         ].includes(w.id),
       }));
     } else if (preset === "developer_docker") {
@@ -235,109 +241,98 @@ export default function DashboardCustomizeModal({
         ...w,
         enabled: [
           "git_pr_velocity",
+          "pipeline_queue",
+          "github_activity",
           "github_trending",
-          "clipboard_manager",
-          "color_palette",
-          "matrix_rain",
+          "quick_actions",
+          "dev_hydration",
+          "system_stats",
         ].includes(w.id),
       }));
     } else if (preset === "minimalist") {
       updated = updated.map((w) => ({
         ...w,
-        enabled: ["dora_metrics", "ai_insight", "system_stats"].includes(w.id),
+        enabled: ["dora_metrics", "ai_insight", "service_status"].includes(w.id),
       }));
     }
 
     saveLayout(updated);
+    toast.success("PRESET APPLIED", { description: `Applied ${preset.toUpperCase()} layout.` });
   };
 
   const handleResetDefaults = () => {
     cyberAudio.play("click");
     setSelectedPreset("all_widgets");
     saveLayout(DEFAULT_WIDGETS);
+    toast.info("LAYOUT RESET", { description: "Reset to default widgets." });
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in font-mono select-none"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-4xl cyber-card bg-[#05060A] border border-[#00FF41]/40 rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.9)] flex flex-col max-h-[90vh] animate-modal-pop"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-4xl bg-[#090B14] border-[#00FF41]/40 text-[#F1F3F9] font-mono p-0 overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="p-5 bg-[#0A0C16] border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#00FF41]/20 border border-[#00FF41]/40 flex items-center justify-center text-[#00FF41]">
-              <Sliders size={16} />
+        <DialogHeader className="p-4 sm:p-5 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30">
+              <Sliders size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-black text-[#F1F3F9] uppercase tracking-wider">
-                CUSTOMIZE TACTICAL DASHBOARD
-              </h3>
-              <span className="text-[10px] text-[#9499B3]">
-                Configure, Toggle & Prioritize Overview Widgets
-              </span>
+              <DialogTitle className="text-sm font-bold text-[#F1F3F9] uppercase tracking-wider">
+                Tactical Matrix Configurator // Dashboard Layout
+              </DialogTitle>
+              <p className="text-[10px] text-[#9499B3]">
+                Toggle, reorder, span, or apply role-based neural presets
+              </p>
             </div>
           </div>
-
-          <button
-            onClick={onClose}
-            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-[#9499B3] hover:text-white cursor-pointer"
-          >
-            DONE
-          </button>
-        </div>
+        </DialogHeader>
 
         {/* Presets Bar */}
-        <div className="p-4 bg-black/40 border-b border-white/5 flex items-center gap-2 overflow-x-auto text-xs">
-          <span className="text-[10px] text-[#4F536E] uppercase font-bold shrink-0">
-            PRESETS:
-          </span>
+        <div className="px-5 py-2.5 border-b border-white/5 bg-black/30 flex items-center gap-1.5 overflow-x-auto text-[10px]">
+          <span className="text-[#4F536E] font-bold mr-2 uppercase">Presets:</span>
           {[
-            { id: "all_widgets", label: "ALL 26 WIDGETS" },
+            { id: "all_widgets", label: "ALL WIDGETS" },
             { id: "tactical_sre", label: "TACTICAL SRE" },
             { id: "ai_researcher", label: "AI RESEARCHER" },
             { id: "cyber_ops", label: "CYBER OPS" },
             { id: "developer_docker", label: "DEVELOPER" },
             { id: "minimalist", label: "MINIMALIST" },
           ].map((pr) => (
-            <button
+            <Button
               key={pr.id}
+              variant={selectedPreset === pr.id ? "default" : "outline"}
+              size="sm"
               onClick={() => applyPreset(pr.id as DashboardPreset)}
-              className={`px-3 py-1 rounded-xl shrink-0 font-bold transition-all cursor-pointer ${
-                selectedPreset === pr.id
-                  ? "bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/50 shadow-[0_0_10px_rgba(0,255,65,0.2)]"
-                  : "bg-white/5 text-[#9499B3] hover:text-white"
-              }`}
+              className="text-[10px] h-7 px-3"
             >
               {pr.label}
-            </button>
+            </Button>
           ))}
         </div>
 
         {/* Widget Grid */}
-        <div className="p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <div className="p-5 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
           {widgets.map((w) => {
             const Icon = w.icon || LayoutDashboard;
             return (
               <div
                 key={w.id}
                 onClick={() => toggleWidget(w.id)}
-                className={`p-3.5 rounded-xl border transition-all flex items-start justify-between gap-3 cursor-pointer select-none ${
+                className={cn(
+                  "p-3.5 rounded-xl border transition-all flex items-start justify-between gap-3 cursor-pointer select-none",
                   w.enabled
                     ? "bg-black/60 border-[#00FF41]/40 shadow-[0_0_15px_rgba(0,255,65,0.08)]"
                     : "bg-black/20 border-white/5 opacity-50 hover:opacity-80"
-                }`}
+                )}
               >
                 <div className="flex items-start gap-3 min-w-0">
                   <div
-                    className={`p-2 rounded-lg shrink-0 ${
+                    className={cn(
+                      "p-2 rounded-lg shrink-0",
                       w.enabled
                         ? "bg-[#00FF41]/10 text-[#00FF41]"
                         : "bg-white/5 text-[#4F536E]"
-                    }`}
+                    )}
                   >
                     <Icon size={16} />
                   </div>
@@ -348,44 +343,51 @@ export default function DashboardCustomizeModal({
                     <span className="text-[10px] text-[#9499B3] line-clamp-2 mt-0.5">
                       {w.description}
                     </span>
-                    <span className="text-[9px] text-[#4F536E] font-bold mt-1">
-                      {w.category} • {w.gridSpan.toUpperCase()}
-                    </span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-[8px] font-mono text-[#4F536E] border-white/10 px-1 py-0">
+                        {w.category}
+                      </Badge>
+                      <Badge variant="outline" className="text-[8px] font-mono text-[#00F0FF] border-[#00F0FF]/30 px-1 py-0">
+                        {w.gridSpan.toUpperCase()}
+                      </Badge>
+                    </div>
 
                     {/* In-Card Quick Controls */}
                     <div className="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-white/5">
-                      <button
-                        type="button"
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={(e) => handleToggleSpan(w.id, e)}
-                        className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all cursor-pointer ${
-                          w.gridSpan === "full"
-                            ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
-                            : "bg-white/5 text-slate-400 hover:text-white"
-                        }`}
+                        className={cn(
+                          "h-5 text-[9px] px-1.5 border-white/10 font-bold",
+                          w.gridSpan === "full" ? "text-cyan-400 border-cyan-500/40 bg-cyan-500/10" : "text-[#9499B3]"
+                        )}
                         title="Toggle 1-Column vs Full 2-Column Span"
                       >
                         {w.gridSpan === "full" ? "SPAN: 2-COL" : "SPAN: 1-COL"}
-                      </button>
+                      </Button>
 
                       <div className="flex items-center gap-1 ml-auto">
-                        <button
-                          type="button"
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => handleMoveUp(widgets.indexOf(w), e)}
                           disabled={widgets.indexOf(w) === 0}
-                          className="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 disabled:opacity-30 cursor-pointer text-[9px]"
+                          className="h-5 w-5 text-slate-300 text-[9px]"
                           title="Move Widget Higher"
                         >
                           ▲
-                        </button>
-                        <button
-                          type="button"
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => handleMoveDown(widgets.indexOf(w), e)}
                           disabled={widgets.indexOf(w) === widgets.length - 1}
-                          className="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 disabled:opacity-30 cursor-pointer text-[9px]"
+                          className="h-5 w-5 text-slate-300 text-[9px]"
                           title="Move Widget Lower"
                         >
                           ▼
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -394,7 +396,7 @@ export default function DashboardCustomizeModal({
                 <div className="shrink-0 mt-1">
                   {w.enabled ? (
                     <div className="w-5 h-5 rounded bg-[#00FF41] text-black flex items-center justify-center font-bold">
-                      <Check size={13} />
+                      <Check size={13} strokeWidth={3} />
                     </div>
                   ) : (
                     <div className="w-5 h-5 rounded border border-white/20" />
@@ -407,22 +409,24 @@ export default function DashboardCustomizeModal({
 
         {/* Footer */}
         <div className="p-4 bg-[#0A0C16] border-t border-white/10 flex items-center justify-between text-xs">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleResetDefaults}
-            className="flex items-center gap-1.5 text-[#9499B3] hover:text-white cursor-pointer"
+            className="flex items-center gap-1.5 text-[#9499B3] hover:text-white"
           >
             <RotateCcw size={13} />
             <span>RESET TO DEFAULT</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-[#00FF41] text-black font-black hover:bg-[#00cc34] cursor-pointer shadow-[0_0_15px_rgba(0,255,65,0.4)]"
+            className="font-bold bg-[#00FF41] text-black hover:bg-[#00cc34] shadow-[0_0_15px_rgba(0,255,65,0.4)]"
           >
             SAVE CONFIGURATION
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

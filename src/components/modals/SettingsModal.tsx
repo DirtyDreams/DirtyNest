@@ -19,25 +19,26 @@ import {
   Server,
   Lock,
 } from "lucide-react";
-import { applyThemePreset } from "@/lib/theme";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { cyberAudio } from "@/lib/cyberAudio";
-import { useToast } from "@/components/common/ToastProvider";
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type ModalTab = "general" | "ai" | "agents" | "apikeys" | "storage";
-
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<ModalTab>("general");
-  const toast = useToast();
+  const [activeTab, setActiveTab] = useState("general");
   const [githubToken, setGithubToken] = useState("");
   const [pollInterval, setPollInterval] = useState("2.5");
   const [soundVolume, setSoundVolume] = useState("80");
   const [scanlinesActive, setScanlinesActive] = useState(false);
-  const [savedMessage, setSavedMessage] = useState(false);
 
   // AI & Agents
   const [defaultAiModel, setDefaultAiModel] = useState("gemini-2.5-pro");
@@ -66,8 +67,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const saveSettings = () => {
     try {
       cyberAudio.play("toggle");
@@ -79,7 +78,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         localStorage.setItem("dirtynest_openai_key", openaiKey);
         localStorage.setItem("dirtynest_ollama_url", ollamaUrl);
       }
-      toast.success("SYSTEM DIRECTIVE UPDATED", "Your neural configurations have been saved successfully.");
+      toast.success("SYSTEM DIRECTIVE UPDATED", {
+        description: "Your neural configurations have been saved successfully.",
+      });
       setTimeout(() => onClose(), 800);
     } catch {
       // ignore
@@ -128,90 +129,55 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       a.download = `dirtynest-backup-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      toast.success("SNAPSHOT CREATED", { description: "Export downloaded." });
     } catch {
-      alert("Failed to export database");
+      toast.error("EXPORT FAILED", { description: "Failed to export database." });
     }
   };
 
-  const tabs = [
-    { id: "general", label: "General", icon: Sliders },
-    { id: "ai", label: "AI Core", icon: Bot },
-    { id: "agents", label: "Swarm", icon: Cpu },
-    { id: "apikeys", label: "API Keys", icon: Key },
-    { id: "storage", label: "Storage", icon: Database },
-  ];
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{
-        background: "rgba(0, 0, 0, 0.82)",
-        backdropFilter: "blur(12px)",
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-2xl max-h-[90vh] flex flex-col cyber-card overflow-hidden animate-modal-pop shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)]"
-        style={{
-          border: "1px solid rgba(0, 255, 65, 0.3)",
-          background: "rgba(11, 12, 20, 0.96)",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-2xl bg-[#090B14] border-[#00FF41]/30 text-[#F1F3F9] font-mono p-0 overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-white/10 shrink-0">
+        <DialogHeader className="p-4 sm:p-5 border-b border-white/10 pb-4">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-lg bg-[#00FF41]/10 text-[#00FF41]">
               <SettingsIcon size={16} />
             </div>
             <div>
-              <h2 className="text-sm font-mono font-bold text-[#F1F3F9] uppercase tracking-wider">
+              <DialogTitle className="text-sm font-bold text-[#F1F3F9] uppercase tracking-wider">
                 System Configuration & Parameters
-              </h2>
-              <p className="text-[10px] font-mono text-[#4F536E]">
+              </DialogTitle>
+              <p className="text-[10px] text-[#4F536E]">
                 DIRTYNEST // CORE PARAMETERS & STORAGE
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-[#9499B3] hover:text-[#FF2A6D] transition-colors cursor-pointer"
-          >
-            <X size={18} />
-          </button>
-        </div>
+        </DialogHeader>
 
-        {/* Tab Selector Bar */}
-        <div className="flex items-center border-b border-white/5 bg-black/20 px-3 overflow-x-auto scrollbar-none text-[11px] font-mono shrink-0">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id as ModalTab);
-                  cyberAudio.play("click");
-                }}
-                className={`flex items-center gap-2 px-3 py-2.5 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? "border-[#00FF41] text-[#00FF41] font-bold bg-white/[0.02]"
-                    : "border-transparent text-[#9499B3] hover:text-[#F1F3F9]"
-                }`}
-              >
-                <Icon size={13} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {/* Tabs Control */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col">
+          <TabsList className="w-full justify-start rounded-none border-b border-white/5 bg-black/40 px-3 h-10 gap-1">
+            <TabsTrigger value="general" className="text-xs data-[state=active]:bg-[#00FF41]/20 data-[state=active]:text-[#00FF41]">
+              <Sliders size={13} className="mr-1.5" /> General
+            </TabsTrigger>
+            <TabsTrigger value="ai" className="text-xs data-[state=active]:bg-[#00FF41]/20 data-[state=active]:text-[#00FF41]">
+              <Bot size={13} className="mr-1.5" /> AI Core
+            </TabsTrigger>
+            <TabsTrigger value="agents" className="text-xs data-[state=active]:bg-[#00FF41]/20 data-[state=active]:text-[#00FF41]">
+              <Cpu size={13} className="mr-1.5" /> Swarm
+            </TabsTrigger>
+            <TabsTrigger value="apikeys" className="text-xs data-[state=active]:bg-[#00FF41]/20 data-[state=active]:text-[#00FF41]">
+              <Key size={13} className="mr-1.5" /> API Keys
+            </TabsTrigger>
+            <TabsTrigger value="storage" className="text-xs data-[state=active]:bg-[#00FF41]/20 data-[state=active]:text-[#00FF41]">
+              <Database size={13} className="mr-1.5" /> Storage
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Form Body */}
-        <div className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto font-mono text-xs">
-          {/* GENERAL TAB */}
-          {activeTab === "general" && (
-            <div className="space-y-4">
-              {/* Telemetry Polling */}
+          <div className="p-4 sm:p-5 max-h-[60vh] overflow-y-auto space-y-4 text-xs">
+            {/* GENERAL */}
+            <TabsContent value="general" className="space-y-4 mt-0">
               <div className="space-y-1.5">
                 <label className="text-[#9499B3] flex items-center gap-1.5 text-[11px] font-bold uppercase">
                   <RefreshCw size={13} className="text-[#00F0FF]" />
@@ -223,23 +189,19 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     { label: "2.5s (Balanced)", val: "2.5" },
                     { label: "5.0s (Eco)", val: "5.0" },
                   ].map((opt) => (
-                    <button
+                    <Button
                       key={opt.val}
                       type="button"
+                      variant={pollInterval === opt.val ? "default" : "outline"}
                       onClick={() => setPollInterval(opt.val)}
-                      className={`p-2 rounded-xl text-center border transition-all cursor-pointer ${
-                        pollInterval === opt.val
-                          ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 font-bold"
-                          : "bg-white/[0.02] border-white/5 text-[#9499B3] hover:bg-white/5"
-                      }`}
+                      className="text-xs h-9"
                     >
                       {opt.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
 
-              {/* Visual Scanline Effect */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
                 <div>
                   <div className="text-[11px] font-bold text-[#F1F3F9] uppercase flex items-center gap-1.5">
@@ -250,23 +212,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     Simulate retro CRT phosphor scanlines across viewport
                   </p>
                 </div>
-                <button
-                  onClick={() => toggleScanlines(!scanlinesActive)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    scanlinesActive
-                      ? "bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/40"
-                      : "bg-white/5 text-[#9499B3]"
-                  }`}
-                >
-                  {scanlinesActive ? "ENABLED" : "DISABLED"}
-                </button>
+                <Switch
+                  checked={scanlinesActive}
+                  onCheckedChange={toggleScanlines}
+                />
               </div>
-            </div>
-          )}
+            </TabsContent>
 
-          {/* AI TAB */}
-          {activeTab === "ai" && (
-            <div className="space-y-4">
+            {/* AI CORE */}
+            <TabsContent value="ai" className="space-y-4 mt-0">
               <div className="space-y-1.5">
                 <label className="text-[#9499B3] text-[11px] font-bold uppercase">
                   Default Reasoning Model
@@ -299,12 +253,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   className="w-full accent-[#00FF41] cursor-pointer"
                 />
               </div>
-            </div>
-          )}
+            </TabsContent>
 
-          {/* AGENTS TAB */}
-          {activeTab === "agents" && (
-            <div className="space-y-4">
+            {/* AGENTS */}
+            <TabsContent value="agents" className="space-y-4 mt-0">
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[#9499B3] text-[11px] font-bold">
                   <span>MAX SWARM CONCURRENCY</span>
@@ -320,23 +272,21 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   className="w-full accent-[#BF40FF] cursor-pointer"
                 />
               </div>
-            </div>
-          )}
+            </TabsContent>
 
-          {/* API KEYS TAB */}
-          {activeTab === "apikeys" && (
-            <div className="space-y-3">
+            {/* API KEYS */}
+            <TabsContent value="apikeys" className="space-y-3 mt-0">
               <div className="space-y-1.5">
                 <label className="text-[#9499B3] flex items-center gap-1.5 text-[11px] font-bold uppercase">
                   <Key size={13} className="text-[#00FF41]" />
                   <span>GitHub Personal Access Token (PAT)</span>
                 </label>
-                <input
+                <Input
                   type="password"
                   value={githubToken}
                   onChange={(e) => setGithubToken(e.target.value)}
                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="w-full bg-[#07070B] rounded-xl px-3 py-2 text-[#F1F3F9] border border-white/10 focus:border-[#00FF41] outline-none"
+                  className="bg-[#07070B] border-white/10 text-xs text-[#F1F3F9] focus-visible:border-[#00FF41]/50"
                 />
               </div>
 
@@ -345,12 +295,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <Key size={13} className="text-[#00F0FF]" />
                   <span>Google Gemini API Key</span>
                 </label>
-                <input
+                <Input
                   type="password"
                   value={geminiKey}
                   onChange={(e) => setGeminiKey(e.target.value)}
                   placeholder="AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="w-full bg-[#07070B] rounded-xl px-3 py-2 text-[#F1F3F9] border border-white/10 focus:border-[#00F0FF] outline-none"
+                  className="bg-[#07070B] border-white/10 text-xs text-[#F1F3F9] focus-visible:border-[#00F0FF]/50"
                 />
               </div>
 
@@ -359,66 +309,61 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <Server size={13} className="text-[#FF2A6D]" />
                   <span>Local Ollama Endpoint URL</span>
                 </label>
-                <input
+                <Input
                   type="text"
                   value={ollamaUrl}
                   onChange={(e) => setOllamaUrl(e.target.value)}
                   placeholder="http://localhost:11434"
-                  className="w-full bg-[#07070B] rounded-xl px-3 py-2 text-[#F1F3F9] border border-white/10 focus:border-[#FF2A6D] outline-none"
+                  className="bg-[#07070B] border-white/10 text-xs text-[#F1F3F9] focus-visible:border-[#FF2A6D]/50"
                 />
               </div>
-            </div>
-          )}
+            </TabsContent>
 
-          {/* STORAGE TAB */}
-          {activeTab === "storage" && (
-            <div className="space-y-3">
+            {/* STORAGE */}
+            <TabsContent value="storage" className="space-y-3 mt-0">
               <label className="text-[#9499B3] flex items-center gap-1.5 text-[11px] font-bold uppercase">
                 <Database size={13} className="text-[#FFB800]" />
                 <span>Storage & Backup Registry</span>
               </label>
               <div className="flex items-center gap-2">
-                <button
+                <Button
                   onClick={exportData}
-                  className="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#F1F3F9] hover:text-[#00FF41] transition-all cursor-pointer"
+                  variant="outline"
+                  className="w-full gap-2 text-xs border-white/10 hover:border-[#00FF41]/40 text-[#F1F3F9] hover:text-[#00FF41]"
                 >
-                  <Download size={13} />
+                  <Download size={14} />
                   <span>EXPORT JSON SNAPSHOT</span>
-                </button>
+                </Button>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-white/10 bg-black/30">
-          {savedMessage ? (
-            <span className="text-[11px] font-mono text-[#00FF41] flex items-center gap-1">
-              <Check size={13} />
-              <span>PARAMETERS APPLIED</span>
-            </span>
-          ) : (
-            <span className="text-[10px] font-mono text-[#4F536E]">
-              CONFIG VERSION 2.4.0
-            </span>
-          )}
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onClose}
-              className="px-3 py-1.5 rounded-lg text-xs font-mono text-[#9499B3] hover:text-[#F1F3F9]"
-            >
-              DISMISS
-            </button>
-            <button
-              onClick={saveSettings}
-              className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30 hover:bg-[#00FF41]/25 transition-all cursor-pointer"
-            >
-              SAVE CONFIG
-            </button>
+            </TabsContent>
           </div>
-        </div>
-      </div>
-    </div>
+
+          {/* Footer Actions */}
+          <div className="flex items-center justify-between px-5 py-3 border-t border-white/10 bg-black/40">
+            <Badge variant="outline" className="text-[10px] text-[#4F536E] border-white/10">
+              CONFIG VERSION 2.4.0
+            </Badge>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="text-xs text-[#9499B3]"
+              >
+                DISMISS
+              </Button>
+              <Button
+                size="sm"
+                onClick={saveSettings}
+                className="text-xs font-bold bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/40 hover:bg-[#00FF41]/30"
+              >
+                SAVE CONFIG
+              </Button>
+            </div>
+          </div>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
   );
 }

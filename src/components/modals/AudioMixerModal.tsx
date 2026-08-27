@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Headphones, Volume2, VolumeX, X, Play, Square, Sparkles, Radio, CloudRain, Server, Zap } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { cyberAudio, AmbientTrackType } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
+import { cn } from "@/lib/utils";
 
 interface AudioMixerModalProps {
   isOpen: boolean;
@@ -21,14 +25,11 @@ export default function AudioMixerModal({ isOpen, onClose }: AudioMixerModalProp
   const { isDronePlaying, setDronePlaying } = useAppStore();
   const [currentTrack, setCurrentTrack] = useState<AmbientTrackType>("drone");
   const [volume, setVolume] = useState(50);
-  const [activeTab, setActiveTab] = useState<"ambient" | "sfx">("ambient");
 
   useEffect(() => {
     setCurrentTrack(cyberAudio.getCurrentTrack());
     setVolume(Math.round(cyberAudio.getVolume() * 100));
   }, [isOpen]);
-
-  if (!isOpen) return null;
 
   const handleToggleAmbient = (trackId?: AmbientTrackType) => {
     cyberAudio.play("click");
@@ -55,54 +56,41 @@ export default function AudioMixerModal({ isOpen, onClose }: AudioMixerModalProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in font-mono">
-      <div className="cyber-card p-6 w-full max-w-lg relative flex flex-col gap-5 border border-white/10 shadow-[0_0_30px_rgba(0,255,65,0.15)] animate-modal-pop">
-        {/* HUD Corners */}
-        <div className="hud-corner hud-corner-tl" />
-        <div className="hud-corner hud-corner-tr" />
-        <div className="hud-corner hud-corner-bl" />
-        <div className="hud-corner hud-corner-br" />
-
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-white/5 pb-3.5">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg bg-[#090B14] border-[#00FF41]/30 text-[#F1F3F9] font-mono p-6 shadow-[0_0_40px_rgba(0,255,65,0.15)]">
+        {/* Header */}
+        <DialogHeader className="border-b border-white/10 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 shadow-[0_0_10px_rgba(0,255,65,0.2)]">
               <Headphones size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-[#F1F3F9] uppercase tracking-wider">
+              <DialogTitle className="text-sm font-bold text-[#F1F3F9] uppercase tracking-wider">
                 Cyber Audio Matrix & Soundboard
-              </h3>
+              </DialogTitle>
               <p className="text-[10px] text-[#9499B3]">
                 Pure Web Audio API real-time synthesis engine
               </p>
             </div>
           </div>
-
-          <button
-            onClick={() => {
-              cyberAudio.play("click");
-              onClose();
-            }}
-            className="p-1.5 rounded-lg text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/5 transition-all cursor-pointer"
-          >
-            <X size={16} />
-          </button>
-        </div>
+        </DialogHeader>
 
         {/* Equalizer Visualizer & Master Power */}
         <div className="p-4 rounded-xl bg-black/50 border border-white/5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <button
+            <Button
               onClick={() => handleToggleAmbient()}
-              className={`p-3 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+              variant="outline"
+              size="icon"
+              className={cn(
+                "h-11 w-11 rounded-xl transition-all cursor-pointer",
                 isDronePlaying
                   ? "bg-[#00FF41]/20 border-[#00FF41] text-[#00FF41] shadow-[0_0_15px_rgba(0,255,65,0.4)]"
-                  : "bg-white/5 border-white/10 text-[#9499B3] hover:text-[#F1F3F9]"
-              }`}
+                  : "bg-white/5 border-white/10 text-[#9499B3]"
+              )}
             >
               {isDronePlaying ? <Square size={16} /> : <Play size={16} className="ml-0.5" />}
-            </button>
+            </Button>
 
             <div className="flex flex-col">
               <span className="text-xs font-bold text-[#F1F3F9]">
@@ -119,11 +107,12 @@ export default function AudioMixerModal({ isOpen, onClose }: AudioMixerModalProp
             {[40, 75, 55, 90, 65, 80].map((h, i) => (
               <div
                 key={i}
-                className={`w-1 rounded-full transition-all duration-200 ${
+                className={cn(
+                  "w-1 rounded-full transition-all duration-200",
                   isDronePlaying
                     ? "bg-[#00FF41] animate-pulse shadow-[0_0_6px_#00FF41]"
                     : "bg-white/10 h-1.5"
-                }`}
+                )}
                 style={{
                   height: isDronePlaying ? `${h}%` : "4px",
                   animationDelay: `${i * 120}ms`,
@@ -140,7 +129,9 @@ export default function AudioMixerModal({ isOpen, onClose }: AudioMixerModalProp
               {volume === 0 ? <VolumeX size={13} /> : <Volume2 size={13} className="text-[#00FF41]" />}
               MASTER AMBIENT VOLUME
             </span>
-            <span className="font-bold text-[#00FF41] text-xs">{volume}%</span>
+            <Badge variant="outline" className="text-[#00FF41] bg-[#00FF41]/10 border-[#00FF41]/30 text-xs font-bold">
+              {volume}%
+            </Badge>
           </div>
           <input
             type="range"
@@ -166,11 +157,12 @@ export default function AudioMixerModal({ isOpen, onClose }: AudioMixerModalProp
                 <button
                   key={t.id}
                   onClick={() => handleTrackSelect(t.id)}
-                  className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer ${
+                  className={cn(
+                    "p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all cursor-pointer",
                     isSelected
                       ? "bg-black/60 shadow-[0_0_12px_rgba(0,255,65,0.2)]"
                       : "bg-white/[0.02] border-white/5 hover:border-white/20"
-                  }`}
+                  )}
                   style={{
                     borderColor: isSelected ? t.color : undefined,
                   }}
@@ -207,33 +199,41 @@ export default function AudioMixerModal({ isOpen, onClose }: AudioMixerModalProp
             TACTICAL SFX TEST BOARD
           </label>
           <div className="grid grid-cols-4 gap-2 text-center text-xs">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => cyberAudio.play("click")}
-              className="py-2 px-2 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41] border border-white/5 hover:border-[#00FF41]/30 transition-all cursor-pointer text-[10px] font-bold"
+              className="text-[10px] border-white/5 bg-white/5 hover:bg-white/10 hover:text-[#00FF41]"
             >
               CLICK
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => cyberAudio.play("chime")}
-              className="py-2 px-2 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00F0FF] border border-white/5 hover:border-[#00F0FF]/30 transition-all cursor-pointer text-[10px] font-bold"
+              className="text-[10px] border-white/5 bg-white/5 hover:bg-white/10 hover:text-[#00F0FF]"
             >
               CHIME
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => cyberAudio.play("warp")}
-              className="py-2 px-2 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#BF40FF] border border-white/5 hover:border-[#BF40FF]/30 transition-all cursor-pointer text-[10px] font-bold"
+              className="text-[10px] border-white/5 bg-white/5 hover:bg-white/10 hover:text-[#BF40FF]"
             >
               WARP
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => cyberAudio.play("error")}
-              className="py-2 px-2 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#FF2A6D] border border-white/5 hover:border-[#FF2A6D]/30 transition-all cursor-pointer text-[10px] font-bold"
+              className="text-[10px] border-white/5 bg-white/5 hover:bg-white/10 hover:text-[#FF2A6D]"
             >
               ERROR
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
