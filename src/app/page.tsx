@@ -152,7 +152,10 @@ import {
   Mic,
   Share2,
   Square,
+  GripVertical,
 } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   const {
@@ -423,6 +426,57 @@ export default function Home() {
   };
 
   const [dashboardLayout, setDashboardLayout] = useState<WidgetLayoutItem[]>(() => loadWidgetLayout());
+  const [draggedWidgetId, setDraggedWidgetId] = useState<string | null>(null);
+  const [dragOverWidgetId, setDragOverWidgetId] = useState<string | null>(null);
+
+  const handleWidgetDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedWidgetId(id);
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleWidgetDragOver = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverWidgetId !== targetId) {
+      setDragOverWidgetId(targetId);
+    }
+  };
+
+  const handleWidgetDragLeave = (targetId: string) => {
+    if (dragOverWidgetId === targetId) {
+      setDragOverWidgetId(null);
+    }
+  };
+
+  const handleWidgetDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData("text/plain") || draggedWidgetId;
+    setDraggedWidgetId(null);
+    setDragOverWidgetId(null);
+
+    if (!sourceId || sourceId === targetId) return;
+
+    setDashboardLayout((prev) => {
+      const fromIdx = prev.findIndex((w) => w.id === sourceId);
+      const toIdx = prev.findIndex((w) => w.id === targetId);
+      if (fromIdx === -1 || toIdx === -1) return prev;
+
+      const next = [...prev];
+      const [moved] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, moved);
+
+      saveWidgetLayout(next);
+      cyberAudio.play("warp");
+      toast.success("Tile layout updated");
+      return next;
+    });
+  };
+
+  const handleWidgetDragEnd = () => {
+    setDraggedWidgetId(null);
+    setDragOverWidgetId(null);
+  };
 
   useEffect(() => {
     const handleSync = () => setDashboardLayout(loadWidgetLayout());
@@ -1081,8 +1135,34 @@ export default function Home() {
                         }
 
                         if (!widgetNode) return null;
+                        const isDragging = draggedWidgetId === w.id;
+                        const isOver = dragOverWidgetId === w.id;
+
                         return (
-                          <div key={w.id} id={`${w.id}-widget`} className="w-full h-full flex flex-col">
+                          <div
+                            key={w.id}
+                            id={`${w.id}-widget`}
+                            draggable
+                            onDragStart={(e) => handleWidgetDragStart(e, w.id)}
+                            onDragOver={(e) => handleWidgetDragOver(e, w.id)}
+                            onDragLeave={() => handleWidgetDragLeave(w.id)}
+                            onDrop={(e) => handleWidgetDrop(e, w.id)}
+                            onDragEnd={handleWidgetDragEnd}
+                            className={cn(
+                              "w-full h-full flex flex-col relative group/widget transition-all duration-200 rounded-2xl",
+                              isDragging && "opacity-40 scale-[0.98] border border-dashed border-[#00F0FF]",
+                              isOver && !isDragging && "ring-2 ring-[#00FF41] shadow-[0_0_20px_rgba(0,255,65,0.4)] scale-[1.01]"
+                            )}
+                          >
+                            {/* Floating Drag Grip Indicator */}
+                            <div
+                              className="absolute top-2.5 right-2.5 z-20 opacity-0 group-hover/widget:opacity-100 transition-opacity flex items-center gap-1 cursor-grab active:cursor-grabbing text-[#4F536E] hover:text-[#00FF41] bg-[#090A14]/90 px-1.5 py-0.5 rounded-lg border border-white/10 text-[9px] font-mono shadow-md backdrop-blur-md"
+                              title="Drag to rearrange dashboard tiles"
+                            >
+                              <GripVertical size={11} />
+                              <span className="hidden sm:inline">REORDER</span>
+                            </div>
+
                             {widgetNode}
                           </div>
                         );
