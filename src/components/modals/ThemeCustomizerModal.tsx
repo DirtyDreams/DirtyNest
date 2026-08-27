@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   Palette,
   Check,
@@ -10,12 +10,8 @@ import {
   Sparkles,
   Sliders,
   Copy,
-  Download,
   Upload,
-  RotateCcw,
-  Eye,
-  Layers,
-  X,
+  Atom,
 } from "lucide-react";
 import {
   ThemePreset,
@@ -27,6 +23,18 @@ import {
 } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";
 import CyberpunkShaderFxStudioModal from "@/components/views/tools/CyberpunkShaderFxStudioModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 interface Props {
   isOpen: boolean;
@@ -58,7 +66,7 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
   const [themes, setThemes] = useState<ThemePreset[]>(DEFAULT_THEMES);
   const [currentThemeId, setCurrentThemeId] = useState("matrix");
   const [isShaderModalOpen, setIsShaderModalOpen] = useState(false);
-  
+
   // Editor state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [themeName, setThemeName] = useState("");
@@ -70,7 +78,6 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
   // JSON Import / Export
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
-  const [copiedNotification, setCopiedNotification] = useState(false);
 
   const refreshThemes = () => {
     try {
@@ -105,12 +112,11 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const handleSelectTheme = (theme: ThemePreset) => {
     cyberAudio.play("click");
     setCurrentThemeId(theme.id);
     applyThemePreset(theme);
+    toast.success(`Active theme switched to: ${theme.name}`);
   };
 
   const handleStartCreate = () => {
@@ -159,6 +165,7 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
     applyThemePreset(newTheme);
     refreshThemes();
     setActiveTab("all");
+    toast.success(`Theme "${newTheme.name}" saved & applied!`);
   };
 
   const handleDeleteTheme = (id: string, e: React.MouseEvent) => {
@@ -167,6 +174,7 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
     if (confirm("Are you sure you want to delete this custom theme?")) {
       deleteCustomTheme(id);
       refreshThemes();
+      toast.info("Custom theme deleted");
     }
   };
 
@@ -202,128 +210,88 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
       refreshThemes();
       setActiveTab("all");
       cyberAudio.play("chime");
+      toast.success(`Theme "${saved.name}" successfully imported!`);
     } catch (err: any) {
       setJsonError(err.message || "Failed to parse JSON.");
+      toast.error("Invalid JSON format");
     }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in font-mono select-none"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-3xl max-h-[92vh] flex flex-col cyber-card p-4 sm:p-6 gap-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.95)] border border-[#00FF41]/40 overflow-hidden animate-modal-pop"
-        style={{ background: "rgba(10, 11, 20, 0.98)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* MODAL HEADER */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[92vh] flex flex-col p-4 sm:p-6 gap-4 bg-[#090A14] border-[#00FF41]/40 font-mono shadow-2xl overflow-hidden">
+        {/* Header */}
+        <DialogHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#00FF41]">
               <Palette size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-black text-[#F1F3F9] uppercase tracking-wider flex items-center gap-2">
+              <DialogTitle className="text-sm font-black text-[#F1F3F9] uppercase tracking-wider flex items-center gap-2">
                 <span>CYBERPUNK THEME ENGINE</span>
-                <span className="text-[10px] text-[#00FF41] font-bold px-1.5 py-0.5 rounded bg-[#00FF41]/15 border border-[#00FF41]/30">
+                <Badge variant="outline" className="text-[10px] bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/30">
                   LIVE COLORWAYS
-                </span>
-              </h3>
+                </Badge>
+              </DialogTitle>
               <p className="text-[10px] text-[#4F536E] uppercase">
                 Create, customize, preview, and manage system palettes
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleStartCreate}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00FF41]/15 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/25 text-xs font-bold transition-all cursor-pointer"
-            >
-              <Plus size={14} />
-              <span>NEW THEME</span>
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-white transition-colors cursor-pointer"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* TOP TABS */}
-        <div className="flex items-center justify-between border-b border-white/5 pb-2 shrink-0">
-          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5 text-xs">
-            <button
-              type="button"
-              onClick={() => setActiveTab("all")}
-              className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                activeTab === "all"
-                  ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30"
-                  : "text-[#9499B3] hover:text-white"
-              }`}
-            >
-              All Themes ({themes.length})
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (activeTab !== "editor") handleStartCreate();
-                setActiveTab("editor");
-              }}
-              className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeTab === "editor"
-                  ? "bg-[#00F0FF]/15 text-[#00F0FF] font-bold border border-[#00F0FF]/30"
-                  : "text-[#9499B3] hover:text-white"
-              }`}
-            >
-              <Sliders size={12} />
-              <span>{editingId ? "Edit Theme" : "Theme Creator"}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleExportJson}
-              className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeTab === "json"
-                  ? "bg-[#BF40FF]/15 text-[#BF40FF] font-bold border border-[#BF40FF]/30"
-                  : "text-[#9499B3] hover:text-white"
-              }`}
-            >
-              <Copy size={12} />
-              <span>Import / Export</span>
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              cyberAudio.play("warp");
-              setIsShaderModalOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/40 font-bold hover:bg-[#00FF41]/25 text-xs transition-all shadow-[0_0_10px_rgba(0,255,65,0.2)] cursor-pointer"
-          >
-            <Sparkles size={13} />
-            <span>SHADER & MATRIX FX</span>
-          </button>
-
-          <button
-            type="button"
+          <Button
+            size="sm"
             onClick={handleStartCreate}
-            className="sm:hidden flex items-center gap-1 p-1.5 rounded-lg bg-[#00FF41]/15 border border-[#00FF41]/30 text-[#00FF41] text-xs font-bold"
+            className="hidden sm:flex items-center gap-1.5 bg-[#00FF41]/15 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/25 font-bold h-8"
           >
             <Plus size={14} />
-          </button>
-        </div>
+            <span>NEW THEME</span>
+          </Button>
+        </DialogHeader>
 
-        {/* TAB 1: ALL THEMES BROWSER */}
-        {activeTab === "all" && (
-          <div className="flex-1 overflow-y-auto pr-1 space-y-3 scrollbar-none">
+        {/* Tab Strip */}
+        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as ModalTab)} className="w-full flex-1 flex flex-col min-h-0">
+          <div className="flex items-center justify-between border-b border-white/5 pb-2 shrink-0 gap-2 flex-wrap">
+            <TabsList className="bg-black/50 border border-white/10 p-0.5">
+              <TabsTrigger value="all" className="text-xs">
+                All Themes ({themes.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="editor"
+                onClick={() => {
+                  if (activeTab !== "editor") handleStartCreate();
+                }}
+                className="text-xs flex items-center gap-1.5"
+              >
+                <Sliders size={12} />
+                <span>{editingId ? "Edit Theme" : "Theme Creator"}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="json"
+                onClick={handleExportJson}
+                className="text-xs flex items-center gap-1.5"
+              >
+                <Copy size={12} />
+                <span>Import / Export</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                cyberAudio.play("warp");
+                setIsShaderModalOpen(true);
+              }}
+              className="bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 font-bold hover:bg-[#00FF41]/25 text-xs h-8 shadow-[0_0_10px_rgba(0,255,65,0.2)]"
+            >
+              <Sparkles size={13} className="mr-1.5" />
+              <span>SHADER & MATRIX FX</span>
+            </Button>
+          </div>
+
+          {/* TAB 1: ALL THEMES */}
+          <TabsContent value="all" className="flex-1 overflow-y-auto pr-1 space-y-3 mt-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {themes.map((theme) => {
                 const isActive = currentThemeId === theme.id;
@@ -340,20 +308,16 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
                       background: `linear-gradient(135deg, ${theme.bgDeep} 0%, rgba(20,20,35,0.7) 100%)`,
                     }}
                   >
-                    {/* Header with Title and Type Tag */}
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span
-                            className="text-xs font-black tracking-wide"
-                            style={{ color: theme.primary }}
-                          >
+                          <span className="text-xs font-black tracking-wide" style={{ color: theme.primary }}>
                             {theme.name}
                           </span>
                           {isActive && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/40">
+                            <Badge variant="outline" className="text-[9px] bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/40">
                               ACTIVE
-                            </span>
+                            </Badge>
                           )}
                         </div>
                         <span className="text-[9px] text-[#4F536E] uppercase">
@@ -363,38 +327,41 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
 
                       <div className="flex items-center gap-1">
                         {theme.isCustom && (
-                          <button
-                            type="button"
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             title="Edit this theme"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleStartEdit(theme);
                             }}
-                            className="p-1 rounded-lg bg-white/5 hover:bg-white/15 text-[#9499B3] hover:text-[#00F0FF] transition-colors"
+                            className="h-7 w-7 text-[#9499B3] hover:text-[#00F0FF]"
                           >
                             <Edit2 size={12} />
-                          </button>
+                          </Button>
                         )}
-                        <button
-                          type="button"
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           title="Clone & customize"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDuplicate(theme);
                           }}
-                          className="p-1 rounded-lg bg-white/5 hover:bg-white/15 text-[#9499B3] hover:text-[#BF40FF] transition-colors"
+                          className="h-7 w-7 text-[#9499B3] hover:text-[#BF40FF]"
                         >
                           <Copy size={12} />
-                        </button>
+                        </Button>
                         {theme.isCustom && (
-                          <button
-                            type="button"
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             title="Delete theme"
                             onClick={(e) => handleDeleteTheme(theme.id, e)}
-                            className="p-1 rounded-lg bg-white/5 hover:bg-red-500/20 text-[#9499B3] hover:text-[#FF2A6D] transition-colors"
+                            className="h-7 w-7 text-[#9499B3] hover:text-[#FF2A6D]"
                           >
                             <Trash2 size={12} />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -402,31 +369,19 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
                     {/* Color Swatch Bar */}
                     <div className="grid grid-cols-4 gap-1.5 p-2 rounded-xl bg-black/50 border border-white/5">
                       <div className="flex flex-col items-center gap-1">
-                        <div
-                          className="w-full h-4 rounded-md shadow-sm"
-                          style={{ background: theme.primary }}
-                        />
+                        <div className="w-full h-4 rounded-md shadow-sm" style={{ background: theme.primary }} />
                         <span className="text-[8px] text-[#4F536E]">Primary</span>
                       </div>
                       <div className="flex flex-col items-center gap-1">
-                        <div
-                          className="w-full h-4 rounded-md shadow-sm"
-                          style={{ background: theme.secondary }}
-                        />
+                        <div className="w-full h-4 rounded-md shadow-sm" style={{ background: theme.secondary }} />
                         <span className="text-[8px] text-[#4F536E]">Secondary</span>
                       </div>
                       <div className="flex flex-col items-center gap-1">
-                        <div
-                          className="w-full h-4 rounded-md shadow-sm"
-                          style={{ background: theme.accent }}
-                        />
+                        <div className="w-full h-4 rounded-md shadow-sm" style={{ background: theme.accent }} />
                         <span className="text-[8px] text-[#4F536E]">Accent</span>
                       </div>
                       <div className="flex flex-col items-center gap-1">
-                        <div
-                          className="w-full h-4 rounded-md border border-white/10"
-                          style={{ background: theme.bgDeep }}
-                        />
+                        <div className="w-full h-4 rounded-md border border-white/10" style={{ background: theme.bgDeep }} />
                         <span className="text-[8px] text-[#4F536E]">Abyss</span>
                       </div>
                     </div>
@@ -434,38 +389,31 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
                 );
               })}
             </div>
-          </div>
-        )}
+          </TabsContent>
 
-        {/* TAB 2: LIVE THEME CREATOR & EDITOR */}
-        {activeTab === "editor" && (
-          <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 lg:grid-cols-2 gap-5 scrollbar-none">
-            {/* Left: Input Controls */}
+          {/* TAB 2: LIVE CREATOR & EDITOR */}
+          <TabsContent value="editor" className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 lg:grid-cols-2 gap-5 mt-3">
             <div className="space-y-4">
               <div>
                 <label className="text-xs text-[#9499B3] uppercase font-bold flex items-center gap-2 mb-1.5">
                   <Edit2 size={13} className="text-[#00FF41]" />
                   <span>Theme Name</span>
                 </label>
-                <input
+                <Input
                   type="text"
                   value={themeName}
                   onChange={(e) => setThemeName(e.target.value)}
                   placeholder="e.g. Neon Horizon, Cyber Gold..."
-                  className="w-full bg-black/60 border border-white/10 focus:border-[#00FF41] rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors"
+                  className="bg-black/60 border-white/10"
                 />
               </div>
 
-              {/* Color Pickers Grid */}
+              {/* Color Pickers */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Primary Color */}
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[#F1F3F9]">Primary Neon</span>
-                    <div
-                      className="w-4 h-4 rounded-full border border-white/20"
-                      style={{ background: primaryColor }}
-                    />
+                    <div className="w-4 h-4 rounded-full border border-white/20" style={{ background: primaryColor }} />
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -474,23 +422,19 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
                       onChange={(e) => setPrimaryColor(e.target.value)}
                       className="w-8 h-8 rounded-lg bg-transparent border-0 cursor-pointer"
                     />
-                    <input
+                    <Input
                       type="text"
                       value={primaryColor}
                       onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="flex-1 bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs text-white font-mono"
+                      className="h-8 bg-black/50 border-white/10 text-xs font-mono"
                     />
                   </div>
                 </div>
 
-                {/* Secondary Color */}
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[#F1F3F9]">Secondary Glow</span>
-                    <div
-                      className="w-4 h-4 rounded-full border border-white/20"
-                      style={{ background: secondaryColor }}
-                    />
+                    <div className="w-4 h-4 rounded-full border border-white/20" style={{ background: secondaryColor }} />
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -499,23 +443,19 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
                       onChange={(e) => setSecondaryColor(e.target.value)}
                       className="w-8 h-8 rounded-lg bg-transparent border-0 cursor-pointer"
                     />
-                    <input
+                    <Input
                       type="text"
                       value={secondaryColor}
                       onChange={(e) => setSecondaryColor(e.target.value)}
-                      className="flex-1 bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs text-white font-mono"
+                      className="h-8 bg-black/50 border-white/10 text-xs font-mono"
                     />
                   </div>
                 </div>
 
-                {/* Accent Color */}
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[#F1F3F9]">Accent Cyan</span>
-                    <div
-                      className="w-4 h-4 rounded-full border border-white/20"
-                      style={{ background: accentColor }}
-                    />
+                    <div className="w-4 h-4 rounded-full border border-white/20" style={{ background: accentColor }} />
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -524,23 +464,19 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
                       onChange={(e) => setAccentColor(e.target.value)}
                       className="w-8 h-8 rounded-lg bg-transparent border-0 cursor-pointer"
                     />
-                    <input
+                    <Input
                       type="text"
                       value={accentColor}
                       onChange={(e) => setAccentColor(e.target.value)}
-                      className="flex-1 bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs text-white font-mono"
+                      className="h-8 bg-black/50 border-white/10 text-xs font-mono"
                     />
                   </div>
                 </div>
 
-                {/* Background Abyss Color */}
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[#F1F3F9]">Background Abyss</span>
-                    <div
-                      className="w-4 h-4 rounded-full border border-white/20"
-                      style={{ background: bgDeepColor }}
-                    />
+                    <div className="w-4 h-4 rounded-full border border-white/20" style={{ background: bgDeepColor }} />
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -549,17 +485,17 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
                       onChange={(e) => setBgDeepColor(e.target.value)}
                       className="w-8 h-8 rounded-lg bg-transparent border-0 cursor-pointer"
                     />
-                    <input
+                    <Input
                       type="text"
                       value={bgDeepColor}
                       onChange={(e) => setBgDeepColor(e.target.value)}
-                      className="flex-1 bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs text-white font-mono"
+                      className="h-8 bg-black/50 border-white/10 text-xs font-mono"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Quick Color Swatches */}
+              {/* Quick Swatches */}
               <div className="space-y-1.5">
                 <span className="text-[10px] text-[#4F536E] uppercase font-bold">Quick Neon Palette:</span>
                 <div className="flex flex-wrap gap-1.5">
@@ -615,9 +551,9 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
                   />
                 </div>
                 <div className="flex items-center gap-2 pt-1">
-                  <button
-                    type="button"
-                    className="px-3 py-1 rounded-lg text-xs font-bold"
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs font-bold"
                     style={{
                       background: `${primaryColor}20`,
                       color: primaryColor,
@@ -625,10 +561,11 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
                     }}
                   >
                     EXECUTE
-                  </button>
-                  <button
-                    type="button"
-                    className="px-3 py-1 rounded-lg text-xs font-bold"
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs font-bold"
                     style={{
                       background: `${secondaryColor}20`,
                       color: secondaryColor,
@@ -636,62 +573,61 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
                     }}
                   >
                     REVERT
-                  </button>
+                  </Button>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="pt-2 flex items-center justify-end gap-2">
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setActiveTab("all")}
-                  className="px-3 py-2 rounded-xl text-xs text-[#9499B3] hover:text-white bg-white/5 cursor-pointer"
+                  className="text-xs text-[#9499B3] hover:text-white"
                 >
                   CANCEL
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  size="sm"
                   onClick={handleSaveTheme}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-black cursor-pointer shadow-lg hover:scale-[1.02] transition-transform"
+                  className="flex items-center gap-1.5 text-xs font-bold text-black shadow-lg"
                   style={{ background: primaryColor }}
                 >
                   <Sparkles size={14} />
                   <span>{editingId ? "UPDATE THEME" : "SAVE & APPLY"}</span>
-                </button>
+                </Button>
               </div>
             </div>
-          </div>
-        )}
+          </TabsContent>
 
-        {/* TAB 3: JSON IMPORT / EXPORT */}
-        {activeTab === "json" && (
-          <div className="flex-1 overflow-y-auto pr-1 space-y-3 scrollbar-none flex flex-col">
+          {/* TAB 3: JSON */}
+          <TabsContent value="json" className="flex-1 overflow-y-auto pr-1 space-y-3 mt-3 flex flex-col">
             <div className="flex items-center justify-between">
               <span className="text-xs text-[#9499B3] uppercase font-bold">
                 Theme Preset JSON Format
               </span>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   try {
                     navigator.clipboard.writeText(jsonText);
-                    setCopiedNotification(true);
-                    setTimeout(() => setCopiedNotification(false), 1500);
+                    toast.success("JSON copied to clipboard!");
                   } catch {}
                 }}
-                className="flex items-center gap-1 text-xs text-[#00FF41] hover:underline"
+                className="text-xs text-[#00FF41] hover:text-[#00FF41]/80 h-7"
               >
-                <Copy size={12} />
-                <span>{copiedNotification ? "COPIED!" : "Copy JSON"}</span>
-              </button>
+                <Copy size={12} className="mr-1" />
+                <span>Copy JSON</span>
+              </Button>
             </div>
 
-            <textarea
+            <Textarea
               value={jsonText}
               onChange={(e) => setJsonText(e.target.value)}
               rows={9}
               placeholder="Paste theme JSON here to import..."
-              className="w-full bg-black/60 border border-white/10 focus:border-[#BF40FF] rounded-xl p-3 text-xs text-white font-mono focus:outline-none flex-1"
+              className="bg-black/60 border-white/10 font-mono text-xs flex-1"
             />
 
             {jsonError && (
@@ -701,24 +637,23 @@ export default function ThemeCustomizerModal({ isOpen, onClose }: Props) {
             )}
 
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
+              <Button
                 onClick={handleImportJson}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#BF40FF] text-white hover:bg-[#BF40FF]/80 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 bg-[#BF40FF] text-white hover:bg-[#BF40FF]/80 font-bold text-xs h-9"
               >
                 <Upload size={14} />
                 <span>IMPORT & APPLY THEME</span>
-              </button>
+              </Button>
             </div>
-          </div>
-        )}
-      </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
 
-      {/* Cyberpunk Shader & Matrix FX Studio Modal */}
+      {/* Shader & Matrix FX Studio Modal */}
       <CyberpunkShaderFxStudioModal
         isOpen={isShaderModalOpen}
         onClose={() => setIsShaderModalOpen(false)}
       />
-    </div>
+    </Dialog>
   );
 }
