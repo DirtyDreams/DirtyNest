@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   Rocket,
   Shield,
@@ -8,15 +9,10 @@ import {
   Bot,
   Download,
   Database,
-  CheckCircle2,
-  Terminal,
   Zap,
-  Play,
-  RotateCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +20,7 @@ interface ActionItem {
   id: string;
   label: string;
   description: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
   successMessage: string;
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Palette, Check, SlidersHorizontal } from "lucide-react";
-import { getAllThemes, applyThemePreset, type ThemePreset } from "@/lib/theme";
+import { getAllThemes, applyThemePreset, type ThemePreset, DEFAULT_THEMES } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";
 import {
   DropdownMenu,
@@ -21,7 +21,7 @@ interface ThemeMenuProps {
 
 export default function ThemeMenu({ onOpenCustomizer }: ThemeMenuProps) {
   const [open, setOpen] = useState(false);
-  const [themes, setThemes] = useState<ThemePreset[]>([]);
+  const [themes, setThemes] = useState<ThemePreset[]>(DEFAULT_THEMES);
   const [currentTheme, setCurrentTheme] = useState("matrix");
 
   const refreshThemes = () => {

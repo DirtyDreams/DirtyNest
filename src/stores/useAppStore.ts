@@ -72,9 +72,10 @@ export const useAppStore = create<AppState>((set) => ({
     if (
       typeof document !== "undefined" &&
       "startViewTransition" in document &&
+      typeof (document as Document & { startViewTransition?: (cb: () => void) => void }).startViewTransition === "function" &&
       !window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      (document as any).startViewTransition(update);
+      (document as Document & { startViewTransition: (cb: () => void) => void }).startViewTransition(update);
     } else {
       update();
     }
