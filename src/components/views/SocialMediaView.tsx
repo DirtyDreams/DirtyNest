@@ -16,6 +16,7 @@ import {
   Flame,
   CalendarDays,
   Repeat,
+  Inbox,
 } from "lucide-react";
 import MultiPlatformComposer, { SocialPlatform } from "./social_media/MultiPlatformComposer";
 import HermesAiCopywriter from "./social_media/HermesAiCopywriter";
@@ -23,12 +24,14 @@ import SocialScheduledQueue, { ScheduledPost, INITIAL_SCHEDULE } from "./social_
 import EngagementRadar from "./social_media/EngagementRadar";
 import SocialContentCalendar from "./social_media/SocialContentCalendar";
 import ThreadHookArchitect from "./social_media/ThreadHookArchitect";
+import UnifiedSocialInbox from "./social_media/UnifiedSocialInbox";
+import SocialListeningIntel from "./social_media/SocialListeningIntel";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function SocialMediaView() {
   const [posts, setPosts] = useState<ScheduledPost[]>(INITIAL_SCHEDULE);
   const [activeSubTab, setActiveSubTab] = useState<
-    "composer" | "calendar" | "thread" | "copywriter" | "queue" | "radar"
+    "composer" | "calendar" | "thread" | "inbox" | "listening" | "copywriter" | "queue" | "radar"
   >("composer");
   const [injectedText, setInjectedText] = useState<string | null>(null);
 
@@ -126,6 +129,8 @@ export default function SocialMediaView() {
           { id: "composer" as const, label: "Omnichannel Composer", icon: Send },
           { id: "calendar" as const, label: "Visual Content Calendar", icon: CalendarDays },
           { id: "thread" as const, label: "Viral Thread Architect", icon: Repeat },
+          { id: "inbox" as const, label: "Unified Community Inbox", icon: Inbox },
+          { id: "listening" as const, label: "Social Listening & Intel", icon: Radio },
           { id: "copywriter" as const, label: "Hermes Viral Copywriter", icon: Sparkles },
           { id: "queue" as const, label: "Scheduled Dispatch Queue", icon: Calendar },
           { id: "radar" as const, label: "Audience & Engagement Radar", icon: TrendingUp },
@@ -170,6 +175,18 @@ export default function SocialMediaView() {
       {activeSubTab === "thread" && (
         <div className="animate-fade-in">
           <ThreadHookArchitect />
+        </div>
+      )}
+
+      {activeSubTab === "inbox" && (
+        <div className="animate-fade-in">
+          <UnifiedSocialInbox />
+        </div>
+      )}
+
+      {activeSubTab === "listening" && (
+        <div className="animate-fade-in">
+          <SocialListeningIntel />
         </div>
       )}
 
