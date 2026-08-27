@@ -39,6 +39,11 @@ import DockerCveScannerModal from "./docker/DockerCveScannerModal";
 import DockerComposeDesignerModal from "./docker/DockerComposeDesignerModal";
 import DockerLogsStreamModal from "./docker/DockerLogsStreamModal";
 import NetworkTopologyStudioModal from "./tools/NetworkTopologyStudioModal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import NumberFlow from "@number-flow/react";
+import { cn } from "@/lib/utils";
 
 interface DockerContainerItem {
   id: string;
@@ -385,12 +390,16 @@ export default function DockerView() {
 
           <div className="flex flex-col p-2.5 rounded-lg bg-black/30 border border-white/5">
             <span className="text-[10px] text-[#4F536E] uppercase">Running Containers</span>
-            <span className="text-sm font-bold text-[#00F0FF] mt-0.5">{runningCount} Active</span>
+            <span className="text-sm font-bold text-[#00F0FF] mt-0.5 flex items-center gap-1">
+              <NumberFlow value={runningCount} /> Active
+            </span>
           </div>
 
           <div className="flex flex-col p-2.5 rounded-lg bg-black/30 border border-white/5">
             <span className="text-[10px] text-[#4F536E] uppercase">Cached Images</span>
-            <span className="text-sm font-bold text-[#BF40FF] mt-0.5">{images.length} Repositories</span>
+            <span className="text-sm font-bold text-[#BF40FF] mt-0.5 flex items-center gap-1">
+              <NumberFlow value={images.length} /> Repositories
+            </span>
           </div>
 
           <div className="flex flex-col p-2.5 rounded-lg bg-black/30 border border-white/5">
@@ -477,12 +486,12 @@ export default function DockerView() {
         {/* Search */}
         <div className="relative flex-1 max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4F536E]" />
-          <input
+          <Input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search containers, images, ports..."
-            className="w-full pl-8 pr-3 py-1.5 bg-black/40 border border-white/10 rounded-xl text-xs text-[#F1F3F9] outline-none focus:border-[#00F0FF]/50"
+            className="pl-8 bg-black/40 border-white/10 text-xs"
           />
         </div>
       </div>
@@ -536,64 +545,76 @@ export default function DockerView() {
                       </div>
 
                       {/* Container Actions */}
-                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                         {isRunning ? (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleContainerAction(c.id, "stop")}
-                            className="p-1.5 rounded-lg bg-black/60 border border-white/10 hover:border-[#FF2A6D]/40 text-[#9499B3] hover:text-[#FF2A6D] cursor-pointer"
+                            className="h-7 w-7 text-[#9499B3] hover:text-[#FF2A6D] hover:bg-[#FF2A6D]/10"
                             title="Stop Container"
                           >
                             <Square size={13} />
-                          </button>
+                          </Button>
                         ) : (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleContainerAction(c.id, "start")}
-                            className="p-1.5 rounded-lg bg-black/60 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] cursor-pointer"
+                            className="h-7 w-7 text-[#9499B3] hover:text-[#00FF41] hover:bg-[#00FF41]/10"
                             title="Start Container"
                           >
                             <Play size={13} />
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleContainerAction(c.id, "restart")}
-                          className="p-1.5 rounded-lg bg-black/60 border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] cursor-pointer"
+                          className="h-7 w-7 text-[#9499B3] hover:text-[#00F0FF] hover:bg-[#00F0FF]/10"
                           title="Restart Container"
                         >
                           <RotateCw size={13} />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
                             cyberAudio.play("click");
                             setTerminalContainer(c);
                           }}
-                          className="p-1.5 rounded-lg bg-black/60 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] cursor-pointer"
+                          className="h-7 w-7 text-[#9499B3] hover:text-[#00FF41] hover:bg-[#00FF41]/10"
                           title="Open In-Browser Exec Terminal"
                         >
                           <TerminalIcon size={13} />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
                             cyberAudio.play("click");
                             setStreamingLogsContainer(c.name);
                           }}
-                          className="p-1.5 rounded-lg bg-black/60 border border-white/10 hover:border-emerald-500/40 text-[#9499B3] hover:text-emerald-400 cursor-pointer"
+                          className="h-7 w-7 text-[#9499B3] hover:text-emerald-400 hover:bg-emerald-500/10"
                           title="Live Streaming Logs Pipe"
                         >
                           <FileText size={13} />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
                             cyberAudio.play("click");
                             setCveImage(c.image);
                           }}
-                          className="p-1.5 rounded-lg bg-black/60 border border-white/10 hover:border-amber-500/40 text-[#9499B3] hover:text-amber-400 cursor-pointer"
+                          className="h-7 w-7 text-[#9499B3] hover:text-amber-400 hover:bg-amber-500/10"
                           title="Scan Image for CVEs with Trivy"
                         >
                           <ShieldAlert size={13} />
-                        </button>
+                        </Button>
                       </div>
                     </div>
 

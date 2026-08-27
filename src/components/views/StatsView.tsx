@@ -34,6 +34,10 @@ import {
 import { cyberAudio } from "@/lib/cyberAudio";
 import PromQlQueryBuilder from "./stats/PromQlQueryBuilder";
 import CpuCoreHeatmap from "./stats/CpuCoreHeatmap";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import NumberFlow from "@number-flow/react";
+import { cn } from "@/lib/utils";
 
 type TelemetryTab = "cluster" | "promql" | "llm" | "api" | "agents" | "security";
 
@@ -327,7 +331,9 @@ export default function StatsView() {
                   <Cpu size={15} className="text-[#00FF41]" />
                   <span className="text-xs font-bold text-[#F1F3F9]">CPU Core Load</span>
                 </div>
-                <span className="text-xs font-black text-[#00FF41]">64.2%</span>
+                <span className="text-xs font-black text-[#00FF41] flex items-center">
+                  <NumberFlow value={cpuPoints[cpuPoints.length - 1]} />%
+                </span>
               </div>
               {renderSvgSparkline(cpuPoints, "#00FF41", "rgba(0,255,65,0.1)")}
               <div className="flex items-center justify-between text-[10px] text-[#4F536E] pt-1 border-t border-white/5">
@@ -342,7 +348,9 @@ export default function StatsView() {
                   <Database size={15} className="text-[#00F0FF]" />
                   <span className="text-xs font-bold text-[#F1F3F9]">RAM Pool</span>
                 </div>
-                <span className="text-xs font-black text-[#00F0FF]">66.4%</span>
+                <span className="text-xs font-black text-[#00F0FF] flex items-center">
+                  <NumberFlow value={memPoints[memPoints.length - 1]} />%
+                </span>
               </div>
               {renderSvgSparkline(memPoints, "#00F0FF", "rgba(0,240,255,0.1)")}
               <div className="flex items-center justify-between text-[10px] text-[#4F536E] pt-1 border-t border-white/5">
@@ -357,7 +365,9 @@ export default function StatsView() {
                   <Wifi size={15} className="text-[#BF40FF]" />
                   <span className="text-xs font-bold text-[#F1F3F9]">Throughput</span>
                 </div>
-                <span className="text-xs font-black text-[#BF40FF]">105 MB/s</span>
+                <span className="text-xs font-black text-[#BF40FF] flex items-center">
+                  <NumberFlow value={netPoints[netPoints.length - 1]} /> MB/s
+                </span>
               </div>
               {renderSvgSparkline(netPoints, "#BF40FF", "rgba(191,64,255,0.1)")}
               <div className="flex items-center justify-between text-[10px] text-[#4F536E] pt-1 border-t border-white/5">
@@ -372,7 +382,9 @@ export default function StatsView() {
                   <Flame size={15} className="text-amber-400" />
                   <span className="text-xs font-bold text-[#F1F3F9]">GPU VRAM (CUDA)</span>
                 </div>
-                <span className="text-xs font-black text-amber-400">82.1%</span>
+                <span className="text-xs font-black text-amber-400 flex items-center">
+                  <NumberFlow value={gpuPoints[gpuPoints.length - 1]} />%
+                </span>
               </div>
               {renderSvgSparkline(gpuPoints, "#FFB800", "rgba(255,184,0,0.1)")}
               <div className="flex items-center justify-between text-[10px] text-[#4F536E] pt-1 border-t border-white/5">

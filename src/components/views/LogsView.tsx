@@ -42,6 +42,7 @@ import LogHistogramBarChart from "./logs/LogHistogramBarChart";
 import { DataTable, ColumnDef } from "@/components/ui/data-table/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type SubTab = "stream" | "analytics" | "traces" | "security";
 type ViewMode = "table" | "raw";
@@ -317,6 +318,127 @@ export default function LogsView() {
       return ts;
     }
   };
+
+  const logColumns: ColumnDef<SystemLog>[] = useMemo(
+    () => [
+      {
+        key: "timestamp",
+        header: "Timestamp",
+        sortable: true,
+        accessor: (item: SystemLog) => (
+          <span className="font-mono text-[#9499B3] whitespace-nowrap text-xs">
+            {formatTimestamp(item.timestamp)}
+          </span>
+        ),
+      },
+      {
+        key: "level",
+        header: "Level",
+        sortable: true,
+        accessor: (item: SystemLog) => (
+          <Badge
+            variant="outline"
+            className={cn("text-[10px] font-bold border", getLevelBadge(item.level))}
+          >
+            {item.level}
+          </Badge>
+        ),
+      },
+      {
+        key: "category",
+        header: "Category",
+        sortable: true,
+        accessor: (item: SystemLog) => (
+          <div className="flex items-center gap-1.5 text-[#F1F3F9] whitespace-nowrap">
+            {getCategoryIcon(item.category)}
+            <span className="text-[11px] font-medium">{item.category}</span>
+          </div>
+        ),
+      },
+      {
+        key: "action",
+        header: "Action / Directive",
+        searchable: true,
+        accessor: (item: SystemLog) => (
+          <div className="flex flex-col gap-1 min-w-[220px]">
+            <div className="flex items-center gap-2 font-bold text-[#F1F3F9]">
+              <span>{item.action}</span>
+              {item.status_code && item.status_code !== "200" && (
+                <Badge variant="outline" className="text-[9px] px-1 bg-[#FF003C]/20 text-[#FF003C] border-[#FF003C]/30">
+                  {item.status_code}
+                </Badge>
+              )}
+            </div>
+            {item.details && (
+              <span className="text-[10px] text-[#4F536E] font-mono truncate max-w-md">
+                {item.details}
+              </span>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "actor",
+        header: "Actor",
+        searchable: true,
+        accessor: (item: SystemLog) => (
+          <Badge variant="outline" className="bg-white/5 border-white/10 text-[11px] text-[#9499B3]">
+            {item.actor}
+          </Badge>
+        ),
+      },
+      {
+        key: "latency_ms",
+        header: "Latency",
+        sortable: true,
+        accessor: (item: SystemLog) => (
+          <span className={cn("font-mono text-xs font-bold", item.latency_ms > 500 ? "text-[#FFB800]" : "text-[#00FF41]")}>
+            {item.latency_ms}ms
+          </span>
+        ),
+      },
+      {
+        key: "hash_sig",
+        header: "Hash",
+        accessor: (item: SystemLog) => (
+          <span className="font-mono text-[10px] text-[#4F536E] whitespace-nowrap">
+            {item.hash_sig || "0x--------"}
+          </span>
+        ),
+      },
+      {
+        key: "actions",
+        header: "Actions",
+        accessor: (item: SystemLog) => (
+          <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                cyberAudio.play("click");
+                setAiExplainingLog(item);
+              }}
+              className="h-7 w-7 text-[#BF40FF] hover:bg-[#BF40FF]/20"
+              title="Explain with AI & Generate Fix"
+            >
+              <Sparkles size={13} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => handleCopyLog(item, e)}
+              className="h-7 w-7 text-[#9499B3] hover:text-[#00FF41] hover:bg-white/5"
+              title="Copy JSON Payload"
+            >
+              {copiedId === item.id ? <Check size={13} className="text-[#00FF41]" /> : <Copy size={13} />}
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [copiedId]
+  );
 
   // Computed metrics for analytics tab
   const totalEvents = stats.totalLogs || logs.length;
@@ -687,114 +809,13 @@ export default function LogsView() {
       {subTab === "stream" && (
         <>
           {viewMode === "table" ? (
-            <div className="cyber-card overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10 bg-black/40 text-[10px] text-[#4F536E] uppercase font-bold tracking-wider">
-                      <th className="py-3 px-4 w-8"></th>
-                      <th className="py-3 px-4 w-28">Timestamp</th>
-                      <th className="py-3 px-4 w-24">Level</th>
-                      <th className="py-3 px-4 w-28">Category</th>
-                      <th className="py-3 px-4">Action / Directive</th>
-                      <th className="py-3 px-4 w-36">Actor / Subsystem</th>
-                      <th className="py-3 px-4 w-20 text-right">Latency</th>
-                      <th className="py-3 px-4 w-24 text-center">Hash</th>
-                      <th className="py-3 px-4 w-16 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {logs.map((log) => {
-                      const isExpanded = expandedLogIds.has(log.id);
-                      return (
-                        <tr
-                          key={log.id}
-                          onClick={() => setSelectedLog(log)}
-                          className="hover:bg-white/[0.03] transition-colors cursor-pointer group"
-                        >
-                          <td className="py-2.5 px-4 text-[#4F536E]" onClick={(e) => { e.stopPropagation(); toggleExpand(log.id); }}>
-                            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                          </td>
-                          <td className="py-2.5 px-4 font-mono text-[#9499B3] whitespace-nowrap">
-                            {formatTimestamp(log.timestamp)}
-                          </td>
-                          <td className="py-2.5 px-4">
-                            <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${getLevelBadge(log.level)}`}>
-                              {log.level}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-4 whitespace-nowrap">
-                            <div className="flex items-center gap-1.5 text-[#F1F3F9]">
-                              {getCategoryIcon(log.category)}
-                              <span className="text-[11px] font-medium">{log.category}</span>
-                            </div>
-                          </td>
-                          <td className="py-2.5 px-4 font-bold text-[#F1F3F9] group-hover:text-[#00FF41] transition-colors">
-                            <div className="flex items-center gap-2">
-                              <span>{log.action}</span>
-                              {log.status_code && log.status_code !== "200" && (
-                                <span className="text-[9px] px-1 rounded bg-[#FF003C]/20 text-[#FF003C] border border-[#FF003C]/30">
-                                  {log.status_code}
-                                </span>
-                              )}
-                            </div>
-                            {isExpanded && log.details && (
-                              <div className="mt-2 p-3 rounded-lg bg-black/60 border border-white/10 text-[11px] font-mono text-[#00F0FF] overflow-x-auto whitespace-pre-wrap max-h-60">
-                                {log.details}
-                              </div>
-                            )}
-                          </td>
-                          <td className="py-2.5 px-4 text-[#9499B3] whitespace-nowrap">
-                            <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-[11px]">
-                              {log.actor}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-4 text-right whitespace-nowrap font-mono">
-                            <span className={log.latency_ms > 500 ? "text-[#FFB800]" : "text-[#00FF41]"}>
-                              {log.latency_ms}ms
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-4 text-center font-mono text-[10px] text-[#4F536E] whitespace-nowrap">
-                            {log.hash_sig || "0x--------"}
-                          </td>
-                          <td className="py-2.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  cyberAudio.play("click");
-                                  setAiExplainingLog(log);
-                                }}
-                                className="p-1.5 rounded-lg bg-[#BF40FF]/15 hover:bg-[#BF40FF]/25 text-[#BF40FF] transition-all cursor-pointer"
-                                title="Explain with AI & Generate Fix"
-                              >
-                                <Sparkles size={13} />
-                              </button>
-                              <button
-                                onClick={(e) => handleCopyLog(log, e)}
-                                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer"
-                                title="Copy JSON Payload"
-                              >
-                                {copiedId === log.id ? <Check size={13} className="text-[#00FF41]" /> : <Copy size={13} />}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-
-                    {logs.length === 0 && !loading && (
-                      <tr>
-                        <td colSpan={9} className="py-12 text-center text-[#4F536E]">
-                          <ScrollText size={32} className="mx-auto mb-2 opacity-30" />
-                          <div>NO TELEMETRY LOGS MATCH CURRENT QUERY DIRECTIVES</div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <DataTable<SystemLog>
+              data={logs}
+              columns={logColumns}
+              exportFilename="dirtynest-logs"
+              searchPlaceholder="Filter operational directives, actors, hashes..."
+              onRowClick={(row) => setSelectedLog(row)}
+            />
           ) : (
             /* RAW MONOSPACE CONSOLE STREAM */
             <div className="cyber-card p-4 flex flex-col gap-2 bg-[#040508] border border-[#00FF41]/20">

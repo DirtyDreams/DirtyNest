@@ -37,6 +37,12 @@ import ToolPermissionMatrix from "./agents/ToolPermissionMatrix";
 import AgentDetailDrawer, { SwarmAgent } from "./agents/AgentDetailDrawer";
 import SwarmDagPipelineModal from "./agents/SwarmDagPipelineModal";
 import PaperclipCompanyControlPlane from "./agents/PaperclipCompanyControlPlane";
+import { BorderBeam } from "@/components/ui/animated/border-beam";
+import NumberFlow from "@number-flow/react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 type Agent = SwarmAgent;
 
@@ -378,15 +384,21 @@ export default function AiAgentsView() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="cyber-card p-3 flex flex-col gap-1">
           <span className="text-[10px] text-[#4F536E] uppercase font-bold">Active Agents</span>
-          <span className="text-lg font-black text-[#00FF41]">{activeCount} / {agents.length}</span>
+          <span className="text-lg font-black text-[#00FF41] flex items-center gap-1">
+            <NumberFlow value={activeCount} /> / {agents.length}
+          </span>
         </div>
         <div className="cyber-card p-3 flex flex-col gap-1">
           <span className="text-[10px] text-[#4F536E] uppercase font-bold">Avg Swarm Load</span>
-          <span className="text-lg font-black text-[#00F0FF]">{avgCpu}% CPU</span>
+          <span className="text-lg font-black text-[#00F0FF] flex items-center gap-1">
+            <NumberFlow value={avgCpu} />% CPU
+          </span>
         </div>
         <div className="cyber-card p-3 flex flex-col gap-1">
           <span className="text-[10px] text-[#4F536E] uppercase font-bold">Completed Tasks</span>
-          <span className="text-lg font-black text-[#BF40FF]">{totalTasks.toLocaleString()}</span>
+          <span className="text-lg font-black text-[#BF40FF]">
+            <NumberFlow value={totalTasks} />
+          </span>
         </div>
         <div className="cyber-card p-3 flex flex-col gap-1">
           <span className="text-[10px] text-[#4F536E] uppercase font-bold">Swarm Success Rate</span>
@@ -459,95 +471,110 @@ export default function AiAgentsView() {
         <div className="flex flex-col gap-5 animate-fade-in">
           {/* Mission Dispatch Bar */}
           <form onSubmit={dispatchMission} className="cyber-card p-3 flex gap-2">
-            <input
+            <Input
               type="text"
               placeholder="Dispatch collective swarm directive (e.g. 'Audit /api/auth endpoints for CVE-2026-9811 and run PR review')..."
               value={missionInput}
               onChange={(e) => setMissionInput(e.target.value)}
-              className="flex-1 bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F1F3F9] font-mono outline-none focus:border-[#00FF41]"
+              className="flex-1 bg-black/60 border-white/10 text-xs text-[#F1F3F9] font-mono"
             />
-            <button
+            <Button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#00FF41] text-black font-black text-xs hover:bg-[#00cc34] transition-all cursor-pointer shadow-[0_0_10px_rgba(0,255,65,0.3)]"
+              className="bg-[#00FF41] text-black font-black text-xs hover:bg-[#00cc34] shadow-[0_0_10px_rgba(0,255,65,0.3)]"
             >
               DISPATCH
-            </button>
+            </Button>
           </form>
 
           {/* Agents Card Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {agents
               .filter((a) => statusFilter === "ALL" || a.status.toUpperCase() === statusFilter)
-              .map((agent) => (
-              <div
-                key={agent.id}
-                onClick={() => setSelectedDetailAgent(agent)}
-                className="cyber-card p-4 flex flex-col justify-between gap-3 hover:border-emerald-500/40 cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(0,255,65,0.15)] group"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse" style={{ background: agent.color }} />
-                      <h4 className="text-xs font-black text-[#F1F3F9] group-hover:text-emerald-400 transition-colors">{agent.name}</h4>
-                    </div>
-
-                    <span
-                      className={`text-[9px] font-mono px-2 py-0.5 rounded uppercase font-bold ${
-                        agent.status === "active" || agent.status === "executing"
-                          ? "bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/30"
-                          : "bg-white/5 text-[#4F536E] border border-white/10"
-                      }`}
-                    >
-                      {agent.status}
-                    </span>
-                  </div>
-
-                  <span className="text-[10px] text-[#4F536E] block mt-0.5">{agent.role}</span>
-
-                  <p className="text-[11px] text-[#9499B3] mt-2 p-2 rounded bg-black/40 border border-white/5 line-clamp-2 font-mono">
-                    {agent.lastAction}
-                  </p>
-                </div>
-
-                <div>
-                  {/* Stats Strip */}
-                  <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] py-2 border-y border-white/5 my-2">
+              .map((agent) => {
+                const isRunning = agent.status === "active" || agent.status === "executing";
+                return (
+                  <div
+                    key={agent.id}
+                    onClick={() => setSelectedDetailAgent(agent)}
+                    className="relative overflow-hidden cyber-card p-4 flex flex-col justify-between gap-3 hover:border-emerald-500/40 cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(0,255,65,0.15)] group"
+                  >
+                    {isRunning && (
+                      <BorderBeam
+                        size={120}
+                        duration={6}
+                        colorFrom={agent.color || "#00FF41"}
+                        colorTo="#00F0FF"
+                      />
+                    )}
                     <div>
-                      <span className="text-[#4F536E] block">CPU</span>
-                      <span className="font-bold text-[#00FF41]">{agent.cpuUsage}%</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse" style={{ background: agent.color }} />
+                          <h4 className="text-xs font-black text-[#F1F3F9] group-hover:text-emerald-400 transition-colors">{agent.name}</h4>
+                        </div>
+
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[9px] font-mono uppercase font-bold",
+                            isRunning
+                              ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/30"
+                              : "bg-white/5 text-[#4F536E] border-white/10"
+                          )}
+                        >
+                          {agent.status}
+                        </Badge>
+                      </div>
+
+                      <span className="text-[10px] text-[#4F536E] block mt-0.5">{agent.role}</span>
+
+                      <p className="text-[11px] text-[#9499B3] mt-2 p-2 rounded bg-black/40 border border-white/5 line-clamp-2 font-mono">
+                        {agent.lastAction}
+                      </p>
                     </div>
+
                     <div>
-                      <span className="text-[#4F536E] block">RAM</span>
-                      <span className="font-bold text-[#00F0FF]">{agent.memoryMb}MB</span>
-                    </div>
-                    <div>
-                      <span className="text-[#4F536E] block">SUCCESS</span>
-                      <span className="font-bold text-[#BF40FF]">{agent.successRate}%</span>
+                      {/* Stats Strip */}
+                      <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] py-2 border-y border-white/5 my-2">
+                        <div>
+                          <span className="text-[#4F536E] block">CPU</span>
+                          <span className="font-bold text-[#00FF41]">{agent.cpuUsage}%</span>
+                        </div>
+                        <div>
+                          <span className="text-[#4F536E] block">RAM</span>
+                          <span className="font-bold text-[#00F0FF]">{agent.memoryMb}MB</span>
+                        </div>
+                        <div>
+                          <span className="text-[#4F536E] block">SUCCESS</span>
+                          <span className="font-bold text-[#BF40FF]">{agent.successRate}%</span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedDetailAgent(agent)}
+                          className="h-7 px-2 text-[10px] text-[#00F0FF] hover:bg-[#00F0FF]/10 font-bold"
+                        >
+                          <Database size={11} className="mr-1" />
+                          <span>INSPECT HUD</span>
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleAgentStatus(agent.id)}
+                          className="h-7 px-2.5 bg-white/5 border-white/10 hover:bg-white/10 text-[10px] text-[#F1F3F9] font-bold"
+                        >
+                          {agent.status === "paused" ? "RESUME" : "PAUSE"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDetailAgent(agent)}
-                      className="text-[10px] text-[#00F0FF] hover:underline cursor-pointer flex items-center gap-1 font-bold"
-                    >
-                      <Database size={11} />
-                      <span>INSPECT HUD</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => toggleAgentStatus(agent.id)}
-                      className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-[10px] text-[#F1F3F9] font-bold cursor-pointer"
-                    >
-                      {agent.status === "paused" ? "RESUME" : "PAUSE"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+                );
+              })}
           </div>
 
           {/* Live Swarm Terminal Log */}

@@ -46,6 +46,9 @@ import { useAppStore } from "@/stores/useAppStore";
 import SemanticRagTester from "./knowledge/SemanticRagTester";
 import KnowledgeGraphCanvas, { GraphNode } from "./knowledge/KnowledgeGraphCanvas";
 import CyberMarkdownViewer from "./knowledge/CyberMarkdownViewer";
+import { CyberMarkdownEditor } from "@/components/ui/editor/CyberMarkdownEditor";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export interface KnowledgeDoc {
   id: string;
@@ -1404,106 +1407,13 @@ export default function KnowledgeView() {
                   </button>
                 </div>
 
-                {/* TAB 1: MARKDOWN VIEWER & SPLIT EDITOR */}
+                {/* TAB 1: MARKDOWN VIEWER & NOVEL-STYLE EDITOR */}
                 {activeTab === "viewer" && (
-                  <div className="flex flex-col gap-3">
-                    {/* Editor Toolbar */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-black/60 rounded-xl border border-white/10 text-xs">
-                      <div className="flex items-center gap-1 bg-black/40 p-1 rounded-lg border border-white/5 overflow-x-auto scrollbar-none">
-                        <button
-                          onClick={() => {
-                            cyberAudio.play("click");
-                            setEditorSplitMode("preview");
-                          }}
-                          className={`shrink-0 px-2.5 py-1 rounded text-[11px] font-bold transition-colors cursor-pointer ${
-                            editorSplitMode === "preview"
-                              ? "bg-[#00FF41] text-black shadow-[0_0_8px_rgba(0,255,65,0.3)]"
-                              : "text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          PREVIEW
-                        </button>
-                        <button
-                          onClick={() => {
-                            cyberAudio.play("click");
-                            setEditorSplitMode("split");
-                          }}
-                          className={`shrink-0 hidden sm:inline-block px-2.5 py-1 rounded text-[11px] font-bold transition-colors cursor-pointer ${
-                            editorSplitMode === "split"
-                              ? "bg-[#00F0FF] text-black shadow-[0_0_8px_rgba(0,240,255,0.3)]"
-                              : "text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          SPLIT 50/50
-                        </button>
-                        <button
-                          onClick={() => {
-                            cyberAudio.play("click");
-                            setEditorSplitMode("edit");
-                          }}
-                          className={`shrink-0 px-2.5 py-1 rounded text-[11px] font-bold transition-colors cursor-pointer ${
-                            editorSplitMode === "edit"
-                              ? "bg-[#BF40FF] text-black shadow-[0_0_8px_rgba(191,64,255,0.3)]"
-                              : "text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          EDIT SOURCE
-                        </button>
-                      </div>
-
-                      {/* Live Token, Word & Read-time Metrics */}
-                      <div className="flex items-center gap-2.5 text-[10px] text-slate-400 font-mono pr-2">
-                        <span>
-                          <strong className="text-emerald-400">{selectedDoc.tokens}</strong> tok
-                        </span>
-                        <span>•</span>
-                        <span>
-                          <strong className="text-cyan-400">
-                            {selectedDoc.content.trim().split(/\s+/).filter(Boolean).length}
-                          </strong> words
-                        </span>
-                        <span>•</span>
-                        <span>
-                          ~{Math.max(1, Math.ceil(selectedDoc.content.trim().split(/\s+/).filter(Boolean).length / 200))}m read
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Split View Container */}
-                    <div
-                      className={`grid gap-3 min-h-[420px] max-h-[620px] ${
-                        editorSplitMode === "split"
-                          ? "grid-cols-1 md:grid-cols-2"
-                          : "grid-cols-1"
-                      }`}
-                    >
-                      {/* Editor Textarea */}
-                      {(editorSplitMode === "edit" || editorSplitMode === "split") && (
-                        <div className="flex flex-col bg-black/60 rounded-xl border border-white/10 overflow-hidden">
-                          <div className="px-3 py-1.5 bg-black/80 border-b border-white/5 text-[10px] text-slate-400 flex items-center justify-between">
-                            <span>MARKDOWN SOURCE EDITOR</span>
-                            <span className="text-emerald-400">AUTO-SAVED TO VAULT</span>
-                          </div>
-                          <textarea
-                            value={selectedDoc.content}
-                            onChange={(e) => handleUpdateDocContent(selectedDoc.id, e.target.value)}
-                            className="w-full flex-1 p-3.5 bg-transparent text-xs text-slate-200 font-mono outline-none resize-none leading-relaxed selection:bg-emerald-500/30 min-h-[300px]"
-                            placeholder="Write Obsidian markdown with [[WikiLinks]]..."
-                          />
-                        </div>
-                      )}
-
-                      {/* Preview Pane */}
-                      {(editorSplitMode === "preview" || editorSplitMode === "split") && (
-                        <div className="p-4 rounded-xl bg-black/50 border border-white/10 overflow-y-auto max-h-[600px] min-h-[360px] scrollbar-none shadow-inner">
-                          <CyberMarkdownViewer
-                            content={selectedDoc.content}
-                            onWikiLinkClick={handleWikiLinkClick}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <CyberMarkdownEditor
+                    value={selectedDoc.content}
+                    onChange={(val) => handleUpdateDocContent(selectedDoc.id, val)}
+                    placeholder="Write Obsidian markdown with [[WikiLinks]]..."
+                  />
                 )}
 
                 {/* TAB 2: BACKLINKS & WIKILINK CONNECTIONS */}

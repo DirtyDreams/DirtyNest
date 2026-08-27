@@ -52,6 +52,11 @@ import SnippetVault from "@/components/tools/SnippetVault";
 import CyberColorPaletteConverter from "@/components/tools/CyberColorPaletteConverter";
 import NetworkTopologyStudioModal from "./tools/NetworkTopologyStudioModal";
 import CyberpunkShaderFxStudioModal from "./tools/CyberpunkShaderFxStudioModal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import NumberFlow from "@number-flow/react";
+import { cn } from "@/lib/utils";
 
 export interface DevToolItem {
   id: string;
@@ -382,12 +387,12 @@ export default function ToolsView() {
             {/* Live Search */}
             <div className="relative">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4F536E]" />
-              <input
+              <Input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tools..."
-                className="w-full pl-8 pr-3 py-1.5 bg-black/60 border border-white/10 focus:border-[#00FF41] rounded-xl text-[11px] text-[#F1F3F9] outline-none"
+                className="pl-8 bg-black/60 border-white/10 text-[11px]"
               />
             </div>
           </div>

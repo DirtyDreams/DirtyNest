@@ -23,6 +23,11 @@ import {
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
 import MitreAttackMatrixModal from "./intel/MitreAttackMatrixModal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import NumberFlow from "@number-flow/react";
+import { cn } from "@/lib/utils";
 
 interface IntelItem {
   id: string;
@@ -188,37 +193,39 @@ export default function IntelFeedView() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
               onClick={() => {
                 cyberAudio.play("click");
                 setActiveView("settings");
               }}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FF8800]/15 border border-[#FF8800]/40 text-[#FF8800] hover:bg-[#FF8800]/25 text-xs font-bold transition-all shadow-[0_0_12px_rgba(255,136,0,0.2)] cursor-pointer"
+              className="h-9 px-3.5 bg-[#FF8800]/15 border-[#FF8800]/40 text-[#FF8800] hover:bg-[#FF8800]/25 text-xs font-bold shadow-[0_0_12px_rgba(255,136,0,0.2)]"
               title="Configure RSS sources and alert filters in Settings"
             >
-              <Settings size={14} />
+              <Settings size={14} className="mr-1.5" />
               <span>MANAGE WIRE FEEDS</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="outline"
               onClick={() => {
                 cyberAudio.play("click");
                 setShowMitreModal(true);
               }}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-400 hover:bg-rose-500/25 text-xs font-bold transition-all shadow-[0_0_12px_rgba(255,0,60,0.2)] cursor-pointer"
+              className="h-9 px-3.5 bg-rose-500/15 border-rose-500/40 text-rose-400 hover:bg-rose-500/25 text-xs font-bold shadow-[0_0_12px_rgba(255,0,60,0.2)]"
             >
-              <ShieldAlert size={14} />
+              <ShieldAlert size={14} className="mr-1.5" />
               <span>MITRE ATT&CK MATRIX</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#00F0FF]/15 border border-[#00F0FF]/40 text-[#00F0FF] hover:bg-[#00F0FF]/25 text-xs font-bold transition-all shadow-[0_0_12px_rgba(0,240,255,0.2)] cursor-pointer disabled:opacity-50"
+              className="h-9 px-3.5 bg-[#00F0FF]/15 border border-[#00F0FF]/40 text-[#00F0FF] hover:bg-[#00F0FF]/25 text-xs font-bold shadow-[0_0_12px_rgba(0,240,255,0.2)] disabled:opacity-50"
             >
-              <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+              <RefreshCw size={14} className={cn("mr-1.5", isRefreshing ? "animate-spin" : "")} />
               <span>{isRefreshing ? "SYNCING..." : "FETCH LATEST"}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -242,12 +249,12 @@ export default function IntelFeedView() {
             {/* Search input */}
             <div className="relative flex-1 min-w-[200px]">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4F536E]" />
-              <input
+              <Input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search intel keywords, CVEs, tags..."
-                className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-black/50 border border-white/10 focus:border-[#00F0FF] text-xs font-mono text-[#F1F3F9] outline-none"
+                className="pl-9 bg-black/50 border-white/10 text-xs font-mono"
               />
             </div>
 

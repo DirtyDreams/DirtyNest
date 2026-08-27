@@ -33,6 +33,11 @@ import InfluencerProfileModal, { VirtualInfluencer } from "./nexus/InfluencerPro
 import LivestreamSimulatorModal from "./nexus/LivestreamSimulatorModal";
 import CreateInfluencerModal from "./nexus/CreateInfluencerModal";
 import PersonaVisemeAvatarStudio from "./nexus/PersonaVisemeAvatarStudio";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import NumberFlow from "@number-flow/react";
+import { cn } from "@/lib/utils";
 
 const INITIAL_INFLUENCERS: VirtualInfluencer[] = [
   {
@@ -451,42 +456,44 @@ export default function PersonaNexusView() {
         {/* Action Controls */}
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* User Persona Switcher */}
-          <button
+          <Button
+            variant="outline"
             onClick={() => {
               cyberAudio.play("click");
               setIsUserPersonaModalOpen(true);
             }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30 hover:bg-[#00F0FF]/25 transition-all cursor-pointer shadow-[0_0_10px_rgba(0,240,255,0.2)]"
+            className="h-9 px-3.5 bg-[#00F0FF]/15 text-[#00F0FF] border-[#00F0FF]/30 hover:bg-[#00F0FF]/25 font-bold shadow-[0_0_10px_rgba(0,240,255,0.2)]"
             title="Switch User Roleplay Persona"
           >
-            <span>{activeUserPersona.avatar}</span>
+            <span className="mr-1.5">{activeUserPersona.avatar}</span>
             <span>PLAY AS: {activeUserPersona.name}</span>
-          </button>
+          </Button>
 
           {/* Lorebook Trigger Matrix */}
-          <button
+          <Button
+            variant="outline"
             onClick={() => {
               cyberAudio.play("click");
               setIsLorebookModalOpen(true);
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#BF40FF]/15 text-[#BF40FF] border border-[#BF40FF]/30 hover:bg-[#BF40FF]/25 transition-all cursor-pointer shadow-[0_0_10px_rgba(191,64,255,0.2)]"
+            className="h-9 px-3.5 bg-[#BF40FF]/15 text-[#BF40FF] border-[#BF40FF]/30 hover:bg-[#BF40FF]/25 font-bold shadow-[0_0_10px_rgba(191,64,255,0.2)]"
             title="Manage Dynamic World Lorebook Matrix"
           >
-            <BookOpen size={14} />
+            <BookOpen size={14} className="mr-1.5" />
             <span>WORLD LORE ({lorebookEntries.length})</span>
-          </button>
+          </Button>
 
           {/* Cast New Virtual Influencer CTA */}
-          <button
+          <Button
             onClick={() => {
               cyberAudio.play("click");
               setIsCastTalentModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/40 hover:bg-[#00FF41]/25 transition-all cursor-pointer shadow-[0_0_15px_rgba(0,255,65,0.2)]"
+            className="h-9 px-4 bg-[#00FF41]/15 text-[#00FF41] border border-[#00FF41]/40 hover:bg-[#00FF41]/25 font-bold shadow-[0_0_15px_rgba(0,255,65,0.2)]"
           >
-            <Plus size={14} />
+            <Plus size={14} className="mr-1.5" />
             <span>CAST NEW TALENT</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -497,7 +504,9 @@ export default function PersonaNexusView() {
             <span className="text-[10px] text-[#4F536E] uppercase font-bold">Total Roster</span>
             <Users size={14} className="text-[#00FF41]" />
           </div>
-          <div className="text-xl font-black text-[#F1F3F9] mt-1">{agencyMetrics.totalTalents} Talents</div>
+          <div className="text-xl font-black text-[#F1F3F9] mt-1 flex items-center gap-1">
+            <NumberFlow value={agencyMetrics.totalTalents} /> Talents
+          </div>
           <span className="text-[9px] text-[#00FF41] font-mono mt-1">100% Autonomous AI</span>
         </div>
 

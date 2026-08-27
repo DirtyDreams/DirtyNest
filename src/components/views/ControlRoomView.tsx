@@ -28,6 +28,11 @@ import HermesSkillBrowser from "./control_room/HermesSkillBrowser";
 import HermesMemoryInspector from "./control_room/HermesMemoryInspector";
 import HitlApprovalModal, { PendingApproval } from "./control_room/HitlApprovalModal";
 import MultiFeedCyberStreamGrid from "./control_room/MultiFeedCyberStreamGrid";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import NumberFlow from "@number-flow/react";
+import { cn } from "@/lib/utils";
 
 export type HarnessId = "hermes" | "pi" | "opencode";
 
@@ -421,31 +426,33 @@ export default function ControlRoomView() {
           {/* Quick Actions */}
           <div className="flex items-center gap-2">
             {/* Emergency Swarm Killswitch */}
-            <button
+            <Button
               type="button"
               onClick={() => {
                 cyberAudio.play("error");
                 setIsKillswitchActive(!isKillswitchActive);
               }}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+              className={cn(
+                "h-9 px-3.5 text-xs font-bold transition-all",
                 isKillswitchActive
                   ? "bg-red-600 text-white border-red-500 shadow-[0_0_20px_rgba(255,0,60,0.8)] animate-pulse"
-                  : "bg-red-500/15 border-red-500/40 text-red-400 hover:bg-red-500/25"
-              }`}
+                  : "bg-red-500/15 border border-red-500/40 text-red-400 hover:bg-red-500/25"
+              )}
               title="Emergency Swarm Killswitch: Immediately freeze all autonomous loops"
             >
-              <OctagonAlert size={14} />
+              <OctagonAlert size={14} className="mr-1.5" />
               <span>{isKillswitchActive ? "KILLSWITCH ENGAGED" : "SWARM FREEZE"}</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleForkSession}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-[#F1F3F9] transition-all cursor-pointer"
+              className="h-9 px-3.5 bg-white/5 hover:bg-white/10 border-white/10 text-xs font-bold text-[#F1F3F9]"
             >
-              <GitBranch size={14} className="text-[#00F0FF]" />
+              <GitBranch size={14} className="text-[#00F0FF] mr-1.5" />
               <span>FORK SESSION</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -759,19 +766,19 @@ export default function ControlRoomView() {
 
               {/* Direct Prompt Injection */}
               <form onSubmit={handleInjectPrompt} className="flex gap-2 mt-2 pt-3 border-t border-white/10">
-                <input
+                <Input
                   type="text"
                   value={promptInjection}
                   onChange={(e) => setPromptInjection(e.target.value)}
                   placeholder={`Inject live directive into ${activeHarness.name}...`}
-                  className="flex-1 px-3 py-2 bg-black/50 border border-white/10 rounded-xl text-xs text-[#F1F3F9] font-mono outline-none focus:border-[#00FF41]/50"
+                  className="flex-1 bg-black/50 border-white/10 text-xs text-[#F1F3F9] font-mono"
                 />
-                <button
+                <Button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 text-xs font-bold transition-all shadow-[0_0_10px_rgba(0,255,65,0.2)] cursor-pointer"
+                  className="bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 text-xs font-bold shadow-[0_0_10px_rgba(0,255,65,0.2)]"
                 >
                   TRANSMIT
-                </button>
+                </Button>
               </form>
             </div>
           </div>

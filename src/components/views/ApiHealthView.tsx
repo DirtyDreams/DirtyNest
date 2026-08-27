@@ -24,6 +24,10 @@ import {
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
 import ApiEndpointProbeModal from "./api_health/ApiEndpointProbeModal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import NumberFlow from "@number-flow/react";
+import { cn } from "@/lib/utils";
 
 interface ServiceHealthItem {
   id: string;
@@ -210,26 +214,27 @@ export default function ApiHealthView() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
               onClick={() => {
                 cyberAudio.play("click");
                 setActiveView("settings");
               }}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40 text-xs font-bold transition-all cursor-pointer"
+              className="h-9 px-3.5 bg-white/5 border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40 text-xs font-bold"
               title="Configure API Keys and Timeout Thresholds in Settings"
             >
-              <Settings size={14} />
+              <Settings size={14} className="mr-1.5" />
               <span>API KEYS & TIMEOUTS</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={handleProbeAll}
               disabled={isProbing}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#00FF41]/15 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/25 text-xs font-bold transition-all shadow-[0_0_12px_rgba(0,255,65,0.2)] cursor-pointer disabled:opacity-50"
+              className="h-9 px-3.5 bg-[#00FF41]/15 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/25 text-xs font-bold shadow-[0_0_12px_rgba(0,255,65,0.2)] disabled:opacity-50"
             >
-              <RefreshCw size={14} className={isProbing ? "animate-spin" : ""} />
+              <RefreshCw size={14} className={cn("mr-1.5", isProbing ? "animate-spin" : "")} />
               <span>{isProbing ? "PROBING MESH..." : "PROBE ALL (REFRESH)"}</span>
-            </button>
+            </Button>
           </div>
         </div>
 

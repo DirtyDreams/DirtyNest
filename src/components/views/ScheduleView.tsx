@@ -17,6 +17,13 @@ import {
   Sliders,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { EventCalendar, CalendarItem } from "@/components/ui/calendar/EventCalendar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface ScheduleEvent {
   id: string;
@@ -106,11 +113,31 @@ export default function ScheduleView() {
       description: newDesc,
     };
 
-    setEvents((prev) => [...prev, newEvt]);
-    setShowAddModal(false);
+    setEvents((prev) => [newEvt, ...prev]);
     setNewTitle("");
     setNewDesc("");
+    setShowAddModal(false);
   };
+
+  const calendarItems: CalendarItem[] = useMemo(() => {
+    return events.map((e) => {
+      let cat: CalendarItem["category"] = "TASK";
+      if (e.category === "DEPLOYMENT") cat = "DEPLOY";
+      else if (e.category === "CRON_BACKUP") cat = "CRON";
+      else if (e.category === "SECURITY_AUDIT") cat = "SECURITY";
+      else if (e.category === "MAINTENANCE") cat = "MAINTENANCE";
+
+      return {
+        id: e.id,
+        title: e.title,
+        date: e.date,
+        time: e.time,
+        category: cat,
+        priority: e.priority.toLowerCase() as any,
+        description: e.description,
+      };
+    });
+  }, [events]);
 
   const handleTriggerCronJob = (id: string) => {
     cyberAudio.play("click");
@@ -333,106 +360,17 @@ export default function ScheduleView() {
       {viewMode === "calendar" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Calendar Month Grid (7 cols) */}
-        <div className="lg:col-span-7 cyber-card p-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-black text-[#F1F3F9] tracking-wider">
-                {monthNames[month]} {year}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => {
-                  cyberAudio.play("click");
-                  setCurrentMonthOffset((prev) => prev - 1);
-                }}
-                className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] cursor-pointer"
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <button
-                onClick={() => {
-                  cyberAudio.play("click");
-                  setCurrentMonthOffset(0);
-                }}
-                className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 hover:border-[#00FF41]/40 text-[10px] font-bold text-[#9499B3] hover:text-[#00FF41] cursor-pointer"
-              >
-                TODAY
-              </button>
-              <button
-                onClick={() => {
-                  cyberAudio.play("click");
-                  setCurrentMonthOffset((prev) => prev + 1);
-                }}
-                className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] cursor-pointer"
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* Weekday Headers */}
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-[#4F536E] uppercase">
-            <span>SUN</span>
-            <span>MON</span>
-            <span>TUE</span>
-            <span>WED</span>
-            <span>THU</span>
-            <span>FRI</span>
-            <span>SAT</span>
-          </div>
-
-          {/* Days Grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {calendarDays.map((day, idx) => {
-              if (!day.isCurrentMonth) {
-                return <div key={idx} className="h-14 sm:h-16 rounded-xl bg-transparent" />;
-              }
-
-              const isSelected = selectedDate === day.dateStr;
-              const isToday = new Date().toISOString().split("T")[0] === day.dateStr;
-              const dayEvents = events.filter((e) => e.date === day.dateStr);
-
-              return (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    cyberAudio.play("click");
-                    setSelectedDate(day.dateStr);
-                  }}
-                  className={`h-14 sm:h-16 rounded-xl p-1.5 flex flex-col justify-between text-left transition-all cursor-pointer border ${
-                    isSelected
-                      ? "bg-[#00FF41]/15 border-[#00FF41]/60 shadow-[0_0_10px_rgba(0,255,65,0.25)]"
-                      : isToday
-                      ? "bg-white/[0.06] border-white/20 text-[#00F0FF]"
-                      : "bg-black/30 border-white/5 hover:border-white/20 text-[#9499B3]"
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span className={`text-xs font-bold ${isSelected ? "text-[#00FF41]" : isToday ? "text-[#00F0FF]" : "text-[#F1F3F9]"}`}>
-                      {day.dayNumber}
-                    </span>
-                    {isToday && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] animate-pulse" />
-                    )}
-                  </div>
-
-                  {/* Event Pips */}
-                  <div className="flex flex-wrap gap-1 mt-auto">
-                    {dayEvents.map((e) => (
-                      <span
-                        key={e.id}
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ background: getCategoryColor(e.category) }}
-                        title={e.title}
-                      />
-                    ))}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+        <div className="lg:col-span-7">
+          <EventCalendar
+            events={calendarItems}
+            onAddEvent={(d) => {
+              setNewDate(d);
+              setShowAddModal(true);
+            }}
+            onSelectEvent={(e) => {
+              setSelectedDate(e.date);
+            }}
+          />
         </div>
 
         {/* Selected Date Timeline & Event Details (5 cols) */}
@@ -553,130 +491,125 @@ export default function ScheduleView() {
       )}
 
       {/* NEW EVENT CREATION MODAL */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md p-6 rounded-2xl bg-[#0B0C16] border border-[#00FF41]/40 flex flex-col gap-4 font-mono shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <h3 className="text-sm font-black text-[#F1F3F9]">SCHEDULE NEW MISSION EVENT</h3>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-[#4F536E] hover:text-[#F1F3F9] text-xs cursor-pointer"
-              >
-                ✕
-              </button>
+      <Dialog open={showAddModal} onOpenChange={(open) => !open && setShowAddModal(false)}>
+        <DialogContent className="sm:max-w-md bg-[#0B0C16] border-[#00FF41]/40 text-[#F1F3F9] font-mono p-6 shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
+          <DialogHeader className="pb-3 border-b border-white/10 text-left">
+            <DialogTitle className="text-sm font-black text-[#F1F3F9] tracking-wider">
+              SCHEDULE NEW MISSION EVENT
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleAddEvent} className="flex flex-col gap-3 text-xs">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-[#4F536E] uppercase font-bold">Event Title</label>
+              <Input
+                type="text"
+                required
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="e.g. Cluster Upgrade v2.7"
+                className="bg-black/60 border-white/10 text-xs text-[#F1F3F9]"
+              />
             </div>
 
-            <form onSubmit={handleAddEvent} className="flex flex-col gap-3 text-xs">
+            <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] text-[#4F536E] uppercase font-bold">Event Title</label>
-                <input
-                  type="text"
+                <label className="text-[10px] text-[#4F536E] uppercase font-bold">Category</label>
+                <select
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value as any)}
+                  className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none text-xs"
+                >
+                  <option value="DEPLOYMENT">DEPLOYMENT</option>
+                  <option value="CRON_BACKUP">CRON BACKUP</option>
+                  <option value="SECURITY_AUDIT">SECURITY AUDIT</option>
+                  <option value="SPRINT_MILESTONE">SPRINT MILESTONE</option>
+                  <option value="MAINTENANCE">MAINTENANCE</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-[#4F536E] uppercase font-bold">Priority</label>
+                <select
+                  value={newPriority}
+                  onChange={(e) => setNewPriority(e.target.value as any)}
+                  className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none text-xs"
+                >
+                  <option value="CRITICAL">CRITICAL</option>
+                  <option value="HIGH">HIGH</option>
+                  <option value="NORMAL">NORMAL</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-[#4F536E] uppercase font-bold">Date</label>
+                <Input
+                  type="date"
                   required
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. Cluster Upgrade v2.7"
-                  className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  className="bg-black/60 border-white/10 text-[11px]"
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#4F536E] uppercase font-bold">Category</label>
-                  <select
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value as any)}
-                    className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none"
-                  >
-                    <option value="DEPLOYMENT">DEPLOYMENT</option>
-                    <option value="CRON_BACKUP">CRON BACKUP</option>
-                    <option value="SECURITY_AUDIT">SECURITY AUDIT</option>
-                    <option value="SPRINT_MILESTONE">SPRINT MILESTONE</option>
-                    <option value="MAINTENANCE">MAINTENANCE</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#4F536E] uppercase font-bold">Priority</label>
-                  <select
-                    value={newPriority}
-                    onChange={(e) => setNewPriority(e.target.value as any)}
-                    className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none"
-                  >
-                    <option value="CRITICAL">CRITICAL</option>
-                    <option value="HIGH">HIGH</option>
-                    <option value="NORMAL">NORMAL</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#4F536E] uppercase font-bold">Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={newDate}
-                    onChange={(e) => setNewDate(e.target.value)}
-                    className="px-2.5 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none text-[11px]"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#4F536E] uppercase font-bold">Time</label>
-                  <input
-                    type="time"
-                    required
-                    value={newTime}
-                    onChange={(e) => setNewTime(e.target.value)}
-                    className="px-2.5 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none text-[11px]"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-[#4F536E] uppercase font-bold">Recurrence</label>
-                  <select
-                    value={newRecurrence}
-                    onChange={(e) => setNewRecurrence(e.target.value as any)}
-                    className="px-2.5 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none text-[11px]"
-                  >
-                    <option value="ONCE">Once</option>
-                    <option value="HOURLY">Hourly</option>
-                    <option value="DAILY">Daily</option>
-                    <option value="WEEKLY">Weekly</option>
-                  </select>
-                </div>
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] text-[#4F536E] uppercase font-bold">Description</label>
-                <textarea
-                  rows={2}
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  placeholder="Optional mission notes..."
-                  className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none resize-none"
+                <label className="text-[10px] text-[#4F536E] uppercase font-bold">Time</label>
+                <Input
+                  type="time"
+                  required
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  className="bg-black/60 border-white/10 text-[11px]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-white/10">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#9499B3] cursor-pointer"
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-[#4F536E] uppercase font-bold">Recurrence</label>
+                <select
+                  value={newRecurrence}
+                  onChange={(e) => setNewRecurrence(e.target.value as any)}
+                  className="px-2.5 py-2 rounded-xl bg-black/60 border border-white/10 focus:border-[#00FF41] text-[#F1F3F9] outline-none text-[11px]"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 font-bold cursor-pointer shadow-[0_0_10px_rgba(0,255,65,0.2)]"
-                >
-                  Confirm Event
-                </button>
+                  <option value="ONCE">Once</option>
+                  <option value="HOURLY">Hourly</option>
+                  <option value="DAILY">Daily</option>
+                  <option value="WEEKLY">Weekly</option>
+                </select>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-[#4F536E] uppercase font-bold">Description</label>
+              <Textarea
+                rows={2}
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+                placeholder="Optional mission notes..."
+                className="bg-black/60 border-white/10 text-xs text-[#F1F3F9] resize-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-white/10">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setShowAddModal(false)}
+                className="text-xs text-[#9499B3]"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 font-bold"
+              >
+                Confirm Event
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
