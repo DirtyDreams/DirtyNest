@@ -194,6 +194,19 @@ export default function Home() {
   const { isAuthenticated, isLocked, recordActivity, lockSession } = useAuthStore();
 
   useEffect(() => {
+    const handleRejection = (e: PromiseRejectionEvent) => {
+      if (
+        e.reason?.name === "AbortError" ||
+        (typeof e.reason?.message === "string" && e.reason.message.includes("Transition was skipped"))
+      ) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("unhandledrejection", handleRejection);
+    return () => window.removeEventListener("unhandledrejection", handleRejection);
+  }, []);
+
+  useEffect(() => {
     const handleCustomToggleHotkeys = () => {
       cyberAudio.play("warp");
       setIsHotkeyModalOpen((prev) => !prev);

@@ -65,18 +65,40 @@ export const useAppStore = create<AppState>((set) => ({
     const update = () => {
       set({ activeView: view });
       if (typeof window !== "undefined") {
-        window.history.replaceState(null, "", `#${view}`);
+        try {
+          window.history.replaceState(null, "", `#${view}`);
+        } catch {
+          // ignore
+        }
       }
     };
 
-    if (
-      typeof document !== "undefined" &&
-      "startViewTransition" in document &&
-      typeof (document as Document & { startViewTransition?: (cb: () => void) => void }).startViewTransition === "function" &&
-      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      (document as Document & { startViewTransition: (cb: () => void) => void }).startViewTransition(update);
-    } else {
+    try {
+      type ViewTransitionObject = {
+        finished?: Promise<unknown>;
+        ready?: Promise<unknown>;
+        updateCallbackDone?: Promise<unknown>;
+      };
+
+      const doc = typeof document !== "undefined" ? (document as Document & { startViewTransition?: (cb: () => void) => ViewTransitionObject }) : null;
+
+      if (
+        doc &&
+        typeof doc.startViewTransition === "function" &&
+        typeof window !== "undefined" &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        const transition = doc.startViewTransition(update);
+        transition?.finished?.catch(() => {
+          // Handled: Browser AbortError when transition is skipped/superseded
+        });
+        transition?.ready?.catch(() => {
+          // Handled: Browser AbortError
+        });
+      } else {
+        update();
+      }
+    } catch {
       update();
     }
   },
