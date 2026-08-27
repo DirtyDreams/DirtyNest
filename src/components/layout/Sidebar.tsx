@@ -20,6 +20,7 @@ import {
   Share2,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import UserStatusPill from "@/components/auth/UserStatusPill";
 
 export type NavViewId =
   | "dashboard"
@@ -270,8 +271,11 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
         })}
       </div>
 
-      {/* Dedicated System Settings Navigation Footer */}
-      <div className="p-3 border-t border-white/5 flex items-center justify-center shrink-0">
+      {/* Footer Area: Operator Identity & System Settings */}
+      <div className="p-3 border-t border-white/5 flex flex-col gap-2 shrink-0">
+        {/* Active Operator Security Pill */}
+        <UserStatusPill inSidebar={true} />
+
         <button
           onClick={() => {
             cyberAudio.play("click");

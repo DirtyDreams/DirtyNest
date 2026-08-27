@@ -540,9 +540,6 @@ export default function Home() {
                   <span>•</span>
                   <UptimeBadge />
                 </div>
-
-                {/* Operator Identity & Clearance Dropdown */}
-                <UserStatusPill />
               </div>
 
               {/* Right: Quick Action HUD Controls (Strictly Non-Wrapping, Locked Height) */}
