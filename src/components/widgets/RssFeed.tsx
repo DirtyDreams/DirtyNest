@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Rss, ExternalLink, Sparkles, Terminal, Cpu } from "lucide-react";
+import { Rss, ExternalLink, Sparkles, Terminal, Cpu, Brain, Shield, Layers } from "lucide-react";
+import { cyberAudio } from "@/lib/cyberAudio";
 
 interface FeedArticle {
   id: number;
@@ -65,13 +66,44 @@ const mockFeedItems: FeedArticle[] = [
     snippet: "A practical blueprint for federated personal command centers with cryptographic mutual authentication.",
     unread: false,
   },
+  {
+    id: 6,
+    title: "Claude 3.7 Reasoning Core: Hybrid Thinking & Sub-agent Forking",
+    category: "AI",
+    source: "Anthropic Engineering",
+    time: "7h ago",
+    url: "https://anthropic.com",
+    snippet: "Deep dive into dynamic budget allocation for extended test-time compute in complex multi-step coding.",
+    unread: true,
+  },
+  {
+    id: 7,
+    title: "Rust 2026 Edition: Compile-Time SIMD Intrinsics & Safe eBPF",
+    category: "DEV",
+    source: "Rust Core Team",
+    time: "9h ago",
+    url: "https://blog.rust-lang.org",
+    snippet: "Zero-overhead abstractions for kernel-level byte filters and asynchronous zero-copy buffer pipelines.",
+    unread: false,
+  },
+  {
+    id: 8,
+    title: "Hardware Security: Post-Quantum Enclaves in ARM Cortex-M85",
+    category: "SYS",
+    source: "IEEE Security",
+    time: "12h ago",
+    url: "https://ieee.org",
+    snippet: "Lattice-based cryptographic primitives integrated directly into hardware root of trust microcontrollers.",
+    unread: false,
+  },
 ];
 
 export default function RssFeed() {
   const [selectedCat, setSelectedCat] = useState<string>("ALL");
-  const [articles, setArticles] = useState(mockFeedItems);
+  const [articles, setArticles] = useState<FeedArticle[]>(mockFeedItems);
 
   const toggleRead = (id: number, url: string) => {
+    cyberAudio.play("click");
     setArticles((prev) =>
       prev.map((a) => (a.id === id ? { ...a, unread: false } : a))
     );
@@ -83,26 +115,42 @@ export default function RssFeed() {
   );
 
   return (
-    <div className="cyber-card p-5 relative flex flex-col gap-3">
+    <div className="cyber-card p-4 sm:p-5 relative flex flex-col gap-3.5 font-mono select-none">
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
       <div className="hud-corner hud-corner-bl" />
       <div className="hud-corner hud-corner-br" />
 
-      <div className="widget-header">
-        <Rss size={15} className="icon" />
-        <h3>Intelligence Stream</h3>
+      {/* Widget Header with Cyber HUD Badge & Category Filter Pills */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-[#00FF41]/15 border border-[#00FF41]/30 flex items-center justify-center text-[#00FF41] shadow-[0_0_12px_rgba(0,255,65,0.2)]">
+            <Rss size={14} className="animate-pulse" />
+          </div>
+          <div>
+            <h3 className="text-xs font-bold tracking-wider text-[#F1F3F9] uppercase flex items-center gap-2">
+              <span>INTELLIGENCE STREAM</span>
+              <span className="text-[9px] text-[#00FF41] font-normal px-1.5 py-0.2 rounded bg-[#00FF41]/10 border border-[#00FF41]/20">
+                LIVE RSS
+              </span>
+            </h3>
+          </div>
+        </div>
 
         {/* Filter Pills */}
-        <div className="ml-auto flex items-center gap-1 bg-white/5 rounded-lg p-0.5 border border-white/5 text-[10px] font-mono">
+        <div className="flex items-center gap-1 bg-black/60 rounded-xl p-1 border border-white/10 text-[10px]">
           {["ALL", "AI", "DEV", "SYS"].map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCat(cat)}
-              className={`px-2 py-0.5 rounded transition-colors ${
+              type="button"
+              onClick={() => {
+                cyberAudio.play("click");
+                setSelectedCat(cat);
+              }}
+              className={`px-2.5 py-1 rounded-lg transition-all duration-150 cursor-pointer font-bold ${
                 selectedCat === cat
-                  ? "bg-[#00FF41]/20 text-[#00FF41] font-bold"
-                  : "text-[#9499B3]"
+                  ? "bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/40 shadow-[0_0_10px_rgba(0,255,65,0.2)]"
+                  : "text-[#9499B3] hover:text-white hover:bg-white/5"
               }`}
             >
               {cat}
@@ -111,7 +159,8 @@ export default function RssFeed() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1 -mr-1">
+      {/* 2-Column Responsive Feed Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 flex-1 overflow-y-auto pr-1 -mr-1">
         {filtered.map((item) => {
           const badgeColor =
             item.category === "AI"
@@ -120,69 +169,79 @@ export default function RssFeed() {
               ? "#00FF41"
               : "#00F0FF";
 
+          const CategoryIcon =
+            item.category === "AI"
+              ? Brain
+              : item.category === "DEV"
+              ? Terminal
+              : Cpu;
+
           return (
             <article
               key={item.id}
               onClick={() => toggleRead(item.id, item.url)}
-              className="p-3 rounded-xl cursor-pointer transition-all duration-200 group relative"
-              style={{
-                background: "rgba(255, 255, 255, 0.02)",
-                border: "1px solid rgba(255, 255, 255, 0.04)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background =
-                  "rgba(255, 255, 255, 0.05)";
-                (e.currentTarget as HTMLElement).style.borderColor =
-                  "rgba(0, 255, 65, 0.25)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background =
-                  "rgba(255, 255, 255, 0.02)";
-                (e.currentTarget as HTMLElement).style.borderColor =
-                  "rgba(255, 255, 255, 0.04)";
-              }}
+              className="p-3.5 rounded-2xl cursor-pointer transition-all duration-200 group relative flex flex-col justify-between gap-2.5 bg-[#080A16]/90 border border-white/10 hover:border-[#00FF41]/40 hover:bg-[#0D1022] hover:shadow-[0_0_20px_rgba(0,255,65,0.1)] hover:scale-[1.01] active:scale-[0.99] animate-slide-up-fade"
             >
+              {/* Unread Glow Dot */}
               {item.unread && (
-                <div className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-[#00FF41] shadow-[0_0_6px_#00FF41]" />
+                <div className="absolute top-3.5 right-3.5 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-[#00FF41] shadow-[0_0_8px_#00FF41] animate-neural-pulse" />
+                </div>
               )}
 
-              <div className="flex items-center gap-2 mb-1.5">
-                <span
-                  className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase"
-                  style={{
-                    color: badgeColor,
-                    background: `${badgeColor}15`,
-                    border: `1px solid ${badgeColor}30`,
-                  }}
-                >
-                  {item.category}
-                </span>
-                <span className="text-[10px] font-mono text-[#9499B3]">
-                  {item.source}
-                </span>
-                <span className="text-[10px] text-[#4F536E] font-mono">
-                  • {item.time}
-                </span>
+              <div>
+                {/* Meta Header */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span
+                    className="text-[9px] font-bold px-2 py-0.5 rounded-md uppercase flex items-center gap-1 shadow-sm"
+                    style={{
+                      color: badgeColor,
+                      background: `${badgeColor}18`,
+                      border: `1px solid ${badgeColor}40`,
+                    }}
+                  >
+                    <CategoryIcon size={10} />
+                    <span>{item.category}</span>
+                  </span>
+                  <span className="text-[10px] text-[#A1A7C4] font-medium">
+                    {item.source}
+                  </span>
+                  <span className="text-[10px] text-[#4F536E]">
+                    • {item.time}
+                  </span>
+                </div>
+
+                {/* Article Title */}
+                <h4 className="text-xs font-bold text-[#F1F3F9] group-hover:text-[#00FF41] transition-colors leading-snug line-clamp-2">
+                  {item.title}
+                </h4>
+
+                {/* Snippet */}
+                <p className="text-[11px] text-[#9499B3] mt-1.5 line-clamp-2 leading-relaxed font-sans select-text">
+                  {item.snippet}
+                </p>
               </div>
 
-              <h4 className="text-xs font-semibold text-[#F1F3F9] group-hover:text-[#00FF41] transition-colors leading-snug line-clamp-1">
-                {item.title}
-              </h4>
-
-              <p className="text-[11px] text-[#9499B3] mt-1 line-clamp-2 leading-relaxed">
-                {item.snippet}
-              </p>
+              {/* Bottom Quick Link Info */}
+              <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[9px] text-[#4F536E] group-hover:text-[#9499B3] transition-colors">
+                <span className="truncate max-w-[200px]">{item.url.replace(/^https?:\/\//, "")}</span>
+                <span className="flex items-center gap-1 group-hover:text-[#00FF41] transition-colors">
+                  <span>OPEN BRIEF</span>
+                  <ExternalLink size={10} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </span>
+              </div>
             </article>
           );
         })}
       </div>
 
       {/* Feed Status Summary Strip */}
-      <div className="mt-3 pt-2.5 border-t border-white/5 flex flex-wrap items-center justify-between gap-1.5 text-[9px] sm:text-[10px] font-mono text-[#4F536E]">
-        <div className="flex items-center gap-1.5 truncate max-w-full">
-          <span className="truncate">SOURCES: <strong className="text-[#BF40FF]">VERCEL LAB · DEEPMIND · HN</strong></span>
+      <div className="pt-3 border-t border-white/5 flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#4F536E]">
+        <div className="flex items-center gap-2 truncate">
+          <span className="text-[#9499B3]">INTELLIGENCE AGGREGATOR:</span>
+          <span className="text-[#00F0FF] font-bold">8 FEEDS ACTIVE</span>
         </div>
-        <div className="flex items-center gap-1 text-[#00FF41] shrink-0 ml-auto">
+        <div className="flex items-center gap-1.5 text-[#00FF41] shrink-0 ml-auto">
           <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-ping" />
           <span>AUTO-POLL: 60s</span>
         </div>
