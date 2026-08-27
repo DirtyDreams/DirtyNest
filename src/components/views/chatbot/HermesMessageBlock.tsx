@@ -20,6 +20,8 @@ import {
   CheckCheck,
   Table,
   Play,
+  RotateCcw,
+  Edit2,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -31,6 +33,8 @@ interface Props {
   tokens?: number;
   onSaveToObsidian?: (text: string) => void;
   onOpenArtifact?: (artifact: { title: string; language: string; code: string }) => void;
+  onEdit?: (text: string) => void;
+  onRegenerate?: () => void;
 }
 
 interface ParsedSegment {
@@ -345,6 +349,8 @@ export default function HermesMessageBlock({
   tokens,
   onSaveToObsidian,
   onOpenArtifact,
+  onEdit,
+  onRegenerate,
 }: Props) {
   const [thoughtExpanded, setThoughtExpanded] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
@@ -384,14 +390,27 @@ export default function HermesMessageBlock({
   // User Message Rendering
   if (sender === "user") {
     return (
-      <div className="flex justify-end font-mono select-none my-1.5 animate-slide-up-fade w-full">
+      <div className="flex justify-end font-mono select-none my-1.5 animate-slide-up-fade w-full group">
         <div className="max-w-3xl p-3.5 sm:p-4 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#F1F3F9] text-xs leading-relaxed space-y-1.5 shadow-[0_0_20px_rgba(0,255,65,0.08)] transition-all duration-200 hover:border-[#00FF41]/50">
           <div className="flex items-center justify-between text-[10px] text-[#4F536E] pb-1 border-b border-white/5">
             <span className="font-bold text-[#00FF41] flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-neural-pulse" />
               <span>OPERATOR DIRECTIVE</span>
             </span>
-            {timestamp && <span>{timestamp}</span>}
+            <div className="flex items-center gap-2">
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={() => onEdit(content)}
+                  className="flex items-center gap-1 text-[9px] text-[#9499B3] hover:text-[#00FF41] transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-white/5"
+                  title="Edit directive in composer"
+                >
+                  <Edit2 size={10} />
+                  <span>EDIT</span>
+                </button>
+              )}
+              {timestamp && <span>{timestamp}</span>}
+            </div>
           </div>
           <p className="whitespace-pre-wrap font-sans text-xs pt-0.5 text-slate-100 leading-relaxed select-text">
             {content}
@@ -596,6 +615,22 @@ export default function HermesMessageBlock({
               {isSpeaking ? <VolumeX size={12} /> : <Volume2 size={12} />}
               <span>{isSpeaking ? "STOP AUDIO" : "READ ALOUD"}</span>
             </button>
+
+            {/* Regenerate Response */}
+            {onRegenerate && (
+              <button
+                type="button"
+                onClick={() => {
+                  cyberAudio.play("warp");
+                  onRegenerate();
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#FFB800] hover:text-amber-300 transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                title="Regenerate response from last directive"
+              >
+                <RotateCcw size={12} />
+                <span>REGENERATE</span>
+              </button>
+            )}
           </div>
 
           <span className="text-[9px] text-[#4F536E]">

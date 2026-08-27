@@ -233,6 +233,18 @@ Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator powerin
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+
+  useEffect(() => {
+    const handleWindowScroll = () => {
+      if (typeof window === "undefined") return;
+      const scrolledFromBottom = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
+      setShowScrollBottom(scrolledFromBottom > 320);
+    };
+
+    window.addEventListener("scroll", handleWindowScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleWindowScroll);
+  }, []);
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -252,10 +264,10 @@ Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator powerin
       setShowMentionMenu(false);
     }
 
-    // Auto-resize
+    // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 220)}px`;
     }
   };
 
@@ -1058,6 +1070,20 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                     tokens={msg.tokens}
                     onSaveToObsidian={() => handleSaveToObsidian(msg)}
                     onOpenArtifact={(artifact) => setActiveArtifact(artifact)}
+                    onEdit={(text) => {
+                      setInput(text);
+                      if (textareaRef.current) {
+                        textareaRef.current.focus();
+                        textareaRef.current.style.height = "auto";
+                        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 220)}px`;
+                      }
+                    }}
+                    onRegenerate={() => {
+                      const lastUser = [...messages].reverse().find((m) => m.sender === "user");
+                      if (lastUser) {
+                        handleSend(lastUser.text);
+                      }
+                    }}
                   />
                 </div>
               );
@@ -1081,6 +1107,23 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
 
           {/* Floating Sticky Bottom Composer Dock */}
           <div className="sticky bottom-6 lg:bottom-8 z-30 w-full pointer-events-none">
+            {/* Floating Scroll to Bottom Quick Button */}
+            {showScrollBottom && (
+              <div className="flex justify-center mb-3 pointer-events-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    cyberAudio.play("click");
+                    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0D1022]/95 border border-[#00FF41]/40 text-[#00FF41] text-[11px] font-bold shadow-[0_0_25px_rgba(0,255,65,0.3)] hover:bg-[#00FF41] hover:text-black transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md animate-slide-up-fade"
+                >
+                  <ChevronDown size={13} className="animate-bounce" />
+                  <span>LATEST MESSAGES</span>
+                </button>
+              </div>
+            )}
+
             <div className="w-full max-w-[88%] 2xl:max-w-[80%] mx-auto pointer-events-auto">
               {/* Interactive Compositor (Self-contained Solid Card with Ambient Glow) */}
               <div className="relative bg-[#080A16] border border-white/20 hover:border-white/30 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] focus-within:border-[#00FF41]/60 focus-within:shadow-[0_0_35px_rgba(0,255,65,0.2)] transition-all duration-300 flex flex-col w-full overflow-hidden">
@@ -1257,6 +1300,14 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                     <Globe size={12} />
                     <span>WEB</span>
                   </button>
+
+                  {/* Live Prompt Token Estimator */}
+                  {input.trim().length > 0 && (
+                    <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#00FF41]/10 border border-[#00FF41]/30 text-[10px] text-[#00FF41] font-mono animate-fade-in">
+                      <Sparkles size={10} />
+                      <span>~{Math.ceil(input.trim().length / 4)} tok</span>
+                    </span>
+                  )}
 
                   {/* Context Window Token Meter */}
                   <div className="hidden md:flex items-center gap-1.5 px-2 py-1 hover:bg-white/5 rounded-lg text-[10px] text-[#9499B3] font-mono cursor-default transition-colors">
