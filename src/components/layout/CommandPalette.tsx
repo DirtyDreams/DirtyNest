@@ -43,6 +43,8 @@ import {
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 export type SpotlightCategory = "ALL" | "DECKS" | "NOTES" | "CVES" | "CONTAINERS" | "AGENTS" | "LOGS";
 
@@ -502,22 +504,16 @@ export default function CommandPalette() {
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4 font-mono text-xs select-none"
-      style={{
-        background: "rgba(0, 0, 0, 0.82)",
-        backdropFilter: "blur(12px)",
-      }}
-      onClick={() => setOpen(false)}
-    >
-      <div
-        className="w-full max-w-2xl max-h-[85vh] flex flex-col cyber-card overflow-hidden animate-fade-in shadow-[0_20px_70px_rgba(0,0,0,0.95)] rounded-2xl border border-[#00FF41]/40 bg-[#080912]"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open={open} onOpenChange={(val) => setOpen(val)}>
+      <DialogContent
+        className="sm:max-w-2xl bg-[#080912] border-[#00FF41]/40 text-[#F1F3F9] font-mono p-0 overflow-hidden shadow-[0_20px_70px_rgba(0,0,0,0.95)] max-h-[85vh] flex flex-col gap-0"
         onKeyDown={handleCommandKeyDown}
       >
+        <DialogHeader className="sr-only">
+          <DialogTitle>Command Palette</DialogTitle>
+        </DialogHeader>
+
         {/* Search Header */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10 shrink-0 bg-[#0A0C16]">
           <div className="w-7 h-7 rounded-lg bg-[#00FF41]/10 border border-[#00FF41]/30 flex items-center justify-center text-[#00FF41]">
@@ -535,9 +531,9 @@ export default function CommandPalette() {
             className="flex-1 min-w-0 bg-transparent outline-none text-xs text-[#F1F3F9] font-mono placeholder:text-[#4F536E]"
             aria-label="Omni-Search Spotlight Query"
           />
-          <kbd className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[#9499B3]">
+          <Badge variant="outline" className="text-[10px] font-mono border-white/10 text-[#9499B3]">
             ESC
-          </kbd>
+          </Badge>
         </div>
 
         {/* Category Filter Pills */}
@@ -600,8 +596,9 @@ export default function CommandPalette() {
                       {cmd.label}
                     </span>
                     {cmd.badge && (
-                      <span
-                        className="px-1.5 py-0.2 rounded text-[8px] font-black"
+                      <Badge
+                        variant="outline"
+                        className="px-1.5 py-0 text-[8px] font-black"
                         style={{
                           backgroundColor: `${cmd.badgeColor || "#00FF41"}20`,
                           color: cmd.badgeColor || "#00FF41",
@@ -609,7 +606,7 @@ export default function CommandPalette() {
                         }}
                       >
                         {cmd.badge}
-                      </span>
+                      </Badge>
                     )}
                   </div>
                   {cmd.sublabel && (
@@ -620,9 +617,9 @@ export default function CommandPalette() {
                 </div>
 
                 {cmd.shortcut && (
-                  <kbd className="text-[10px] font-mono text-[#9499B3] px-1.5 py-0.5 rounded bg-white/5 border border-white/5 shrink-0">
+                  <Badge variant="outline" className="text-[10px] font-mono text-[#9499B3] border-white/10 shrink-0">
                     {cmd.shortcut}
-                  </kbd>
+                  </Badge>
                 )}
 
                 {isSelected && <ArrowRight size={14} className="text-[#00FF41] shrink-0" />}
@@ -649,7 +646,7 @@ export default function CommandPalette() {
           </div>
           <span>SPOTLIGHT v2.0 // OMNI-INDEXED</span>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

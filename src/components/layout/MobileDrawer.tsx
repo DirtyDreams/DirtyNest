@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
 import {
   X,
   Terminal,
   Headphones,
   Search,
   Wrench,
-  Maximize2,
-  Minimize2,
   Activity,
   Radio,
   Sliders,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { navItems, NavViewId } from "./Sidebar";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { cn } from "@/lib/utils";
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -43,19 +44,6 @@ export default function MobileDrawer({
   onToggleDrone,
   uptimeText,
 }: MobileDrawerProps) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
   const handleItemClick = (item: (typeof navItems)[0]) => {
     onSelectView(item.id);
     onClose();
@@ -70,25 +58,13 @@ export default function MobileDrawer({
   const secondaryItems = navItems.filter((i) => !i.isPrimaryView);
 
   return (
-    <div className="fixed inset-0 z-[60] md:hidden flex">
-      {/* Backdrop */}
-      <div
-        onClick={() => {
-          cyberAudio.play("click");
-          onClose();
-        }}
-        className="absolute inset-0 bg-black/80 backdrop-blur-md z-0"
-      />
-
-      {/* Drawer Panel */}
-      <div
-        className="relative w-4/5 max-w-xs bg-[#08090F] border-r border-white/10 h-full flex flex-col z-10 shadow-[0_0_50px_rgba(0,0,0,0.9)] animate-fade-in"
-        style={{
-          background: "linear-gradient(180deg, #0A0B14 0%, #06070A 100%)",
-        }}
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side="left"
+        className="w-4/5 max-w-xs bg-[#08090F] border-r border-white/10 p-0 flex flex-col font-mono text-xs shadow-[0_0_50px_rgba(0,0,0,0.9)]"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <SheetHeader className="flex flex-row items-center justify-between p-4 border-b border-white/10 space-y-0 text-left">
           <div className="flex items-center gap-2.5">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
@@ -102,25 +78,15 @@ export default function MobileDrawer({
               </div>
             </div>
             <div>
-              <div className="text-sm font-extrabold font-mono text-[#00FF41] tracking-wider">
+              <SheetTitle className="text-sm font-extrabold font-mono text-[#00FF41] tracking-wider text-left">
                 DIRTYNEST
-              </div>
+              </SheetTitle>
               <div className="text-[9px] font-mono text-[#4F536E] uppercase">
                 Mobile Node v0.01
               </div>
             </div>
           </div>
-
-          <button
-            onClick={() => {
-              cyberAudio.play("click");
-              onClose();
-            }}
-            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-white transition-colors"
-          >
-            <X size={18} />
-          </button>
-        </div>
+        </SheetHeader>
 
         {/* Quick Tools Bar */}
         <div className="p-3 border-b border-white/5 grid grid-cols-4 gap-1.5 font-mono text-[9px]">
@@ -131,11 +97,12 @@ export default function MobileDrawer({
               onToggleTerminal();
               onClose();
             }}
-            className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-pointer touch-manipulation ${
+            className={cn(
+              "flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-pointer touch-manipulation",
               isTerminalOpen
                 ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/40"
                 : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00FF41]"
-            }`}
+            )}
           >
             <Terminal size={13} className="mb-1" />
             <span>CLI</span>
@@ -147,11 +114,12 @@ export default function MobileDrawer({
               cyberAudio.play("click");
               onToggleDrone();
             }}
-            className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-pointer touch-manipulation ${
+            className={cn(
+              "flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-pointer touch-manipulation",
               isDronePlaying
                 ? "bg-[#BF40FF]/25 text-[#BF40FF] border-[#BF40FF]/40 shadow-[0_0_8px_rgba(191,64,255,0.3)]"
                 : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#BF40FF]"
-            }`}
+            )}
           >
             <Headphones size={13} className="mb-1" />
             <span>{isDronePlaying ? "Drone" : "Mute"}</span>
@@ -197,19 +165,20 @@ export default function MobileDrawer({
                 key={item.id}
                 type="button"
                 onClick={() => handleItemClick(item)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer touch-manipulation ${
+                className={cn(
+                  "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer touch-manipulation",
                   isActive
                     ? "bg-[#00FF41]/15 text-[#00FF41] font-bold border border-[#00FF41]/30 shadow-[0_0_10px_rgba(0,255,65,0.2)]"
                     : "text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/5 border border-transparent"
-                }`}
+                )}
               >
                 <div className="flex items-center gap-3">
                   <Icon size={16} />
                   <span>{item.label}</span>
                 </div>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-[#4F536E]">
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-white/5 text-[#4F536E] border-transparent">
                   {item.tag}
-                </span>
+                </Badge>
               </button>
             );
           })}
@@ -225,19 +194,20 @@ export default function MobileDrawer({
                 key={item.id}
                 type="button"
                 onClick={() => handleItemClick(item)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer touch-manipulation ${
+                className={cn(
+                  "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer touch-manipulation",
                   isActive
                     ? "bg-[#00F0FF]/15 text-[#00F0FF] font-bold border border-[#00F0FF]/30 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
                     : "text-[#9499B3] hover:text-[#F1F3F9] hover:bg-white/5 border border-transparent"
-                }`}
+                )}
               >
                 <div className="flex items-center gap-3">
                   <Icon size={15} />
                   <span>{item.label}</span>
                 </div>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-[#4F536E]">
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-white/5 text-[#4F536E] border-transparent">
                   {item.tag}
-                </span>
+                </Badge>
               </button>
             );
           })}
@@ -248,7 +218,7 @@ export default function MobileDrawer({
           <span>UPTIME: <span className="text-[#00F0FF]">{uptimeText}</span></span>
           <span className="text-[#00FF41]">● SECURE</span>
         </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }

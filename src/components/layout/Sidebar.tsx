@@ -19,8 +19,11 @@ import {
   Mic,
   Share2,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { cyberAudio } from "@/lib/cyberAudio";
 import UserStatusPill from "@/components/auth/UserStatusPill";
+import { cn } from "@/lib/utils";
 
 export type NavViewId =
   | "dashboard"
@@ -77,19 +80,7 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
 
   return (
     <aside
-      className="hidden md:flex fixed left-0 top-0 h-full z-40 group flex-col transition-all duration-300 select-none"
-      style={{
-        width: "68px",
-        background: "rgba(8, 9, 15, 0.94)",
-        borderRight: "1px solid rgba(255,255,255,0.07)",
-        backdropFilter: "blur(20px)",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.width = "230px";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.width = "68px";
-      }}
+      className="hidden md:flex fixed left-0 top-0 h-full z-40 group flex-col transition-all duration-300 select-none bg-[#08090F]/95 border-r border-white/[0.07] backdrop-blur-2xl w-[68px] hover:w-[230px]"
     >
       {/* Brand Header */}
       <div
@@ -105,108 +96,77 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
         >
           <div className="absolute inset-[1px] bg-[#07070B] rounded-[10px] flex items-center justify-center">
             <span
-              className="text-xs font-black tracking-tighter"
-              style={{
-                fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
-                color: "#00FF41",
-                textShadow: "0 0 8px rgba(0,255,65,0.8)",
-              }}
+              className="text-xs font-black tracking-tighter font-mono text-[#00FF41]"
+              style={{ textShadow: "0 0 8px rgba(0,255,65,0.8)" }}
             >
               DN
             </span>
           </div>
         </div>
 
-        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap overflow-hidden">
+        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap overflow-hidden font-mono">
           <span
-            className="text-sm font-extrabold tracking-wider"
-            style={{
-              fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
-              color: "#00FF41",
-              textShadow: "0 0 10px rgba(0,255,65,0.5)",
-            }}
+            className="text-sm font-extrabold tracking-wider text-[#00FF41]"
+            style={{ textShadow: "0 0 10px rgba(0,255,65,0.5)" }}
           >
             DIRTYNEST
           </span>
-          <span
-            className="text-[10px] tracking-widest text-[#4F536E] uppercase"
-            style={{ fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)" }}
-          >
+          <span className="text-[10px] tracking-widest text-[#4F536E] uppercase">
             Tactical Node v2.5
           </span>
         </div>
       </div>
 
       {/* Nav List */}
-      <div className="flex-1 py-3 px-2 flex flex-col gap-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+      <div className="flex-1 py-3 px-2 flex flex-col gap-1 overflow-y-auto overflow-x-hidden scrollbar-none font-mono">
         {/* Primary View Decks */}
         {primaryItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeView === item.id;
           return (
-            <button
-              key={item.id}
-              type="button"
-              aria-label={`Navigate to ${item.label}`}
-              aria-current={isActive ? "page" : undefined}
-              onClick={() => handleNavClick(item)}
-              className="relative flex items-center gap-3.5 px-3 py-2 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00FF41] focus:outline-none btn-spring"
-              style={{
-                background: isActive ? "rgba(0,255,65,0.09)" : "transparent",
-                color: isActive ? "#00FF41" : "#9499B3",
-                border: isActive
-                  ? "1px solid rgba(0,255,65,0.25)"
-                  : "1px solid transparent",
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  (e.currentTarget as HTMLElement).style.background =
-                    "rgba(255,255,255,0.04)";
-                  (e.currentTarget as HTMLElement).style.color = "#F1F3F9";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  (e.currentTarget as HTMLElement).style.background = "transparent";
-                  (e.currentTarget as HTMLElement).style.color = "#9499B3";
-                }
-              }}
-            >
-              <Icon
-                size={18}
-                className="shrink-0 transition-transform duration-200 group-hover/btn:scale-115"
-                style={{
-                  color: isActive ? "#00FF41" : undefined,
-                  filter: isActive
-                    ? "drop-shadow(0 0 6px rgba(0,255,65,0.6))"
-                    : undefined,
-                }}
-              />
-              <span
-                className="text-xs font-semibold whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-1"
-                style={{
-                  fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
-                }}
-              >
-                {item.label}
-              </span>
-              <span
-                className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-[#4F536E] opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                {item.tag}
-              </span>
+            <Tooltip key={item.id} delayDuration={300}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`Navigate to ${item.label}`}
+                  aria-current={isActive ? "page" : undefined}
+                  onClick={() => handleNavClick(item)}
+                  className={cn(
+                    "relative flex items-center gap-3.5 px-3 py-2 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00FF41] focus:outline-none",
+                    isActive
+                      ? "bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 shadow-[0_0_12px_rgba(0,255,65,0.15)]"
+                      : "text-[#9499B3] hover:bg-white/[0.04] hover:text-[#F1F3F9] border border-transparent"
+                  )}
+                >
+                  <Icon
+                    size={18}
+                    className={cn(
+                      "shrink-0 transition-transform duration-200 group-hover/btn:scale-110",
+                      isActive && "text-[#00FF41] drop-shadow-[0_0_6px_rgba(0,255,65,0.6)]"
+                    )}
+                  />
+                  <span className="text-xs font-semibold whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-1">
+                    {item.label}
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="text-[8px] font-mono px-1 py-0 bg-white/5 text-[#4F536E] border-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    {item.tag}
+                  </Badge>
 
-              {/* Active Glow Pill Indicator */}
-              {isActive && (
-                <div
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r"
-                  style={{
-                    background: "#00FF41",
-                    boxShadow: "0 0 10px rgba(0,255,65,0.8)",
-                  }}
-                />
-              )}
-            </button>
+                  {/* Active Glow Pill Indicator */}
+                  {isActive && (
+                    <div
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r bg-[#00FF41] shadow-[0_0_10px_rgba(0,255,65,0.8)]"
+                    />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-[#090B14] border-white/10 text-xs font-mono text-[#F1F3F9] md:hidden">
+                {item.label}
+              </TooltipContent>
+            </Tooltip>
           );
         })}
 
@@ -222,59 +182,46 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
           const Icon = item.icon;
           const isActive = activeView === item.id;
           return (
-            <button
-              key={item.id}
-              type="button"
-              aria-label={`Open telemetry view ${item.label}`}
-              aria-current={isActive ? "page" : undefined}
-              onClick={() => handleNavClick(item)}
-              className="relative flex items-center gap-3.5 px-3 py-1.5 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00F0FF] focus:outline-none btn-spring"
-              style={{
-                background: isActive ? "rgba(0,240,255,0.08)" : "transparent",
-                color: isActive ? "#00F0FF" : "#9499B3",
-                border: isActive
-                  ? "1px solid rgba(0,240,255,0.2)"
-                  : "1px solid transparent",
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  (e.currentTarget as HTMLElement).style.background =
-                    "rgba(255,255,255,0.04)";
-                  (e.currentTarget as HTMLElement).style.color = "#F1F3F9";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  (e.currentTarget as HTMLElement).style.background = "transparent";
-                  (e.currentTarget as HTMLElement).style.color = "#9499B3";
-                }
-              }}
-            >
-              <Icon
-                size={16}
-                className="shrink-0 transition-transform group-hover/btn:scale-110"
-              />
-              <span
-                className="text-xs font-normal whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-1"
-                style={{
-                  fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
-                }}
-              >
+            <Tooltip key={item.id} delayDuration={300}>
+              <TooltipTrigger asChild>
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-label={`Open telemetry view ${item.label}`}
+                  aria-current={isActive ? "page" : undefined}
+                  onClick={() => handleNavClick(item)}
+                  className={cn(
+                    "relative flex items-center gap-3.5 px-3 py-1.5 rounded-xl transition-all duration-200 w-full text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00F0FF] focus:outline-none",
+                    isActive
+                      ? "bg-[#00F0FF]/10 text-[#00F0FF] border border-[#00F0FF]/30"
+                      : "text-[#9499B3] hover:bg-white/[0.04] hover:text-[#F1F3F9] border border-transparent"
+                  )}
+                >
+                  <Icon
+                    size={16}
+                    className="shrink-0 transition-transform group-hover/btn:scale-110"
+                  />
+                  <span className="text-xs font-normal whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-1">
+                    {item.label}
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="text-[8px] font-mono px-1 py-0 bg-white/5 text-[#4F536E] border-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    {item.tag}
+                  </Badge>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-[#090B14] border-white/10 text-xs font-mono text-[#F1F3F9] md:hidden">
                 {item.label}
-              </span>
-              <span
-                className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-[#4F536E] opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                {item.tag}
-              </span>
-            </button>
+              </TooltipContent>
+            </Tooltip>
           );
         })}
       </div>
 
       {/* Footer Area: Operator Identity & System Settings */}
-      <div className="p-3 border-t border-white/5 flex flex-col gap-2 shrink-0">
-        {/* Active Operator Security Pill */}
+      <div className="p-3 border-t border-white/5 flex flex-col gap-2 shrink-0 font-mono">
         <UserStatusPill inSidebar={true} />
 
         <button
@@ -282,43 +229,35 @@ export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal 
             cyberAudio.play("click");
             onSelectView("settings");
           }}
-          className={`relative w-full flex items-center gap-3.5 px-3 py-2 rounded-xl transition-all duration-200 text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00FF41] focus:outline-none ${
+          className={cn(
+            "relative w-full flex items-center gap-3.5 px-3 py-2 rounded-xl transition-all duration-200 text-left cursor-pointer touch-manipulation group/btn focus-visible:ring-2 focus-visible:ring-[#00FF41] focus:outline-none",
             activeView === "settings"
               ? "bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 shadow-[0_0_10px_rgba(0,255,65,0.2)] font-bold"
               : "bg-white/[0.03] hover:bg-white/[0.08] text-[#9499B3] hover:text-[#00FF41] border border-white/5"
-          }`}
+          )}
           title="Open System Settings"
           aria-label="Open System Settings"
           aria-current={activeView === "settings" ? "page" : undefined}
         >
           <Settings
             size={18}
-            className="shrink-0 transition-transform group-hover/btn:scale-110"
-            style={{
-              color: activeView === "settings" ? "#00FF41" : undefined,
-              filter: activeView === "settings" ? "drop-shadow(0 0 6px rgba(0,255,65,0.6))" : "none",
-            }}
+            className={cn(
+              "shrink-0 transition-transform group-hover/btn:scale-110",
+              activeView === "settings" && "text-[#00FF41] drop-shadow-[0_0_6px_rgba(0,255,65,0.6)]"
+            )}
           />
-          <span
-            className="text-xs font-medium whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-1"
-            style={{
-              fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
-            }}
-          >
+          <span className="text-xs font-medium whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-1">
             Settings
           </span>
-          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-[#4F536E] opacity-0 group-hover:opacity-100 transition-opacity">
+          <Badge
+            variant="outline"
+            className="text-[8px] font-mono px-1 py-0 bg-white/5 text-[#4F536E] border-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+          >
             SYS
-          </span>
+          </Badge>
 
           {activeView === "settings" && (
-            <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r"
-              style={{
-                background: "#00FF41",
-                boxShadow: "0 0 10px rgba(0,255,65,0.8)",
-              }}
-            />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r bg-[#00FF41] shadow-[0_0_10px_rgba(0,255,65,0.8)]" />
           )}
         </button>
       </div>
