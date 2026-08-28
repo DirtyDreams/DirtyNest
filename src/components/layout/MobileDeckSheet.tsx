@@ -10,8 +10,6 @@ import {
   Compass,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import Clock from "@/components/widgets/Clock";
 import FocusTimer from "@/components/widgets/FocusTimer";
 import TodoList from "@/components/widgets/TodoList";

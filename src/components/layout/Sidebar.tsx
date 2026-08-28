@@ -69,7 +69,7 @@ export const navItems = [
   { icon: Calendar, label: "Schedule", id: "calendar" as NavViewId, tag: "03", isPrimaryView: false },
 ];
 
-export default function Sidebar({ activeView, onSelectView, onOpenSettingsModal }: SidebarProps) {
+export default function Sidebar({ activeView, onSelectView }: SidebarProps) {
   const handleNavClick = (item: (typeof navItems)[0]) => {
     cyberAudio.play("click");
     onSelectView(item.id);

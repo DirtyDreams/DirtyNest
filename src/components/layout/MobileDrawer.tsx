@@ -11,7 +11,6 @@ import {
   Sliders,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { navItems, NavViewId } from "./Sidebar";
 import { cyberAudio } from "@/lib/cyberAudio";
@@ -36,7 +35,6 @@ export default function MobileDrawer({
   onClose,
   activeView,
   onSelectView,
-  onOpenSettingsModal,
   onOpenDevTools,
   onToggleTerminal,
   isTerminalOpen,

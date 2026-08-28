@@ -109,9 +109,9 @@ const MODELS = [
 
 export default function ChatbotContextDeck() {
   const [selectedModel, setSelectedModel] = useState("nous-hermes-3");
-  const [tokensUsed, setTokensUsed] = useState(14820);
-  const [costBurn, setCostBurn] = useState(0.044);
-  const [latency, setLatency] = useState(280);
+  const [tokensUsed, _setTokensUsed] = useState(14820);
+  const [costBurn, _setCostBurn] = useState(0.044);
+  const [latency, _setLatency] = useState(280);
 
   // Hyperparameters State
   const [temperature, setTemperature] = useState(0.7);

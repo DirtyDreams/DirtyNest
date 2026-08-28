@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Headphones, Volume2, VolumeX, X, Play, Square, Sparkles, Radio, CloudRain, Server, Zap } from "lucide-react";
+import { Headphones, Volume2, VolumeX, Play, Square, Sparkles, CloudRain, Server, Zap } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

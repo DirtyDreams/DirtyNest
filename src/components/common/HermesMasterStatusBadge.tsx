@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, Brain, Zap, Terminal } from "lucide-react";
+import { Brain } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 
 export default function HermesMasterStatusBadge({ onOpenCommandDrawer }: Props) {
   const [loadPct, setLoadPct] = useState(38);
-  const [pulseActive, setPulseActive] = useState(true);
+  const [_pulseActive, _setPulseActive] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {

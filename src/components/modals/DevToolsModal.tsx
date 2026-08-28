@@ -18,7 +18,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 
 interface DevToolsModalProps {
@@ -37,7 +36,7 @@ export default function DevToolsModal({ isOpen, onClose }: DevToolsModalProps) {
   const [b64Output, setB64Output] = useState("");
 
   // UUID state
-  const [uuidCount, setUuidCount] = useState(3);
+  const [uuidCount, _setUuidCount] = useState(3);
   const [uuids, setUuids] = useState<string[]>([
     "4ea6216b-116a-4504-9890-7152216d03a1",
   ]);

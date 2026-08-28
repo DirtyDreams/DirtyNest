@@ -181,6 +181,9 @@ interface HermesState {
   triggerSkill: (skillId: string) => Promise<string>;
   addAcpEvent: (event: Omit<HermesAcpEvent, "id" | "timestamp">) => void;
   resetConfigToDefault: () => void;
+  updateServicesStatus: (services: Record<string, unknown>) => void;
+  updateMinionsList: (minions: unknown[]) => void;
+  updateHostTelemetry: (host: unknown) => void;
 }
 
 const STORAGE_KEY = "dirtynest_hermes_config";
@@ -281,6 +284,17 @@ export const useHermesStore = create<HermesState>((set, get) => {
         }
       }
       set({ config: DEFAULT_HERMES_CONFIG });
+    },
+
+    // Socket telemetry handlers (data from hermesSocket.ts)
+    updateServicesStatus: (_services) => {
+      // Reserved for future real-time services status binding
+    },
+    updateMinionsList: (_minions) => {
+      // Reserved for future real-time minions list binding
+    },
+    updateHostTelemetry: (_host) => {
+      // Reserved for future real-time host telemetry binding
     },
   };
 });

@@ -24,8 +24,8 @@ interface UserStatusPillProps {
 export default function UserStatusPill({ inSidebar = false }: UserStatusPillProps) {
   const { currentUser, switchPersona, lockSession, logout } = useAuthStore();
   const [open, setOpen] = useState(false);
-  const [showToken, setShowToken] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [_showToken, _setShowToken] = useState(false);
+  const [_copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function UserStatusPill({ inSidebar = false }: UserStatusPillProp
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleCopyToken = () => {
+  const _handleCopyToken = () => {
     if (currentUser?.token) {
       navigator.clipboard.writeText(currentUser.token);
       setCopied(true);

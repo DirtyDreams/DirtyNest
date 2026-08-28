@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Terminal, Shield, Activity, Radio, Cpu, Headphones, Keyboard, Sparkles, Sliders, Atom } from "lucide-react";
+import { Terminal, Shield, Activity, Radio, Headphones, Keyboard, Atom } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
 import { Marquee } from "@/components/ui/animated/marquee";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 
 export default function StatusBar({
   onToggleTerminal,
@@ -17,8 +15,8 @@ export default function StatusBar({
   onToggleTerminal: () => void;
   isTerminalOpen: boolean;
 }) {
-  const { isRightPanelOpen, isDronePlaying, toggleAudioMixer, fxConfig, setFxConfig, toggleBackgroundFx } = useAppStore();
-  const [mounted, setMounted] = useState(false);
+  const { isRightPanelOpen, isDronePlaying, toggleAudioMixer, fxConfig, setFxConfig } = useAppStore();
+  const [_mounted, setMounted] = useState(false);
   const [fps, setFps] = useState(60);
   const [latency, setLatency] = useState(14);
   const [isFxPopoverOpen, setIsFxPopoverOpen] = useState(false);

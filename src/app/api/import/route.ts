@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     try {
       const db = await getDb();
       db.exec("ROLLBACK;");
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
     return NextResponse.json({ error: "Import failed" }, { status: 500 });

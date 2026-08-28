@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.next
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=file:/app/data/dirtynest.db
+      - NEXT_PUBLIC_SIDECAR_URL=http://localhost:8000
+    depends_on:
+      - sidecar
+    networks:
+      - dirtynest-network
+
+  sidecar:
+    build:
+      context: ./sidecar
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:////app/data/dirtynest.db
+    networks:
+      - dirtynest-network
+
+networks:
+  dirtynest-network:
+    driver: bridge

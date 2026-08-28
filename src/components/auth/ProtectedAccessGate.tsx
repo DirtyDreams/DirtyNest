@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldAlert, Lock, ArrowUpRight, ShieldCheck, KeyRound } from "lucide-react";
+import { ShieldAlert, ShieldCheck, KeyRound } from "lucide-react";
 import { type ClearanceLevel } from "@/types/auth";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { cyberAudio } from "@/lib/cyberAudio";

@@ -42,7 +42,6 @@ import {
   Music,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
-import { applyThemePreset } from "@/lib/theme";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 

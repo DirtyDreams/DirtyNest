@@ -17,7 +17,7 @@ import {
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function NexusContextDeck() {
-  const [activeTalent, setActiveTalent] = useState({
+  const [activeTalent, _setActiveTalent] = useState({
     name: "Aria Neon",
     handle: "@aria_neon",
     avatar: "✨",

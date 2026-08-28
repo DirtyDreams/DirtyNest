@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState, useEffect } from "react";
-import { Cpu, Database, Wifi, ShieldCheck, Activity, Zap, CheckCircle2, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface SubsystemInfo {
