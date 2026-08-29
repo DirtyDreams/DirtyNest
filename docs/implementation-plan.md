@@ -259,4 +259,19 @@ Plan zmieniamy przez PR/commit z aktualizacją tego pliku + odpowiedni ADR w [do
 | 7.6 | Graf wiedzy 2D/3D na realnych danych `/api/knowledge/graph` | `src/components/views/knowledge/**` | Ostatni większy frontend-mock |
 | 7.7 | Katalog API generowany z kodu (`src/app/api/**` + sidecar) zamiast ręcznego `api-specification.md` | `scripts/gen-api-docs.mjs`, `docs/` | Koniec utrzymywania ręcznego spisu endpointów |
 
-**Kryteria akceptacji F7:** testowa publikacja przez HITL na Reddit + X działa, rejestr bez `MockAdapter` dla piątki platform, lint 0 błędów/0 ostrzeżeń, e2e zielone w CI, los „/api/chat" rozstrzygnięty per 7.1.
+**Kryteria akceptacji F7:** testowa publikacja przez HITL na Reddit + X działa, rejestr bez `MockAdapter` dla piątki platform, lint 0 błędów/0 ostrzeżeń, e2e zielone w CI, los „/api/chat" rozstrzygnięty per 7.1 → lint 0/0 ✅, e2e ✅, /api/chat ✅ (ADR-0014); publikacja testowa OPEN do kalibracji na żywej sesji (poniżej).
+
+
+### Status realizacji F7 (2026-08-29)
+
+| # | Zadanie | Status |
+|---|---|---|
+| 7.1 | Wycofanie `/api/chat` (proxy Gemini) | ✅ **ADR-0014** — całkowite usunięcie; code_interpreter przez ACP |
+| 7.2 | Realne adaptery CDP X/IG/FB/TikTok | ✅ `cdp_adapter.py` + 4 platformy (candidate-list selectors — kalibracja DOM przy zalogowanej sesji); testy z mockowanym CDP; dry-run domyślnie; HITL nietknięty |
+| 7.3 | Kalibracja Vault | ✅ harness + wyniki (recall@5 1.0; zostaje bge-small-en-v1.5) — docs/knowledge-calibration.md; prompty agentów instruują semantic_search |
+| 7.4 | Lint debt | ✅ 1241 -> 0 błędów / 0 ostrzeżeń; CI gate --max-warnings 0 |
+| 7.5 | E2E Playwright | ✅ 7/7 zielonych, w pełni hermetyczne; job e2e w CI |
+| 7.6 | Graf wiedzy na realnych danych | ✅ useKnowledgeGraph + GraphStateOverlay; mock-mapowanie usunięte; KnowledgeView pobiera docs na montowaniu (bug wykryty przez e2e) |
+| 7.7 | Katalog API z kodu | ✅ scripts/gen-api-docs.mjs -> docs/api-catalog.md (npm run docs:api) |
+
+**Otwarte po F7 (wymaga operatora):** publikacja testowa przez HITL na Reddit + X — selektory adapterów CDP trzeba skalibrować na zalogowanej sesji Chrome (dry-run już działa); wtedy odejdzie też ostatni MockAdapter z twardej piątki.

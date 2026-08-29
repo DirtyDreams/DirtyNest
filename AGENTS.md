@@ -51,7 +51,7 @@ Sidecar (FastAPI :8000) ──► Hermes ACP agent (profile 'dirtydaily') via ac
 | `src/lib/` | Shared logic: `schema.ts` (Drizzle), `db.ts`, `orchestrator/` (classifier, acpBridge, registry, persist + tests), `hermes/` (socket, stores, types), `zbiornik/ops.ts`, `auth/`, `theme.ts`, `widgetLayout.ts`, `cyberAudio.ts`, `cyberSpeech.ts`, `aiModels.ts`, `logger.ts`, `utils.ts` |
 | `src/stores/` | Zustand stores: `useAppStore.ts`, `useAuthStore.ts` (JWT session) |
 | `src/db/` | `index.ts` — shared postgres-js pool + `initDb()` (runs Drizzle migrations) + `insertLog()` |
-| `sidecar/` | Python FastAPI service: `main.py`, `cron_service.py`, `acp_client.py`, `cdp_service.py`, `docker_service.py`, `memory_service.py`, `knowledge_service.py`, `automations/` (incl. `adapters/`), `tests/` (7 files, 55 tests) |
+| `sidecar/` | Python FastAPI service: `main.py`, `cron_service.py`, `acp_client.py`, `cdp_service.py`, `docker_service.py`, `memory_service.py`, `knowledge_service.py`, `automations/` (incl. `adapters/`, CDP-first per ADR-0013), `tests/` (8 files, 86 tests) |
 | `scripts/` | `pg-*.cjs` Postgres admin, `backup.sh`, `ollama-init.sh`, `legacy_archive/` |
 | `docs/` | ADRs (`adr/NNNN-*.md`), `current-state.md` audit, `implementation-plan.md` (F0–F6 done, F7 next), `zbiornik-ops.md`, data models, API spec (aspirational catalog — generate truth from code) |
 | `drizzle/` | Drizzle SQL migrations (PostgreSQL baseline + additive migrations; legacy SQLite moved to `drizzle/_legacy-sqlite/`) |
@@ -64,7 +64,7 @@ Sidecar (FastAPI :8000) ──► Hermes ACP agent (profile 'dirtydaily') via ac
 npm run dev        # next dev (Turbopack)
 npm run build      # next build
 npm run start      # next start
-npm run lint       # eslint (0 errors baseline; ~1241 warnings = known debt)
+npm run lint       # eslint - 0 errors / 0 warnings enforced since F7.4
 npm run typecheck  # tsc --noEmit
 npm test           # vitest (orchestrator)
 ```
@@ -73,12 +73,12 @@ npm test           # vitest (orchestrator)
 ```bash
 pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8000
-pytest tests/      # 7 test files, 55 tests (zbiornik, docker, acp_bridge, knowledge, social_adapters, scheduler, intel)
+pytest tests/      # 8 test files, 86 tests (zbiornik, docker, acp_bridge, knowledge, social_adapters incl. CDP, scheduler, intel)
 ```
 
 **Full stack:** `docker compose up` — 7 services: postgres:16, qdrant, redis, searxng, ollama, web :3000, sidecar :8000. `${POSTGRES_PASSWORD:?}` is enforced from `.env` (never hardcode secrets; see `.env.example`).
 
-**CI:** `.github/workflows/ci.yml` — typecheck, lint, vitest, next build, pytest (against a postgres:16 service).
+**CI:** `.github/workflows/ci.yml` — typecheck, lint (`--max-warnings 0`), vitest, next build, pytest (postgres:16 service), e2e Playwright job (hermetic).
 
 ## Code Conventions & Common Patterns
 
@@ -118,8 +118,8 @@ pytest tests/      # 7 test files, 55 tests (zbiornik, docker, acp_bridge, knowl
 
 ## Testing & QA
 
-- **Sidecar**: `pytest tests/` from `sidecar/` with `sidecar/.venv` — 7 test files / 55 tests: zbiornik, docker, acp_bridge, knowledge, social_adapters, scheduler, intel. Pure unit tests where possible (mocks over network).
+- **Sidecar**: `pytest tests/` from `sidecar/` with `sidecar/.venv` - 8 test files / 86 tests: zbiornik, docker, acp_bridge, knowledge, social_adapters (incl. CDP adapters), scheduler, intel. Pure unit tests where possible (mocks over network).
 - **Frontend**: orchestrator vitest suite (`src/lib/orchestrator/*.test.ts`: classifier, acp bridge, router snapshots); `npm test` at repo root.
-- **CI** (`.github/workflows/ci.yml`): typecheck + lint (0 errors enforced) + vitest + build + pytest vs postgres:16 service.
+- **CI** (`.github/workflows/ci.yml`): typecheck + lint (`--max-warnings 0`) + vitest + build + pytest vs postgres:16 + e2e Playwright job (hermetic).
 - **Coverage expectations**: none formalized. `docs/implementation-plan.md` rules: tests accompany every phase; F7 adds Playwright e2e.
-- **QA gates**: `npm run typecheck`, `npm test`, `npm run lint` (0 errors / ~1241 warnings — warnings are tracked debt, see F7), sidecar `pytest tests/`.
+- **QA gates**: `npm run typecheck`, `npm test`, `npm run lint` (0 errors / 0 warnings enforced since F7.4), sidecar `pytest tests/`.

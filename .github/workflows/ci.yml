@@ -51,8 +51,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Lint
-        run: npm run lint
+      - name: Lint (0 errors, 0 warnings enforced since F7.4)
+        run: npx eslint . --max-warnings 0
 
       - name: Unit tests (vitest)
         run: npm test
