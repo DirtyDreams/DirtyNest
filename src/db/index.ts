@@ -115,6 +115,87 @@ export async function initDb() {
         });
       }
     }
+
+    // Seed agent registry (F3) — 6 agents, only if empty.
+    const agentsCount = await db.select({ count: sql<number>`count(*)::int` }).from(schema.agentConfigs);
+    if (agentsCount[0]?.count === 0) {
+      const seedAgents = [
+        {
+          agent_type: "hermes",
+          name: "Hermes",
+          description: "Master agent — routing, delegation, reasoning, fallback for unmatched prompts.",
+          system_prompt:
+            "You are Hermes, the DirtyNest master agent. Oversee routing, delegate to specialist agents, and reason through complex directives before acting.",
+          keywords: JSON.stringify(["hermes", "master", "nadzorca", "deleguj", "koordynuj"]),
+          tool_whitelist: JSON.stringify(["dirtynest_system_status", "dirtynest_delegate", "dirtynest_web_search"]),
+          llm_provider: "ollama",
+          llm_model: "llama3",
+        },
+        {
+          agent_type: "research",
+          name: "Research",
+          description: "Deep research, citations, fact-checking, source synthesis.",
+          system_prompt:
+            "You are the Research agent. Perform deep research, gather sources, fact-check claims, and synthesize answers with citations.",
+          keywords: JSON.stringify(["research", "zbadaj", "poszukaj", "wyszukaj", "analiza", "źródła", "citations", "fact-check", "deep dive", "raport", "sources"]),
+          tool_whitelist: JSON.stringify(["dirtynest_web_search", "dirtynest_semantic_search"]),
+          llm_provider: "ollama",
+          llm_model: "llama3",
+        },
+        {
+          agent_type: "code",
+          name: "Code",
+          description: "Software engineering — write, review, debug, refactor code in a sandbox.",
+          system_prompt:
+            "You are the Code agent. Write, review, debug, and refactor code. Prefer sandboxed execution and explain your reasoning.",
+          keywords: JSON.stringify(["code", "kod", "program", "bug", "funkcja", "typescript", "python", "refactor", "implement", "napisz kod", "debug", "function"]),
+          tool_whitelist: JSON.stringify(["dirtynest_semantic_search", "dirtynest_web_search"]),
+          llm_provider: "ollama",
+          llm_model: "llama3",
+        },
+        {
+          agent_type: "security",
+          name: "Security",
+          description: "CVE, threat intel, log audit, vulnerability analysis.",
+          system_prompt:
+            "You are the Security agent. Analyze CVEs, audit logs, assess vulnerabilities, and provide threat intelligence.",
+          keywords: JSON.stringify(["security", "bezpieczeństwo", "cve", "vulnerability", "podatność", "threat", "audyt", "exploit", "firewall", "atak", "intel"]),
+          tool_whitelist: JSON.stringify(["dirtynest_cve_query", "dirtynest_cve_scan", "dirtynest_system_status"]),
+          llm_provider: "ollama",
+          llm_model: "llama3",
+        },
+        {
+          agent_type: "devops",
+          name: "DevOps",
+          description: "Containers, Compose, infrastructure, deployment.",
+          system_prompt:
+            "You are the DevOps agent. Manage containers, Compose stacks, infrastructure, and deployments.",
+          keywords: JSON.stringify(["docker", "container", "kontener", "deploy", "infrastruktura", "compose", "kubernetes", "server", "ci/cd", "wdróż", "stack"]),
+          tool_whitelist: JSON.stringify(["dirtynest_docker_list", "dirtynest_docker_logs", "dirtynest_system_status"]),
+          llm_provider: "ollama",
+          llm_model: "llama3",
+        },
+        {
+          agent_type: "social",
+          name: "Social",
+          description: "Copywriting, scheduling, social media analytics.",
+          system_prompt:
+            "You are the Social agent. Draft copy, schedule posts, and analyze social media performance across platforms.",
+          keywords: JSON.stringify(["social", "post", "twitter", "instagram", "facebook", "tiktok", "reddit", "publikacja", "media społecznościowe", "hashtag", "copy"]),
+          tool_whitelist: JSON.stringify(["dirtynest_social_metrics", "dirtynest_social_schedule"]),
+          llm_provider: "ollama",
+          llm_model: "llama3",
+        },
+      ];
+      for (const a of seedAgents) {
+        await db.insert(schema.agentConfigs).values({
+          ...a,
+          enabled: 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
+    }
   } catch (error) {
     console.error("Postgres initDb error:", error);
   }

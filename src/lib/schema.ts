@@ -157,3 +157,48 @@ export const users = pgTable("users", {
   api_keys: text("api_keys"),
   created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
 });
+// ---------------------------------------------------------------------------
+// Hermes Agentic Engine (F3) — chat sessions, messages, agent registry.
+// ---------------------------------------------------------------------------
+
+export const chatSessions = pgTable("chat_sessions", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  model: varchar("model", { length: 100 }),
+  mode: varchar("mode", { length: 50 }).notNull().default("standard"),
+  orchestrator_decision: text("orchestrator_decision"),
+  harness_session_id: varchar("harness_session_id", { length: 100 }),
+  created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
+  updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  session_id: integer("session_id").notNull().references(() => chatSessions.id, { onDelete: "cascade" }),
+  sender: varchar("sender", { length: 20 }).notNull(), // user | ai | system | tool
+  text: text("text").notNull(),
+  tokens: integer("tokens").default(0),
+  thinking_time_ms: integer("thinking_time_ms").default(0),
+  thinking_trace: text("thinking_trace"),
+  citations: text("citations"),
+  tool_calls: text("tool_calls"),
+  agent_used: varchar("agent_used", { length: 50 }),
+  execution_time_ms: integer("execution_time_ms").default(0),
+  created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
+});
+
+export const agentConfigs = pgTable("agent_configs", {
+  id: serial("id").primaryKey(),
+  agent_type: varchar("agent_type", { length: 50 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description").notNull().default(""),
+  system_prompt: text("system_prompt").notNull().default(""),
+  keywords: text("keywords").notNull().default("[]"),
+  tool_whitelist: text("tool_whitelist").notNull().default("[]"),
+  llm_provider: varchar("llm_provider", { length: 50 }).notNull().default("ollama"),
+  llm_model: varchar("llm_model", { length: 100 }).notNull().default("llama3"),
+  enabled: integer("enabled").notNull().default(1),
+  created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
+  updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+});
