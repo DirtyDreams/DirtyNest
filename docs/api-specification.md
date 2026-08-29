@@ -1,5 +1,8 @@
 # DirtyNest 2.0 — API Specification (REST, WebSocket, Webhooki)
 
+> ⚠️ **KATALOG ASPIRACYJNY (2026-08-29) — prawdziwy wykaz endpointów generuj z kodu: `src/app/api/**` + `sidecar/main.py`.**
+> Poniższy katalog powstał jako kontrakt-aspiracja z blueprintu 2.0 (ADR-0011 traktuje go jako życzeniowy kontrakt, nie stan). Zrealizowane odpowiedniki: chat sessions/agents (`/api/chat/*`), knowledge (`/api/knowledge/*`), social (`/api/social/*` + gate HITL), audit (`/api/audit/logs`), hermes proxy (`/api/hermes/*`), zbiornik (`/api/zbiornik/*`). **Nie istnieje** (i nie powstanie): Express :4000, Socket.IO `/socket.io`, endpointy `register` (rejestracja publiczna wykluczona — ADR-0003: 2 konta z seeda).
+
 > Backend Node.js + Express = warstwa integracyjna. Logika agentów: DeepSeek Harness (JSON-RPC).
 > Base URL: `http://localhost:4000/api` · Autoryzacja: `Authorization: Bearer <JWT>`
 > Uprawnienia: **Public / Chronione (dowolne konto) / Admin**

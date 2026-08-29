@@ -1,5 +1,8 @@
 # DirtyNest 2.0 — Model danych (PostgreSQL 16 + Qdrant)
 
+> ⚠️ **CZĘŚCIOWO NIEAKTUALNY (2026-08-29) — prawdziwy schemat: `src/lib/schema.ts` + migracje `drizzle/`.**
+> Odrzucone elementy z tego dokumentu: `harness_sessions`, `compose_stacks`, kolejka BullMQ `async_tasks` w tej postaci (ADR-0011); rejestr agentów ŻYJE w tabeli `agent_configs` (F3), a nie w profilu Harness. Zasadnicze (obowiązujące): Qdrant zamiast pgvector (ADR-0009), AES-GCM na tokenach, `timestamptz` wszędzie — to zrealizowano w F0–F6 inaczej/obok tego dokumentu. Nie używaj tego pliku jako źródła DDL.
+
 > Zmiana względem 1.x: embeddingi i wyszukiwanie wektorowe przeniesione z pgvector do
 > **Qdrant**; w PostgreSQL zostają metadane (`knowledge_docs.qdrant_point_id`).
 > Nowe tabele: `harness_sessions` (mapowanie sesji Harness), `async_tasks` (BullMQ).

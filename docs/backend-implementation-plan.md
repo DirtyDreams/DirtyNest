@@ -1,6 +1,8 @@
 # DirtyNest 2.0 — Plan implementacji backendu (DeepSeek Harness jako mózg)
 
-> Wersja: 2.0 · Data: 2026-08-28 · Status: przyjęty do realizacji
+> ⛔ **ODRZUCONY (2026-08-29) — patrz [ADR-0011](./adr/0011-hermes-acp-confirmed-harness-blueprint-rejected.md).** Sprinty S0–S5 poniżej nie są realizowane; F0–F6 wykonano na architekturze Hermes ACP (commit `86c850c`→`d2bf545`, zweryfikowane). Obowiązujący plan: `implementation-plan.md` (+ nadchodzący F7). Dokument zostaje jako katalog pomysłów (BullMQ, webhooks, monitoring, 11 tabel).
+
+> Wersja: 2.0 · Data: 2026-08-28 · Status: ~~przyjęty do realizacji~~ **ODRZUCONY**
 > **Zmiana koncepcji względem 1.x:** DeepSeek Harness jest centralnym mózgiem
 > (jedyny runtime agentów); backend Node.js/Express to warstwa integracyjna
 > (REST + Socket.IO + serwisy + kolejki + webhooki). Poprzedni plan hybrydowy

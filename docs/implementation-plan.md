@@ -238,4 +238,25 @@ flowchart LR
 
 ## 10. Zmiany w tym planie
 
-Plan zmieniamy przez PR/commit z aktualizacją tego pliku + odpowiedni ADR w [decisions.md](./decisions.md). Status faz aktualizujemy w tabeli §1 [current-state.md](./current-state.md).
+- **2026-08-27** — plan F0–F6 utworzony (na bazie audytu current-state i rejestru decyzji).
+- **2026-08-29** — F0–F6 wykonane i skomitowane (`86c850c`→`d2bf545`); added **§11 F7** jako następna faza. Rejestr decyzji przeniesiony do `docs/adr/` (ADR-0011…0013 rozstrzygają rozjazd „v2.0").
+
+Plan zmieniamy przez PR/commit z aktualizacją tego pliku + odpowiedni ADR w [docs/adr/](./adr/). Status faz aktualizujemy w tabeli §1 [current-state.md](./current-state.md).
+
+---
+
+## 11. F7 — Hardening i domknięcie mocków (następna faza)
+
+> Zaproponowana 2026-08-29 z weryfikacji na żywo po F6. Kolejność wg wartości; ADR-y 0011–0013 obowiązują. Reddit adapter pozostaje wzorcem dla wszystkich poniższych.
+
+| # | Zadanie | Pliki | Uwagi |
+|---|---|---|---|
+| 7.1 | Rozstrzygnięcie otwartej kwestii nr 1 — `/api/chat` (proxy Gemini): całkowite wycofanie albo tryb fallback „Generalist" | `src/app/api/chat/route.ts`, `ChatbotView` | Jeśli całkowite: usunięcie `@google/genai` z zależności |
+| 7.2 | Realne adaptery X/IG/FB/TikTok po ścieżce **CDP-first** (ADR-0013): wymiana `MockAdapter`, sesja Chrome przez sidecar CDP, HITL przed publish, dry-run, limity tempa i dedup jak w zbiornik-ops | `sidecar/automations/adapters/*` | Kolejność do wyboru przez operatora; X → IG → FB → TikTok |
+| 7.3 | Kalibracja Vault: ewaluacja top-5 na 20 pytaniach PL, wybór modelu fastembed, podpięcie `semantic_search` w promptach agentów | `sidecar/knowledge_service.py`, testy | Jedyny test akceptacji F4, który czeka na wykonanie |
+| 7.4 | Lint debt: 1241 ostrzeżeń → 0, etapowo; CI dostaje `--max-warnings` jako stop-regresji | `eslint.config.mjs`, `src/**` | Bez zmian behawioralnych |
+| 7.5 | E2E Playwright: czat (mock ACP), HITL publish (Reddit), knowledge search | `e2e/` | Osobny job w CI |
+| 7.6 | Graf wiedzy 2D/3D na realnych danych `/api/knowledge/graph` | `src/components/views/knowledge/**` | Ostatni większy frontend-mock |
+| 7.7 | Katalog API generowany z kodu (`src/app/api/**` + sidecar) zamiast ręcznego `api-specification.md` | `scripts/gen-api-docs.mjs`, `docs/` | Koniec utrzymywania ręcznego spisu endpointów |
+
+**Kryteria akceptacji F7:** testowa publikacja przez HITL na Reddit + X działa, rejestr bez `MockAdapter` dla piątki platform, lint 0 błędów/0 ostrzeżeń, e2e zielone w CI, los „/api/chat" rozstrzygnięty per 7.1.

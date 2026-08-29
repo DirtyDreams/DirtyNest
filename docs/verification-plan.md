@@ -47,6 +47,8 @@
 
 ## 3. Plan działań
 
+> **Aktualizacja 2026-08-29 (po wykonaniu):** Faza 0 **zrobiona w całości** w commitach `86c850c` (F0) i `255aed8` — lint naprawiony inaczej niż sugerowano poniżej: plugin jest teraz jawnie importowany w `eslint.config.mjs` i `npm run lint` przechodzi z **0 błędów / 1241 ostrzeżeń** (ostrzeżenia = dług na F7). Migracje: 8 plików PG, stara SQLite w `drizzle/_legacy-sqlite/`. Sekrety w env + rotacja zrobione. Poniższy plan zachowany historycznie.
+
 Repo ma już szczegółowy plan F0–F6 w `docs/implementation-plan.md` — jest trafny. Wykonujemy go w kolejności, z **dwoma dodatkami** wynikającymi z weryfikacji.
 
 ### Faza 0 — Naprawa zepsutej bramki + warstwa danych (najpierw, ~1 dzień)

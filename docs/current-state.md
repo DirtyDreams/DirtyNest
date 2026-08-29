@@ -9,21 +9,25 @@
 
 ## 1. Podsumowanie
 
+> **Aktualizacja 2026-08-29** (audyt + weryfikacja na żywo, pełny przebieg: `verification-plan.md`): fazy **F0–F6 zrealizowane i skomitowane** (`86c850c`→`d2bf545`, drzewo czyste, `main` ahead 10). Tabela poniżej zaktualizowana o stan po F6. Rejestr decyzji: `docs/adr/` (0011–0013 rozstrzygają rozjazd „v2.0"), słownik: `CONTEXT.md`.
+
 | Warstwa | Stan | Komentarz |
 |---|---|---|
-| Frontend (16 decków) | 🟢 **Działa** | Next.js 16.3.2 / React 19.2.8 / Tailwind v4; build i typecheck przechodzą (wg `SYSTEM_SCAN_REPORT.md`). |
-| API Next.js (CRUD) | 🟢 **Działa** | 10 grup endpointów na Postgresie przez Drizzle. |
-| `/api/chat` | 🟠 **Proxy Gemini** | Prosty proxy do `@google/genai` — **nie jest** częścią architektury agentowej; docelowo zastąpione przez Hermes ACP. |
-| Baza danych | 🟡 **Mid-migration** | Przejście z `sql.js` (WASM SQLite) na PostgreSQL + Drizzle — **niedokończone**, patrz §7. |
-| Sidecar (FastAPI, :8000) | 🟡 **Działa częściowo** | Telemetria, ACP, CDP, cron, docker, automations; część danych to mocki (§5). |
-| Hermes ACP | 🟡 **Zintegrowany częściowo** | Typy ACP + socket + store po stronie klienta gotowe; API Next `/api/hermes/*` proxy do sidecar. |
-| Infrastruktura (compose) | 🟠 **Niekompletna** | Compose uruchamia tylko `postgres` + `web` + `sidecar`; brak usług Redis / Qdrant / SearXNG / Ollama. |
-| Auth / użytkownicy | 🔴 **Nie istnieje** | Brak tabeli `users`, JWT i ochrony endpointów (decyzja z rozmowy: 2 użytkowników). |
-| Knowledge Vault (RAG) | 🔴 **Nie istnieje w backendzie** | Zależności (`qdrant-client`, `fastembed`) są w `requirements.txt`, Qdrant w `.env.local`, ale brak ingestu i API. |
-| Social Media backend | 🟠 **Reddit częściowo** | `sidecar/automations/` (engagement, topics, dedup, verification) — pipeline Reddita przeniesiony ze starych skryptów root; X/IG/FB/TikTok nie istnieją. |
-| Testy | 🔴 **Brak** | Zero testów jednostkowych i e2e. |
+| Frontend (16 decków) | 🟢 **Działa** | Next.js 16.3.2 / React 19 / Tailwind v4; typecheck + build zielone; **40+ tras API** (dokument z 2026-08-27 podawał 28 i 10 grup — nieaktualne). |
+| API Next.js (CRUD + agentic) | 🟢 **Działa** | CRUD + `/api/chat/*` (sessions/agents), `/api/knowledge/*`, `/api/social/*` (+HITL gate), `/api/audit/logs`, `/api/zbiornik/*`. |
+| `/api/chat` | 🟠 **Proxy Gemini** | Nadal legacja — docelowo wycofane w F7 (otwarte pytanie nr 1). |
+| Baza danych | 🟢 **Zmigrowana (F0)** | 8 migracji PG, zero runtime-DDL, zero sekretów w kodzie, `timestamptz`, `sql.js` usunięty. |
+| Sidecar (FastAPI, :8000) | 🟢 **Działa** | Telemetria, ACP, CDP, cron, docker, automations; **55 testów pytest**; minions mają live-sync (probe :6969), nie hardcode. |
+| Hermes ACP | 🟢 **Zintegrowany** | F3a/F3b: `chat_sessions/messages/agent_configs`, orchestrator (`src/lib/orchestrator/`), streaming zdarzeń, HITL resolve, cancel, snapshot-testy. |
+| Infrastruktura (compose) | 🟢 **Pełna (F1)** | 7 usług: postgres/qdrant/redis/searxng/ollama/web/sidecar; `${POSTGRES_PASSWORD:?}` egzekwowane; backup + ollama-init scripts. |
+| Auth / użytkownicy | 🟢 **F2 gotowe** | Tabela `users` (seed 2 kont), JWT (jose) + middleware, szyfrowane klucze API, rate limit, ekran logowania. |
+| Knowledge Vault (RAG) | 🟡 **F4 zbudowane, jakość do kalibracji** | Ingest Qdrant + `/api/knowledge/*` + obsidian sync + narzędzie `semantic_search`; ewaluacja jakości top-5 do zrobienia. |
+| Social Media backend | 🟠 **Reddit realny; X/IG/FB/TikTok = MockAdapter** | Registry z F5 mapuje 4 platformy na stuby; ścieżka docelowa: CDP-first (ADR-0013), HITL przed publikacją. |
+| Docker Hub / Threat Intel / audyt | 🟡 **F6 zbudowane** | CVE feed, audit_logs, strumienie logów; część ekranów wymaga docięcia do realnych danych. |
+| Testy | 🟢 **55 pytest + vitest (orchestrator) + CI** | `.github/workflows/ci.yml`: typecheck/lint/vitest/build + pytest vs postgres:16. E2E (Playwright) nadal brak. |
+| Lint | 🟢 **0 błędów / 1241 ostrzeżeń** | Naprawiony w F0 (wcześniej „zepsuty" wg tamtego audytu); ostrzeżenia = dług na F7. |
 
-**Stan repozytorium:** 2 commity przed `origin/main`, working tree brudny (migracja w toku: zmodyfikowane route'y API, sidecar, `docker-compose.yml`, `drizzle.config.ts`, usunięte skrypty Python z roota).
+**Stan repozytorium:** `main` ahead 10 commits, working tree **czysty**; na F0 posprzątano (PNG/logi z .gitignore, skrypty root zarchiwizowane).
 
 ---
 

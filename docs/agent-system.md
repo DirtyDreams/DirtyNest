@@ -1,5 +1,7 @@
 # DirtyNest 2.0 — Agenci, osobowości (soul.md) i narzędzia Harness
 
+> ⛔ **ODRZUCONY BLUEPRINT (2026-08-29) — patrz [ADR-0011](./adr/0011-hermes-acp-confirmed-harness-blueprint-rejected.md).** Agenci DirtyNest to nie Harness: żyją w `agent_configs` + profilu Hermes `dirtydaily` (ADR-0002); pętla/HITL/sesje należą do procesu Hermes. Rejestr 16 narzędzi `dirtynest_*` poniżej = inspiracja dla konfiguracji narzędzi agentów (część już pokryta: semantic_search, social_post, docker_*); pakiety `@deepseek-ai/dsh` i pliki `harness/` nie istnieją.
+
 > **Zmiana koncepcji 2.0:** agenci nie są implementowani w backendzie Node.js.
 > Ich osobowości to pliki **soul.md** (`harness/prompts/`), a narzędzia to wtyczki
 > TypeScript Harness (`harness/tools/`) wołające serwisy warstwy integracyjnej.

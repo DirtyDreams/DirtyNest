@@ -1,5 +1,7 @@
 # DirtyNest 2.0 — Project Overview & Frontend Architecture
 
+> ⚠️ **Notka „2.0 / DeepSeek Harness" poniżej jest NIEAKTUALNA (2026-08-29) — patrz [ADR-0011](./adr/0011-hermes-acp-confirmed-harness-blueprint-rejected.md).** Centralnym mózgiem jest **Hermes ACP (profil `dirtydaily`)** przez sidecar, nie DeepSeek Harness. Backend Node/Express nie istnieje (ADR-0012). Sekcje 1–3 (koncepcja UI, 16 decków, stack frontendu) pozostają wiarygodne.
+
 > **Wersja 2.0 (czerwiec 2025):** zmiana koncepcji — patrz `backend-architecture.md`.
 > Centralnym mózgiem systemu jest **DeepSeek Harness**; backend Node.js pełni rolę
 > warstwy integracyjnej (REST + WebSocket + serwisy), a nie własnego silnika agentów.

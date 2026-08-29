@@ -1,5 +1,8 @@
 # DirtyNest 2.0 — Backend Architecture & DeepSeek Harness (Centralny Mózg)
 
+> ⛔ **ODRZUCONY BLUEPRINT (2026-08-29) — patrz [ADR-0011](./adr/0011-hermes-acp-confirmed-harness-blueprint-rejected.md) i [ADR-0012](./adr/0012-no-separate-backend-service.md).**
+> Ten dokument opisuje wymianę silnika na DeepSeek Harness (`dsh`) i warstwę Express :4000 — **nic z tego nie istnieje w kodzie** (`backend/` był zawsze pusty, `dsh` = npm `0.1.1-rc.2`). Silnikiem pozostaje Hermes ACP przez sidecar. Dokument zachowany wyłącznie jako źródło pomysłów adaptowanych inkrementalnie (prompty soul.md, rejestr narzędzi, observability, webhooks). **Nie czytaj dalej jako stanu systemu.**
+
 > **Zmiana koncepcji (2.0):** DeepSeek Harness przestaje być opcjonalnym, hybrydowym
 > "drugim silnikiem" i staje się **jedynym runtime'em agentów**. Backend Node.js nie
 > implementuje własnej pętli ReAct ani własnego orchestratora — pełni rolę warstwy
