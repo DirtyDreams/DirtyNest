@@ -71,3 +71,34 @@ jobs:
         run: |
           cd sidecar
           .venv/bin/python -m pytest tests -q
+
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://dirtynest:***@localhost:5432/dirtynest
+      JWT_SECRET: ci-secret
+      API_KEY_ENC_KEY: ci-enc-key
+      NEXT_PUBLIC_SIDECAR_URL: http://localhost:8000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e suite (hermetic; app mocks every backend at network layer)
+        run: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

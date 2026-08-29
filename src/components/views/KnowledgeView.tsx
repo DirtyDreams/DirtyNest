@@ -44,6 +44,7 @@ import {
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
 import SemanticRagTester from "./knowledge/SemanticRagTester";
+import { useKnowledgeGraph } from "./knowledge/useKnowledgeGraph";
 import KnowledgeGraphCanvas, { GraphNode } from "./knowledge/KnowledgeGraphCanvas";
 import CyberMarkdownViewer from "./knowledge/CyberMarkdownViewer";
 import { CyberMarkdownEditor } from "@/components/ui/editor/CyberMarkdownEditor";
@@ -529,6 +530,16 @@ export default function KnowledgeView() {
   const [executedSkillId, setExecutedSkillId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // F7.6: the 3D graph deck is wired to the real GET /api/knowledge/graph
+  // (knowledge_graph_edges + knowledge_docs). Loading/empty/error states are
+  // rendered by KnowledgeGraphCanvas via GraphStateOverlay.
+  const {
+    nodes: apiGraphNodes,
+    state: graphState,
+    error: graphError,
+    reload: reloadGraph,
+  } = useKnowledgeGraph();
+
   const fetchMemories = useCallback(async () => {
     // Prefer the real Knowledge Vault API (F4). Falls back to the sidecar
     // memory engine, then to localStorage mock data.
@@ -584,6 +595,12 @@ export default function KnowledgeView() {
       }
     } catch {}
   }, []);
+
+  // F7.6: fetch real Vault docs on mount (the initial state is a static
+  // demo set; without this the deck never reads /api/knowledge/docs).
+  useEffect(() => {
+    void fetchMemories();
+  }, [fetchMemories]);
 
   // Debounced semantic search against the real /api/knowledge/search (F4).
   // Maps Qdrant hits back to doc ids -> similarity. Falls back to the local
@@ -665,58 +682,10 @@ export default function KnowledgeView() {
     return docs.find((d) => d.id === selectedDocId) || filteredDocs[0] || docs[0];
   }, [docs, selectedDocId, filteredDocs]);
 
-  // Dynamic 2D Graph Nodes mapped from docs, wikilinks, backlinks, and embeddings
-  const graphNodes: GraphNode[] = useMemo(() => {
-    return docs.map((d) => {
-      const linkedIds: string[] = [];
-      if (d.wikiLinks) {
-        d.wikiLinks.forEach((wl) => {
-          const cleanName = wl.replace(/\[\[|\]\]/g, "").toLowerCase();
-          const target = docs.find((other) => other.title.toLowerCase().includes(cleanName));
-          if (target && target.id !== d.id && !linkedIds.includes(target.id)) linkedIds.push(target.id);
-        });
-      }
-      if (d.backlinks) {
-        d.backlinks.forEach((bl) => {
-          const target = docs.find((other) => other.title.toLowerCase().includes(bl.toLowerCase()));
-          if (target && target.id !== d.id && !linkedIds.includes(target.id)) linkedIds.push(target.id);
-        });
-      }
-
-      const color = d.isKarpathySkill
-        ? "#FFB800"
-        : d.category === "Threat Intel"
-        ? "#FF2A6D"
-        : d.category === "System Arch"
-        ? "#00FF41"
-        : d.category === "API Contracts"
-        ? "#00F0FF"
-        : d.category === "Code Runbooks"
-        ? "#BF40FF"
-        : d.category === "Neural Memory"
-        ? "#FF007F"
-        : "#3B82F6";
-
-      return {
-        id: d.id,
-        title: d.title,
-        category: d.category,
-        color,
-        radius: d.isKarpathySkill ? 10 : 7,
-        x: 0,
-        y: 0,
-        vx: 0,
-        vy: 0,
-        links: linkedIds,
-        tags: d.tags,
-        slug: d.slug,
-        tokens: d.tokens,
-        obsidianPath: d.obsidianPath,
-        embeddingSnippet: d.embeddingSnippet,
-        isKarpathySkill: d.isKarpathySkill,
-      };
-    });
-  }, [docs]);
+  // F7.6: graph nodes come straight from the real /api/knowledge/graph
+  // route (useKnowledgeGraph); the old client-side wikilink-derived mock
+  // mapping is retired.
+  const graphNodes: GraphNode[] = apiGraphNodes;
 
   const handleUpdateDocContent = (id: string, newContentText: string) => {
     const calculatedTokens = Math.ceil(newContentText.length / 4);
@@ -1289,6 +1258,9 @@ export default function KnowledgeView() {
         <div className="flex flex-col gap-4 animate-fade-in">
           <KnowledgeGraphCanvas
             nodes={graphNodes}
+            state={graphState}
+            error={graphError}
+            onReload={reloadGraph}
             selectedNodeId={selectedDocId}
             onSelectNode={(id, switchToEditor) => {
               setSelectedDocId(id);
@@ -1684,6 +1656,9 @@ export default function KnowledgeView() {
                   <div className="w-full">
                     <KnowledgeGraphCanvas
                       nodes={graphNodes}
+                      state={graphState}
+                      error={graphError}
+                      onReload={reloadGraph}
                       selectedNodeId={selectedDoc.id}
                       onSelectNode={(id) => {
                         setSelectedDocId(id);

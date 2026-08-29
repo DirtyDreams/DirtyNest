@@ -8,7 +8,6 @@ import {
   RotateCcw,
   ZoomIn,
   ZoomOut,
-  Sparkles,
   Network,
   Search,
   SlidersHorizontal,
@@ -36,6 +35,7 @@ import {
   Keyboard,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import GraphStateOverlay from "./GraphStateOverlay";
 
 export interface GraphNode {
   id: string;
@@ -58,7 +58,7 @@ export interface GraphNode {
   isKarpathySkill?: boolean;
 }
 
-export type ConstellationPreset = "LIVE_VAULT" | "KARPATHY_TREE" | "CYBER_DEFENSE" | "MEGA_CORTEX";
+export type ConstellationPreset = "LIVE_VAULT" | "KARPATHY_TREE" | "CYBER_DEFENSE";
 export type LabelLodMode = "ADAPTIVE" | "HUBS" | "FOCUS" | "ALL";
 
 // Sector Definition Interface
@@ -114,74 +114,16 @@ const SECTORS: SectorDef[] = [
   },
 ];
 
-// Mega 60+ Node Demo Dataset for Mega Neural Cortex
-const MEGA_CORTEX_NODES: GraphNode[] = [
-  // Sector Alpha: Karpathy Core (Gold)
-  { id: "mc-01", title: "NanoGPT KV-Cache Optimization", category: "Karpathy Skills", color: "#FFB800", radius: 15, links: ["mc-02", "mc-03", "mc-04", "mc-10"], isKarpathySkill: true },
-  { id: "mc-02", title: "BPE Tokenizer from Scratch", category: "Karpathy Skills", color: "#FFB800", radius: 12, links: ["mc-01", "mc-03", "mc-05"], isKarpathySkill: true },
-  { id: "mc-03", title: "Autoresearch Autonomous Loop", category: "Karpathy Skills", color: "#FFB800", radius: 16, links: ["mc-01", "mc-02", "mc-04", "mc-06", "mc-21"], isKarpathySkill: true },
-  { id: "mc-04", title: "LLM-OS Kernel Architecture", category: "Karpathy Skills", color: "#FFB800", radius: 18, links: ["mc-01", "mc-03", "mc-05", "mc-07", "mc-30"], isKarpathySkill: true },
-  { id: "mc-05", title: "Micrograd Computational Graph", category: "Karpathy Skills", color: "#FFB800", radius: 11, links: ["mc-02", "mc-04", "mc-08"], isKarpathySkill: true },
-  { id: "mc-06", title: "RLHF PPO Reward Modeling", category: "Karpathy Skills", color: "#FFB800", radius: 13, links: ["mc-03", "mc-07", "mc-09"], isKarpathySkill: true },
-  { id: "mc-07", title: "Direct Preference Optimization (DPO)", category: "Karpathy Skills", color: "#FFB800", radius: 12, links: ["mc-04", "mc-06", "mc-08"], isKarpathySkill: true },
-  { id: "mc-08", title: "RoPE Rotational Positional Embedding", category: "Karpathy Skills", color: "#FFB800", radius: 10, links: ["mc-05", "mc-07", "mc-09"], isKarpathySkill: true },
-  { id: "mc-09", title: "FlashAttention-3 Kernel Fusion", category: "Karpathy Skills", color: "#FFB800", radius: 14, links: ["mc-06", "mc-08", "mc-10", "mc-40"], isKarpathySkill: true },
-  { id: "mc-10", title: "Mixture-of-Experts (MoE) Routing", category: "Karpathy Skills", color: "#FFB800", radius: 15, links: ["mc-01", "mc-09", "mc-50"], isKarpathySkill: true },
-
-  // Sector Beta: Cyber Defense (Crimson / Green)
-  { id: "mc-11", title: "Zero-Trust eBPF Kernel Filter", category: "System Arch", color: "#00FF41", radius: 16, links: ["mc-12", "mc-13", "mc-14", "mc-04"] },
-  { id: "mc-12", title: "WireGuard Flat Overlay Mesh", category: "System Arch", color: "#00FF41", radius: 12, links: ["mc-11", "mc-13", "mc-15"] },
-  { id: "mc-13", title: "mTLS Ephemeral Token Gateways", category: "System Arch", color: "#00FF41", radius: 13, links: ["mc-11", "mc-12", "mc-16"] },
-  { id: "mc-14", title: "CVE-2026-9811 Threat Mitigation", category: "Threat Intel", color: "#FF2A6D", radius: 15, links: ["mc-11", "mc-15", "mc-17"] },
-  { id: "mc-15", title: "Autonomous Red-Team Recon Daemon", category: "Threat Intel", color: "#FF2A6D", radius: 14, links: ["mc-12", "mc-14", "mc-18"] },
-  { id: "mc-16", title: "Hardware Security Module (HSM) Vault", category: "Threat Intel", color: "#FF2A6D", radius: 11, links: ["mc-13", "mc-17", "mc-19"] },
-  { id: "mc-17", title: "BGP Anycast DDoS Deflector", category: "Threat Intel", color: "#FF2A6D", radius: 13, links: ["mc-14", "mc-16", "mc-18"] },
-  { id: "mc-18", title: "MITRE ATT&CK Matrix Sentinel", category: "Threat Intel", color: "#FF2A6D", radius: 16, links: ["mc-15", "mc-17", "mc-19", "mc-21"] },
-  { id: "mc-19", title: "Memory Safety Sanitizer Hook", category: "System Arch", color: "#00FF41", radius: 10, links: ["mc-16", "mc-18"] },
-  { id: "mc-20", title: "Sandboxed WebAssembly Worker Pool", category: "System Arch", color: "#00FF41", radius: 14, links: ["mc-03", "mc-18", "mc-22"] },
-
-  // Sector Gamma: Autonomous Swarm & Hermes Brain (Cyan / Purple)
-  { id: "mc-21", title: "Hermes Master Brain Orchestrator", category: "Neural Memory", color: "#00F0FF", radius: 22, links: ["mc-20", "mc-22", "mc-23", "mc-24", "mc-04", "mc-50"] },
-  { id: "mc-22", title: "Swarm DAG Directed Acyclic Pipeline", category: "API Contracts", color: "#00F0FF", radius: 15, links: ["mc-21", "mc-23", "mc-25"] },
-  { id: "mc-23", title: "Paperclip Company CEO Control Plane", category: "API Contracts", color: "#00F0FF", radius: 17, links: ["mc-21", "mc-22", "mc-26"] },
-  { id: "mc-24", title: "HITL Dynamic Clearance Gate", category: "API Contracts", color: "#00F0FF", radius: 13, links: ["mc-21", "mc-25", "mc-27"] },
-  { id: "mc-25", title: "JSON-RPC 2.0 Binary WebSocket IPC", category: "API Contracts", color: "#00F0FF", radius: 12, links: ["mc-22", "mc-24", "mc-28"] },
-  { id: "mc-26", title: "Multi-Agent Consensus Raft Engine", category: "API Contracts", color: "#00F0FF", radius: 14, links: ["mc-23", "mc-27", "mc-29"] },
-  { id: "mc-27", title: "Autonomous Token Budget Governor", category: "Neural Memory", color: "#00F0FF", radius: 11, links: ["mc-24", "mc-26", "mc-28"] },
-  { id: "mc-28", title: "Tool-Call Clearance Sandbox", category: "Neural Memory", color: "#00F0FF", radius: 13, links: ["mc-25", "mc-27", "mc-29"] },
-  { id: "mc-29", title: "Agent Memory Hierarchical Summarizer", category: "Neural Memory", color: "#00F0FF", radius: 15, links: ["mc-26", "mc-28", "mc-30"] },
-  { id: "mc-30", title: "Long-Term Episodic Vector Buffer", category: "Neural Memory", color: "#00F0FF", radius: 18, links: ["mc-04", "mc-29", "mc-31"] },
-
-  // Sector Delta: Obsidian Vault & Knowledge Engineering (Blue)
-  { id: "mc-31", title: "SQLite-Vec High-D Embeddings Core", category: "Obsidian Wiki", color: "#3B82F6", radius: 16, links: ["mc-30", "mc-32", "mc-33", "mc-34"] },
-  { id: "mc-32", title: "Bi-Directional [[WikiLink]] Graph", category: "Obsidian Wiki", color: "#3B82F6", radius: 14, links: ["mc-31", "mc-33", "mc-35"] },
-  { id: "mc-33", title: "YAML Frontmatter Schema Validator", category: "Obsidian Wiki", color: "#3B82F6", radius: 11, links: ["mc-31", "mc-32", "mc-36"] },
-  { id: "mc-34", title: "Local Chokidar Vault File Watcher", category: "Obsidian Wiki", color: "#3B82F6", radius: 13, links: ["mc-31", "mc-35", "mc-37"] },
-  { id: "mc-35", title: "Semantic RAG Probe & Cosine Ranker", category: "Obsidian Wiki", color: "#3B82F6", radius: 15, links: ["mc-32", "mc-34", "mc-38"] },
-  { id: "mc-36", title: "Markdown AST MathJax & KaTeX Parser", category: "Obsidian Wiki", color: "#3B82F6", radius: 10, links: ["mc-33", "mc-37", "mc-39"] },
-  { id: "mc-37", title: "Hierarchical Obsidian Folder Tree", category: "Obsidian Wiki", color: "#3B82F6", radius: 12, links: ["mc-34", "mc-36", "mc-40"] },
-  { id: "mc-38", title: "Vector Cluster Projection (UMAP/t-SNE)", category: "Obsidian Wiki", color: "#3B82F6", radius: 13, links: ["mc-35", "mc-39"] },
-  { id: "mc-39", title: "Cross-Vault Deduplication Index", category: "Obsidian Wiki", color: "#3B82F6", radius: 11, links: ["mc-36", "mc-38"] },
-  { id: "mc-40", title: "Karpathy Recipe Execution Harness", category: "Obsidian Wiki", color: "#3B82F6", radius: 17, links: ["mc-09", "mc-37", "mc-41"] },
-
-  // Sector Epsilon: Dev Runbooks & Infrastructure SRE (Purple / Magenta)
-  { id: "mc-41", title: "Kubernetes Canary Rollback Circuit", category: "Code Runbooks", color: "#BF40FF", radius: 15, links: ["mc-40", "mc-42", "mc-43", "mc-44"] },
-  { id: "mc-42", title: "Docker Compose Microservice Stack", category: "Code Runbooks", color: "#BF40FF", radius: 13, links: ["mc-41", "mc-43", "mc-45"] },
-  { id: "mc-43", title: "PostgreSQL pgvector Index Optimizer", category: "Code Runbooks", color: "#BF40FF", radius: 14, links: ["mc-41", "mc-42", "mc-46"] },
-  { id: "mc-44", title: "Prometheus P99 Latency Alerter", category: "Code Runbooks", color: "#BF40FF", radius: 12, links: ["mc-41", "mc-45", "mc-47"] },
-  { id: "mc-45", title: "Turbopack Hot Module Replacer", category: "Code Runbooks", color: "#BF40FF", radius: 11, links: ["mc-42", "mc-44", "mc-48"] },
-  { id: "mc-46", title: "Web Audio Synthesizer Oscillators", category: "Code Runbooks", color: "#BF40FF", radius: 13, links: ["mc-43", "mc-47", "mc-49"] },
-  { id: "mc-47", title: "Web Speech Viseme Facial Animator", category: "Code Runbooks", color: "#BF40FF", radius: 14, links: ["mc-44", "mc-46", "mc-50"] },
-  { id: "mc-48", title: "DiffViewer Syntax Highlighting Core", category: "Code Runbooks", color: "#BF40FF", radius: 10, links: ["mc-45", "mc-49"] },
-  { id: "mc-49", title: "JWT Cryptographic Signature Verifier", category: "Code Runbooks", color: "#BF40FF", radius: 12, links: ["mc-46", "mc-48"] },
-  { id: "mc-50", title: "DirtyNest Tactical Command Center", category: "Code Runbooks", color: "#BF40FF", radius: 24, links: ["mc-10", "mc-47", "mc-21", "mc-04", "mc-31"] },
-];
 
 interface KnowledgeGraphCanvasProps {
   nodes: GraphNode[];
   selectedNodeId: string | null;
   onSelectNode: (id: string, switchToEditor?: boolean) => void;
   onOpenVaultEditor?: (id: string) => void;
+  /** F7.6: deck data state — overlays loading/empty/error above the canvas. */
+  state?: "ready" | "loading" | "empty" | "error";
+  error?: string | null;
+  onReload?: () => void;
 }
 
 export default function KnowledgeGraphCanvas({
@@ -189,6 +131,9 @@ export default function KnowledgeGraphCanvas({
   selectedNodeId,
   onSelectNode,
   onOpenVaultEditor,
+  state = "ready",
+  error = null,
+  onReload,
 }: KnowledgeGraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mountRef = useRef<HTMLDivElement | null>(null);
@@ -216,7 +161,6 @@ export default function KnowledgeGraphCanvas({
 
   // Current Active Nodes based on Preset
   const activeDataset: GraphNode[] = useMemo(() => {
-    if (preset === "MEGA_CORTEX") return MEGA_CORTEX_NODES;
     if (preset === "KARPATHY_TREE")
       return initialNodes.filter((n) => n.category === "Karpathy Skills" || n.isKarpathySkill);
     if (preset === "CYBER_DEFENSE")
@@ -1047,20 +991,6 @@ export default function KnowledgeGraphCanvas({
             >
               Cyber Defense
             </button>
-            <button
-              onClick={() => {
-                cyberAudio.play("click");
-                setPreset("MEGA_CORTEX");
-              }}
-              className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                preset === "MEGA_CORTEX"
-                  ? "bg-cyan-500/25 text-cyan-300 border border-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.4)]"
-                  : "text-cyan-400 hover:text-white"
-              }`}
-            >
-              <Sparkles className="w-3 h-3 text-cyan-300" />
-              <span>Mega Cortex (60+)</span>
-            </button>
           </div>
         </div>
 
@@ -1362,6 +1292,11 @@ export default function KnowledgeGraphCanvas({
             </div>
           )}
         </div>
+      )}
+
+      {/* F7.6: DATA STATE OVERLAY (loading / empty / error) */}
+      {state !== "ready" && (
+        <GraphStateOverlay state={state} error={error} onReload={onReload} />
       )}
 
       {/* THREE.JS WEBGL CANVAS MOUNT */}
