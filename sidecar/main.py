@@ -15,6 +15,7 @@ import psutil
 
 from acp_client import acp_bridge
 from memory_service import memory_engine
+from knowledge_service import KnowledgeVaultEngine
 from cdp_service import cdp_engine
 from cron_service import cron_manager
 from docker_service import docker_engine
@@ -31,6 +32,9 @@ engagement_mgr = EngagementManager()
 topic_mgr = TopicManager()
 dedup_service = DeduplicationService()
 verification_service = VerificationService()
+
+# Knowledge vault shares the single fastembed model with the memory engine
+knowledge_engine = KnowledgeVaultEngine(embed_fn=memory_engine.embed_text)
 
 
 # Configure logging
@@ -306,6 +310,49 @@ def create_memory_endpoint(req: MemoryCreateRequest):
 def delete_memory_endpoint(memory_id: str):
     success = memory_engine.delete_memory(memory_id)
     return {"status": "success" if success else "failed", "deleted_id": memory_id}
+
+
+class KnowledgeIngestRequest(BaseModel):
+    title: str
+    content: str
+    doc_id: Optional[str] = None
+    source: Optional[str] = None
+    category: str = "doc"
+    tags: Optional[List[str]] = None
+
+
+@app.post("/api/knowledge/ingest")
+def ingest_document_endpoint(req: KnowledgeIngestRequest):
+    try:
+        result = knowledge_engine.ingest_document(
+            title=req.title,
+            content=req.content,
+            doc_id=req.doc_id,
+            source=req.source,
+            category=req.category,
+            tags=req.tags,
+        )
+        return {"status": "success", "document": result}
+    except Exception as exc:
+        return {"status": "failed", "error": str(exc)}
+
+
+@app.get("/api/knowledge/search")
+def search_knowledge_endpoint(q: str, limit: int = 5, threshold: float = 0.65):
+    results = knowledge_engine.search(query=q, limit=limit, score_threshold=threshold)
+    return {"status": "success", "query": q, "results": results, "count": len(results)}
+
+
+@app.get("/api/knowledge/list")
+def list_knowledge_endpoint(limit: int = 50):
+    documents = knowledge_engine.list_documents(limit=limit)
+    return {"status": "success", "documents": documents, "count": len(documents)}
+
+
+@app.delete("/api/knowledge/{doc_id}")
+def delete_knowledge_endpoint(doc_id: str):
+    success = knowledge_engine.delete_document(doc_id)
+    return {"status": "success" if success else "failed", "deleted_id": doc_id}
 
 class CdpNavigateRequest(BaseModel):
     url: str = Field(..., description="Target URL")

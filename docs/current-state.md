@@ -1,6 +1,6 @@
 # DirtyNest — Audyt stanu bieżącego (current state)
 
-> **Wersja:** 1.0 · **Data:** 2026-08-27 · **Repo:** `dirty-test` = klon `DirtyDreams/DirtyNest` (gałąź `main`)
+> **Wersja:** 1.1 · **Data:** 2026-08-29 · **Repo:** `pitest` = klon `DirtyDreams/DirtyNest` (gałąź `main`)
 > **Źródła:** inspekcja kodu (`src/`, `sidecar/`, `docker-compose.yml`, `drizzle/`, `package.json`), `git log`/`git status`, raporty `SYSTEM_SCAN_REPORT.md` i `HERMES_ECOSYSTEM_REPORT.md`.
 >
 > Ten dokument jest **mapą tego, co realnie istnieje w kodzie** — odróżnia „działa", „jest mockiem" i „nie istnieje". Wszystkie dalsze dokumenty (`backend-architecture`, `data-models`, `api-specification`, `agent-system`, `implementation-plan`) są z nim zgodne.
@@ -14,16 +14,16 @@
 | Frontend (16 decków) | 🟢 **Działa** | Next.js 16.3.2 / React 19.2.8 / Tailwind v4; build i typecheck przechodzą (wg `SYSTEM_SCAN_REPORT.md`). |
 | API Next.js (CRUD) | 🟢 **Działa** | 10 grup endpointów na Postgresie przez Drizzle. |
 | `/api/chat` | 🟠 **Proxy Gemini** | Prosty proxy do `@google/genai` — **nie jest** częścią architektury agentowej; docelowo zastąpione przez Hermes ACP. |
-| Baza danych | 🟡 **Mid-migration** | Przejście z `sql.js` (WASM SQLite) na PostgreSQL + Drizzle — **niedokończone**, patrz §7. |
-| Sidecar (FastAPI, :8000) | 🟡 **Działa częściowo** | Telemetria, ACP, CDP, cron, docker, automations; część danych to mocki (§5). |
+| Baza danych | 🟢 **Zmigrowana** | `sql.js` usunięty; `drizzle/` w dialekcie PostgreSQL; `initDb()` = `migrate()` + seed; live-DB zrekoncyliowana przez `drizzle-kit push` (9→14 tabel, `todos.created_at` dodane). |
+| Sidecar (FastAPI, :8000) | 🟢 **Działa** | Telemetria, ACP, CDP, cron (Redis), docker, automations + **Knowledge Vault** (chunked ingest/search/list/delete). 38 endpointów. |
 | Hermes ACP | 🟡 **Zintegrowany częściowo** | Typy ACP + socket + store po stronie klienta gotowe; API Next `/api/hermes/*` proxy do sidecar. |
-| Infrastruktura (compose) | 🟠 **Niekompletna** | Compose uruchamia tylko `postgres` + `web` + `sidecar`; brak usług Redis / Qdrant / SearXNG / Ollama. |
+| Infrastruktura (compose) | 🟢 **Działa** | `postgres` + `web` + `sidecar` + `qdrant` (:6335) + `redis` (:6380); dev-runtime korzysta z żywej płaszczyzny :5432/:6333/:6379. |
 | Auth / użytkownicy | 🔴 **Nie istnieje** | Brak tabeli `users`, JWT i ochrony endpointów (decyzja z rozmowy: 2 użytkowników). |
-| Knowledge Vault (RAG) | 🔴 **Nie istnieje w backendzie** | Zależności (`qdrant-client`, `fastembed`) są w `requirements.txt`, Qdrant w `.env.local`, ale brak ingestu i API. |
-| Social Media backend | 🟠 **Reddit częściowo** | `sidecar/automations/` (engagement, topics, dedup, verification) — pipeline Reddita przeniesiony ze starych skryptów root; X/IG/FB/TikTok nie istnieją. |
-| Testy | 🔴 **Brak** | Zero testów jednostkowych i e2e. |
+| Knowledge Vault (RAG) | 🟢 **Działa** | `knowledge_vault` w Qdrant: chunked ingest (900/150), search top-k, list/delete; deck „Quick Vector Ingest" podpięty na żywo; wspólny embeder bge-small 384. |
+| Social Media backend | 🟠 **Zbiornik realny, reszta brak** | Pipeline zbiornik.com pełny: CDP :9333 + konto operatora + kolejka HITL + publish-gate; X/IG/FB/TikTok nie istnieją. |
+| Testy | 🟢 **CI-enforced** | 23 pytest (sidecar) + 14 vitest (web); GitHub Actions `run: push`. |
 
-**Stan repozytorium:** 2 commity przed `origin/main`, working tree brudny (migracja w toku: zmodyfikowane route'y API, sidecar, `docker-compose.yml`, `drizzle.config.ts`, usunięte skrypty Python z roota).
+**Stan repozytorium:** `main` == `origin/main` (push testowane 3× CI-green 2026-08-29), working tree czysty (`c5da10a`).
 
 ---
 
@@ -88,7 +88,7 @@
 
 ## 5. Sidecar (FastAPI, port 8000)
 
-**Plik główny:** `sidecar/main.py` (~660 linii, 33 endpointy). **Moduły:** `acp_client.py` (most Hermes ACP), `memory_service.py`, `cdp_service.py` (Chrome DevTools), `cron_service.py`, `docker_service.py`, `automations/` (engagement, topics, dedup, verification), `migrate_sqlite_to_pg.py`.
+**Plik główny:** `sidecar/main.py` (~750 linii, 38 endpointów). **Moduły:** `acp_client.py` (most Hermes ACP), `memory_service.py`, **`knowledge_service.py`** (Knowledge Vault), `cdp_service.py` (Chrome DevTools), `cron_service.py`, `docker_service.py`, `automations/` (engagement, topics, dedup, verification, zbiornik), `migrate_sqlite_to_pg.py`.
 
 **Endpointy (potwierdzone grep-em):**
 - Health/telemetria: `GET /health`, `GET /api/hermes/status`, `WS /ws/telemetry`
@@ -122,17 +122,16 @@
 
 ## 7. Infrastruktura i konfiguracja
 
-- `docker-compose.yml`: `postgres:16-alpine` (+healthcheck) → `web` (`Dockerfile.next`, :3000) → `sidecar` (:8000). **Brak usług:** `redis`, `qdrant`, `searxng`, `ollama`.
-- `.env.local` zawiera już: `DATABASE_URL`, `NEXT_PUBLIC_SIDECAR_URL`, `QDRANT_URL`, `REDIS_URL`, `SEARXNG_URL` — czyli plan zakłada usługi, których compose jeszcze nie uruchamia.
+- `docker-compose.yml`: `postgres:16-alpine` (+healthcheck), `web` (`Dockerfile.next`, :3000), `sidecar` (:8000), `qdrant` (:6335), `redis` (:6380→6379). **Brak usług:** `searxng`, `ollama`.
 - `.env.local` nie zawiera kluczy dostawców LLM (`GEMINI_API_KEY` itd.) ani social APIs — `/api/chat` wymaga klucza przekazywanego z UI lub z env.
 
 ## 8. Repozytorium i jakość (z `git status`, `SYSTEM_SCAN_REPORT.md`)
 
-- `main` jest 2 commity przed `origin/main`; working tree brudny (migracja w toku).
+- `main` == `origin/main` — wszystkie push-e 2026-08-29 przeszły CI (`web` ✓, `sidecar` ✓).
 - Usunięte skrypty Python z root (`post_engagement.py`, `pull_topics.py`, `reply_inbox.py`…) — logika przeniesiona do `sidecar/automations/`; archiwum w `scripts/legacy_archive/`.
-- Lint: ~80 błędów / 239 ostrzeżeń (gł. `no-explicit-any`, nieużywane importy) — nie blokuje builda.
-- Hygiene: ~10 zrzutów PNG (~4,6 MB) w root, logi (`*.log`, `cleanup.log`) w repo, `tsconfig.tsbuildinfo` w repo.
-- Build i typecheck: ✅ przechodzą.
+- Lint: **0 errors / 164 warnings** (unused-imports plugin pilnuje importów; `_`-prefix scaffold + `exhaustive-deps` pozostają celowo) — nie blokuje builda.
+- Hygiene: transients ignorowane (`.tmp-*.ps1`, `sidecar/data/`); `sidecar/__pycache__` zdjęte z trackingu.
+- Build i typecheck: ✅ przechodzą; pytest 23/23, vitest 14/14.
 
 ## 9. Mapa „co jest mockiem"
 
@@ -145,8 +144,8 @@
 | ACP sessions/prompt/gate | 🟢 realne (acp_client → Hermes ACP) |
 | Pamięć Hermes | 🟢 realne (memory_service → Postgres/Qdrant) |
 | CVE radar / Intel feed | 🔴 frontend z mockami |
-| Social Media (X/IG/FB/TikTok) | 🔴 brak backendu; Reddit 🟡 pipeline w sidecar |
-| Knowledge Vault (graf, RAG) | 🔴 frontend z mockami; backend nie istnieje |
+| Social Media (X/IG/FB/TikTok) | 🔴 brak backendu; **zbiornik.com 🟢 pełny HITL pipeline** (poll, kolejka, publish-gate, sesja CDP live) |
+| Knowledge Vault (graf, RAG) | 🟢 realne — `knowledge_vault` w Qdrant (ingest/search/list/delete + chunking) + `hermes_memories` (live); RAG Tester i „Quick Vector Ingest" odpytują prawdziwe endpointy |
 | Docker Hub (frontend) | 🟡 strumień logów przez sidecar, reszta mock |
 
 ---
