@@ -457,16 +457,50 @@ This guarantees zero hallucination for proprietary tactical cluster protocols.`,
   },
 ];
 
-const CATEGORIES = [
-  "ALL NODES",
-  "Karpathy Skills",
-  "Obsidian Wiki",
-  "Threat Intel",
-  "System Arch",
-  "API Contracts",
-  "Code Runbooks",
-  "Neural Memory",
-] as const;
+interface ApiKnowledgeDoc {
+  id: number;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  source: string;
+  obsidian_path: string | null;
+  updated_at: string | null;
+}
+
+function normalizeCategory(category: string): KnowledgeDoc["category"] {
+  const c = category.toLowerCase();
+  if (c.includes("karpathy") || c === "ai") return "Karpathy Skills";
+  if (c.includes("obsidian")) return "Obsidian Wiki";
+  if (c.includes("threat") || c.includes("security")) return "Threat Intel";
+  if (c.includes("arch") || c === "general" || c === "fact") return "System Arch";
+  if (c.includes("api")) return "API Contracts";
+  if (c.includes("runbook") || c.includes("code")) return "Code Runbooks";
+  if (c.includes("neural") || c.includes("memory")) return "Neural Memory";
+  return "System Arch";
+}
+
+function mapApiDocToKnowledgeDoc(d: ApiKnowledgeDoc): KnowledgeDoc {
+  const category = normalizeCategory(d.category);
+  return {
+    id: String(d.id),
+    title: d.title,
+    category,
+    slug: `/${d.category.toLowerCase().replace(/\s+/g, "-")}/${d.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`,
+    tags: d.tags,
+    tokens: Math.max(120, Math.floor(d.content.length / 4)),
+    chunks: Math.max(1, Math.ceil(d.content.length / 800)),
+    vectors: "384-dim float32",
+    updatedAt: d.updated_at ? d.updated_at.replace("T", " ").slice(0, 16) : "now",
+    author: d.source === "obsidian" ? "OBSIDIAN" : "OPERATOR",
+    obsidianPath: d.obsidian_path ?? undefined,
+    backlinks: [],
+    wikiLinks: [],
+    isKarpathySkill: category === "Karpathy Skills",
+    embeddingSnippet: [0.12, -0.05, 0.38, 0.19],
+    content: d.content,
+  };
+}
 
 export default function KnowledgeView() {
   const { setActiveView } = useAppStore();
@@ -476,6 +510,7 @@ export default function KnowledgeView() {
   const [selectedDocId, setSelectedDocId] = useState<string>("skill-01");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"viewer" | "vectors" | "graph" | "backlinks">("viewer");
+  const [semanticResults, setSemanticResults] = useState<Record<string, number>>({});
   const [mobileTab, setMobileTab] = useState<"list" | "inspector">("inspector");
   const [editorSplitMode, setEditorSplitMode] = useState<"preview" | "split" | "edit">("preview");
   const [obsidianVaultPath, setObsidianVaultPath] = useState("C:\\\\Users\\\\coyot\\\\Obsidian\\\\CyberVault");
@@ -495,6 +530,21 @@ export default function KnowledgeView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const fetchMemories = useCallback(async () => {
+    // Prefer the real Knowledge Vault API (F4). Falls back to the sidecar
+    // memory engine, then to localStorage mock data.
+    try {
+      const res = await fetch("/api/knowledge/docs");
+      if (res.ok) {
+        const data = (await res.json()) as { docs?: ApiKnowledgeDoc[] };
+        if (data.docs && data.docs.length > 0) {
+          setDocs(data.docs.map(mapApiDocToKnowledgeDoc));
+          return;
+        }
+      }
+    } catch {
+      // fall through to legacy sources
+    }
+
     try {
       const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
       const res = await fetch(`${sidecarUrl}/api/hermes/memories`);
@@ -535,14 +585,35 @@ export default function KnowledgeView() {
     } catch {}
   }, []);
 
-  // Load saved state
+  // Debounced semantic search against the real /api/knowledge/search (F4).
+  // Maps Qdrant hits back to doc ids -> similarity. Falls back to the local
+  // heuristic similarity when the API is unavailable.
   useEffect(() => {
-    fetchMemories();
-    const savedVault = localStorage.getItem("dirtynest_obsidian_path");
-    if (savedVault) {
-      setObsidianVaultPath(savedVault);
+    const q = searchQuery.trim();
+    if (!q) {
+      setSemanticResults({});
+      return;
     }
-  }, [fetchMemories]);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/knowledge/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: q, limit: 10, threshold: 0.3 }),
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { results?: Array<{ doc_id: string; score: number }> };
+        const map: Record<string, number> = {};
+        for (const r of data.results ?? []) {
+          map[r.doc_id] = r.score;
+        }
+        setSemanticResults(map);
+      } catch {
+        // keep local heuristic similarity
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const saveDocs = (newDocs: KnowledgeDoc[]) => {
     setDocs(newDocs);
@@ -577,13 +648,18 @@ export default function KnowledgeView() {
       .map((d) => {
         let sim = undefined;
         if (searchQuery.trim().length > 0) {
-          const titleMatch = d.title.toLowerCase().includes(searchQuery.toLowerCase());
-          const tagMatch = d.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
-          sim = titleMatch ? 0.98 : tagMatch ? 0.89 : 0.77;
+          const semantic = semanticResults[d.id];
+          if (semantic !== undefined) {
+            sim = semantic;
+          } else {
+            const titleMatch = d.title.toLowerCase().includes(searchQuery.toLowerCase());
+            const tagMatch = d.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+            sim = titleMatch ? 0.98 : tagMatch ? 0.89 : 0.77;
+          }
         }
         return { ...d, similarity: sim };
       });
-  }, [docs, viewMode, selectedCategory, searchQuery]);
+  }, [docs, viewMode, selectedCategory, searchQuery, semanticResults]);
 
   const selectedDoc = useMemo(() => {
     return docs.find((d) => d.id === selectedDocId) || filteredDocs[0] || docs[0];
@@ -656,14 +732,29 @@ export default function KnowledgeView() {
   const karpathySkillCount = useMemo(() => docs.filter((d) => d.isKarpathySkill || d.category === "Karpathy Skills").length, [docs]);
 
   // Trigger Obsidian Vault Sync
-  const handleSyncObsidianVault = () => {
+  const handleSyncObsidianVault = async () => {
     cyberAudio.play("click");
     setIsObsidianSyncing(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/knowledge/obsidian/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vault_path: obsidianVaultPath }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { scanned?: number; edges?: number };
+        setObsidianSyncCount(data.scanned ?? 0);
+        await fetchMemories();
+      }
+    } catch {
+      // fall back to the mock sync animation
+      setTimeout(() => {
+        setObsidianSyncCount((prev) => prev + 3);
+      }, 1200);
+    } finally {
       setIsObsidianSyncing(false);
-      setObsidianSyncCount((prev) => prev + 3);
       cyberAudio.play("chime");
-    }, 1200);
+    }
   };
 
   // Launch Obsidian Protocol URI
@@ -717,17 +808,31 @@ export default function KnowledgeView() {
   // Delete Document
   const handleDeleteDoc = async (id: string) => {
     cyberAudio.play("click");
+    // Prefer the real Knowledge Vault API (F4); fall back to the sidecar
+    // memory engine, then to a local mock removal.
     try {
-      const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
-      const res = await fetch(`${sidecarUrl}/api/hermes/memories/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/knowledge/docs/${id}`, { method: "DELETE" });
       if (res.ok) {
         await fetchMemories();
-      } else {
-        throw new Error();
+        if (selectedDocId === id && docs.length > 1) {
+          setSelectedDocId(docs[0].id);
+        }
+        return;
       }
+      throw new Error();
     } catch {
-      const updated = docs.filter((d) => d.id !== id);
-      saveDocs(updated);
+      try {
+        const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
+        const res = await fetch(`${sidecarUrl}/api/hermes/memories/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          await fetchMemories();
+        } else {
+          throw new Error();
+        }
+      } catch {
+        const updated = docs.filter((d) => d.id !== id);
+        saveDocs(updated);
+      }
     }
     if (selectedDocId === id && docs.length > 1) {
       setSelectedDocId(docs[0].id);
@@ -757,47 +862,78 @@ export default function KnowledgeView() {
       .map((t) => t.trim().replace(/^#/, ""))
       .filter(Boolean);
 
+    // Prefer the real Knowledge Vault API (F4); fall back to the sidecar
+    // memory engine, then to a local mock doc.
     try {
-      const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
-      const res = await fetch(`${sidecarUrl}/api/hermes/memories`, {
+      const res = await fetch("/api/knowledge/docs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newTitle.trim(),
           content: newContent.trim(),
-          category: newCategory === "Karpathy Skills" ? "ai" : newCategory === "System Arch" ? "architecture" : newCategory === "Threat Intel" ? "security" : "fact",
+          category: newCategory,
           tags: tagsArray,
         }),
       });
       if (res.ok) {
         await fetchMemories();
-      } else {
-        throw new Error();
+        setIngestProgress(100);
+        setIngestPhase("Syncing into Qdrant vector database...");
+        setTimeout(() => {
+          setIsIngesting(false);
+          setShowIngestModal(false);
+          setNewTitle("");
+          setNewContent("");
+          setNewTags("");
+          setIngestProgress(0);
+          cyberAudio.play("chime");
+        }, 300);
+        return;
       }
+      throw new Error();
     } catch {
-      const isKarpathy = newCategory === "Karpathy Skills";
-      const slugBase = newTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);
-      const newDoc: KnowledgeDoc = {
-        id: `doc-${Date.now().toString(36)}`,
-        title: newTitle.trim(),
-        category: newCategory,
-        slug: `/${newCategory.toLowerCase().replace(/\s+/g, "-")}/${slugBase}.md`,
-        tags: tagsArray.length > 0 ? tagsArray : ["obsidian", "pkm"],
-        tokens: Math.max(120, Math.floor(newContent.length / 4)),
-        chunks: Math.max(1, Math.ceil(newContent.length / 800)),
-        vectors: "1536-dim float32",
-        updatedAt: new Date().toISOString().replace("T", " ").slice(0, 16),
-        author: "OPERATOR",
-        obsidianPath: `${newCategory.replace(/\s+/g, "_")}/${newTitle.replace(/[^a-zA-Z0-9_-]/g, "_")}.md`,
-        backlinks: [],
-        wikiLinks: [],
-        isKarpathySkill: isKarpathy,
-        embeddingSnippet: [0.12, -0.05, 0.38, 0.19],
-        content: newContent,
-      };
-      const updated = [newDoc, ...docs];
-      saveDocs(updated);
-      setSelectedDocId(newDoc.id);
+      try {
+        const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
+        const res = await fetch(`${sidecarUrl}/api/hermes/memories`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: newTitle.trim(),
+            content: newContent.trim(),
+            category: newCategory === "Karpathy Skills" ? "ai" : newCategory === "System Arch" ? "architecture" : newCategory === "Threat Intel" ? "security" : "fact",
+            tags: tagsArray,
+          }),
+        });
+        if (res.ok) {
+          await fetchMemories();
+        } else {
+          throw new Error();
+        }
+      } catch {
+        const isKarpathy = newCategory === "Karpathy Skills";
+        const slugBase = newTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);
+        const newDoc: KnowledgeDoc = {
+          id: `doc-${Date.now().toString(36)}`,
+          title: newTitle.trim(),
+          category: newCategory,
+          slug: `/${newCategory.toLowerCase().replace(/\s+/g, "-")}/${slugBase}.md`,
+          tags: tagsArray.length > 0 ? tagsArray : ["obsidian", "pkm"],
+          tokens: Math.max(120, Math.floor(newContent.length / 4)),
+          chunks: Math.max(1, Math.ceil(newContent.length / 800)),
+          vectors: "1536-dim float32",
+          updatedAt: new Date().toISOString().replace("T", " ").slice(0, 16),
+          author: "OPERATOR",
+          obsidianPath: `${newCategory.replace(/\s+/g, "_")}/${newTitle.replace(/[^a-zA-Z0-9_-]/g, "_")}.md`,
+          backlinks: [],
+          wikiLinks: [],
+          isKarpathySkill: isKarpathy,
+          embeddingSnippet: [0.12, -0.05, 0.38, 0.19],
+          content: newContent,
+        };
+        const updated = [newDoc, ...docs];
+        saveDocs(updated);
+        setSelectedDocId(newDoc.id);
+      }
     }
 
     setIngestProgress(100);

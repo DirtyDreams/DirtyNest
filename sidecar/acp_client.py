@@ -214,6 +214,7 @@ class HermesAcpBridge:
             needs_browser = "browse" in lower_prompt or "cdp" in lower_prompt or "web" in lower_prompt or "scrape" in lower_prompt or "screenshot" in lower_prompt or "http" in lower_prompt
             needs_fs_patch = "patch" in lower_prompt or "edit" in lower_prompt or "modify" in lower_prompt or "write file" in lower_prompt or "refactor" in lower_prompt
             needs_inspect = "inspect" in lower_prompt or "status" in lower_prompt or "check" in lower_prompt or "scan" in lower_prompt or "health" in lower_prompt
+            needs_knowledge = "knowledge" in lower_prompt or "vault" in lower_prompt or "semantic search" in lower_prompt or "rag" in lower_prompt or "find in the knowledge" in lower_prompt or "search the knowledge" in lower_prompt
 
             if needs_browser:
                 target_url = "http://localhost:3000"
@@ -304,6 +305,23 @@ class HermesAcpBridge:
                     "session_id": session_id,
                     "tool_name": "system_scan",
                     "result": "Verified services: SkillClaw :30000 [UP], Minions :6969 [UP], CDP :9222 [UP]."
+                })
+                await asyncio.sleep(0.4)
+
+            elif needs_knowledge:
+                from knowledge_service import knowledge_service
+                vault_results = []
+                if knowledge_service.is_ready:
+                    vault_results = knowledge_service.search(prompt, limit=3, score_threshold=0.4)
+                result_text = "Knowledge Vault semantic search results:\n" + (
+                    "\n".join([f"  * [{r['category']}] {r['title']} ({int(r['score']*100)}% match): {r['text'][:200]}" for r in vault_results])
+                    if vault_results else "  * No knowledge vault documents above similarity threshold."
+                )
+                await self.broadcast_event({
+                    "type": "ACP_TOOL_EXECUTED",
+                    "session_id": session_id,
+                    "tool_name": "semantic_search",
+                    "result": result_text
                 })
                 await asyncio.sleep(0.4)
 

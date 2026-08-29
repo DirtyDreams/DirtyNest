@@ -19,6 +19,7 @@ import psutil
 
 from acp_client import acp_bridge
 from memory_service import memory_engine
+from knowledge_service import COLLECTION_NAME, knowledge_service
 from cdp_service import cdp_engine
 from cron_service import cron_manager
 from docker_service import docker_engine
@@ -386,10 +387,61 @@ def create_memory_endpoint(req: MemoryCreateRequest):
     )
     return {"status": "success", "memory": result}
 
-@app.delete("/api/hermes/memories/{memory_id}")
-def delete_memory_endpoint(memory_id: str):
-    success = memory_engine.delete_memory(memory_id)
-    return {"status": "success" if success else "failed", "deleted_id": memory_id}
+class KnowledgeIngestRequest(BaseModel):
+    doc_id: str = Field(..., description="PG knowledge_docs.id as string")
+    title: str = Field(..., description="Document title")
+    content: str = Field(..., description="Document body text")
+    category: str = Field("general", description="Category")
+    tags: Optional[List[str]] = Field(default_factory=list)
+
+class KnowledgeSearchRequest(BaseModel):
+    query: str = Field(..., description="Semantic search query")
+    limit: int = Field(5, ge=1, le=50)
+    threshold: float = Field(0.5, ge=0.0, le=1.0)
+
+class KnowledgeObsidianIndexRequest(BaseModel):
+    vault_path: str = Field(..., description="Absolute path to Obsidian vault dir")
+
+@app.post("/api/knowledge/ingest")
+def knowledge_ingest_endpoint(req: KnowledgeIngestRequest):
+    try:
+        point_ids = knowledge_service.ingest_document(
+            doc_id=req.doc_id,
+            title=req.title,
+            content=req.content,
+            category=req.category,
+            tags=req.tags
+        )
+        return {"status": "success", "point_ids": point_ids, "chunks": len(point_ids)}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+@app.post("/api/knowledge/search")
+def knowledge_search_endpoint(req: KnowledgeSearchRequest):
+    results = knowledge_service.search(query=req.query, limit=req.limit, score_threshold=req.threshold)
+    return {"status": "success", "query": req.query, "results": results, "count": len(results)}
+
+@app.delete("/api/knowledge/docs/{doc_id}")
+def knowledge_delete_endpoint(doc_id: str):
+    success = knowledge_service.delete_document(doc_id)
+    return {"status": "success" if success else "failed", "deleted_doc_id": doc_id}
+
+@app.get("/api/knowledge/stats")
+def knowledge_stats_endpoint():
+    return {"status": "success", "collection": COLLECTION_NAME,
+            "point_count": knowledge_service.count_points(),
+            "ready": knowledge_service.is_ready}
+
+@app.post("/api/knowledge/obsidian/index")
+def knowledge_obsidian_index_endpoint(req: KnowledgeObsidianIndexRequest):
+    try:
+        result = knowledge_service.index_obsidian_vault(req.vault_path)
+        return {"status": "success", "docs": result["docs"], "edges": result["edges"],
+                "doc_count": len(result["docs"]), "edge_count": len(result["edges"])}
+    except FileNotFoundError as e:
+        return {"status": "error", "error": str(e)}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 class CdpNavigateRequest(BaseModel):
     url: str = Field(..., description="Target URL")

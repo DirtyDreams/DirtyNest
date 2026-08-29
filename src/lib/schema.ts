@@ -202,3 +202,29 @@ export const agentConfigs = pgTable("agent_configs", {
   created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
   updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
 });
+// ---------------------------------------------------------------------------
+// Knowledge Vault (F4) — document metadata in PG, embeddings in Qdrant.
+// ---------------------------------------------------------------------------
+
+export const knowledgeDocs = pgTable("knowledge_docs", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  category: varchar("category", { length: 100 }).notNull().default("general"),
+  tags: text("tags").notNull().default("[]"),
+  metadata: text("metadata"),
+  qdrant_point_id: varchar("qdrant_point_id", { length: 100 }),
+  source: varchar("source", { length: 50 }).notNull().default("manual"),
+  obsidian_path: text("obsidian_path"),
+  created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
+  updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+});
+
+export const knowledgeGraphEdges = pgTable("knowledge_graph_edges", {
+  id: serial("id").primaryKey(),
+  source_doc_id: integer("source_doc_id").notNull().references(() => knowledgeDocs.id, { onDelete: "cascade" }),
+  target_doc_id: integer("target_doc_id").notNull().references(() => knowledgeDocs.id, { onDelete: "cascade" }),
+  relation: varchar("relation", { length: 50 }).notNull().default("wiki_link"),
+  created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
+});
