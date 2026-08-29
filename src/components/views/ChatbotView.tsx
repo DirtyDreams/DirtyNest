@@ -581,80 +581,37 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
         }
       }, 16);
     } else {
-      let apiKey = "";
-      if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
-        apiKey = localStorage.getItem("dirtynest_gemini_key") || "";
+      // ADR-0014: legacy /api/chat (Gemini proxy) retired. code_interpreter mode
+      // rides the same Hermes ACP path as standard/reasoning (agents are the
+      // fallback, not a second LLM proxy).
+      if (acpIsStreaming || isGenerating) return;
+      if (!customPrompt) setInput("");
+      cyberAudio.play("click");
+
+      const userMsg: Message = {
+        id: `usr-${Date.now()}`,
+        sender: "user",
+        text: textToSend,
+        timestamp: timeStr,
+        mode: activeMode,
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      setIsGenerating(true);
+
+      let sId = acpActiveSessionId;
+      if (!sId) {
+        const newSession = await acpCreateSession(`Hermes Thread - ${textToSend.slice(0, 20)}...`);
+        if (newSession) {
+          sId = newSession.id;
+        }
       }
 
-      const aiMsgId = `ai-${Date.now()}`;
-      const aiResponse: Message = {
-        id: aiMsgId,
-        sender: "ai",
-        text: "",
-        timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
-        model: activeAiModel?.name,
-        mode: activeMode,
-        tokens: 0,
-      };
-
-      setMessages((prev) => [...prev, aiResponse]);
-
-      try {
-        const payload = {
-          messages: [...messages, userMsg],
-          apiKey,
-          model: selectedModel,
-          mode: activeMode,
-        };
-
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || "Failed to communicate with AI core.");
-        }
-
-        if (!res.body) throw new Error("No readable stream returned.");
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let done = false;
-        let responseText = "";
-        let tokenCounter = 0;
-
-        while (!done) {
-          const { value, done: readerDone } = await reader.read();
-          done = readerDone;
-          if (value) {
-            const chunkText = decoder.decode(value, { stream: true });
-            responseText += chunkText;
-            tokenCounter += Math.ceil(chunkText.length / 4);
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === aiMsgId
-                  ? { ...msg, text: responseText, tokens: tokenCounter }
-                  : msg
-              )
-            );
-          }
-        }
-        
-        cyberAudio.play("chime");
-      } catch (err: any) {
-        console.error("Chat error:", err);
-        toast.error("COMMUNICATION FAILURE", err.message);
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === aiMsgId
-              ? { ...msg, text: `**ERROR:** ${err.message}` }
-              : msg
-          )
-        );
-      } finally {
+      if (sId) {
+        await sendPromptDirective(textToSend);
         setIsGenerating(false);
+      } else {
+        setIsGenerating(false);
+        toast.error("NO ACP SESSION", "Could not create a Hermes session. Check sidecar status.");
       }
     }
   };

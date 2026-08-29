@@ -17,6 +17,7 @@
 | [0011](./adr/0011-hermes-acp-confirmed-harness-blueprint-rejected.md) | **Hermes ACP potwierdzony silnikiem; blueprint DeepSeek Harness 2.0 odrzucony** | ✅ |
 | [0012](./adr/0012-no-separate-backend-service.md) | **Brak osobnej usługi backend — topo dwuwarstwowa (Next + sidecar)** | ✅ |
 | [0013](./adr/0013-social-cdp-first.md) | **Social: CDP-first, API tylko gdzie CDP zawodzi** | ✅ |
+| [0014](./adr/0014-retire-legacy-gemini-chat-proxy.md) | **`/api/chat` (proxy Gemini) całkowicie wycofane; code_interpreter przez ACP** | ✅ |
 
 ## Historia
 
