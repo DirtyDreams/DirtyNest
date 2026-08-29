@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState } from "react";
-import { Copy, Check, ExternalLink, Sparkles, Tag, ShieldCheck, Terminal, Cpu } from "lucide-react";
+import { Copy, Check, ExternalLink, Sparkles, Terminal } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface CyberMarkdownViewerProps {

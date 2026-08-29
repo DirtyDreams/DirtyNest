@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Brain,
-  ChevronDown,
-  ChevronUp,
-  Sparkles,
-  Activity,
-  Cpu,
-} from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, Cpu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ReasoningTreeInspectorProps {

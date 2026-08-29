@@ -1,20 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Clock,
-  Play,
-  RotateCw,
-  CheckCircle2,
-  AlertCircle,
-  ShieldAlert,
-  Database,
-  Brain,
-  Wifi,
-  Loader2,
-  Server,
-  Zap,
-} from "lucide-react";
+import { Clock, Play, RotateCw, ShieldAlert, Database, Brain, Wifi, Loader2 } from "lucide-react";
 import { hermesSocket } from "@/lib/hermes/hermesSocket";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Button } from "@/components/ui/button";

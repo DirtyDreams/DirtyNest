@@ -1,16 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Activity,
-  Cpu,
-  Layers,
-  Zap,
-  Terminal,
-  Shield,
-  RotateCcw,
-} from "lucide-react";
-import { cyberAudio } from "@/lib/cyberAudio";
+import { Activity } from "lucide-react";
+import {  } from "@/lib/cyberAudio";
 
 interface SyscallStat {
   name: string;

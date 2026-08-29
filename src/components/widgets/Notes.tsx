@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { FileText, Copy, Check, Trash2, Code } from "lucide-react";
+import { FileText, Copy, Check, Code } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -1,16 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Activity,
-  Sparkles,
-  Sliders,
-  Cpu,
-  HardDrive,
-  Clock,
-  TrendingUp,
-  AlertTriangle,
-} from "lucide-react";
+import { Activity, Sparkles, Clock, TrendingUp, AlertTriangle } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

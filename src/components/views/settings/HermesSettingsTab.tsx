@@ -1,25 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Brain,
-  Sliders,
-  Database,
-  Sparkles,
-  Shield,
-  Radio,
-  Cpu,
-  Save,
-  RotateCcw,
-  CheckCircle2,
-  Lock,
-  Eye,
-  EyeOff,
-  Server,
-  Zap,
-  Layers,
-  Terminal,
-} from "lucide-react";
+import { Brain, Sliders, Database, Sparkles, Shield, Radio, Cpu, Save, RotateCcw, Eye, EyeOff } from "lucide-react";
 import { useHermesStore } from "@/lib/hermes/hermesStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";

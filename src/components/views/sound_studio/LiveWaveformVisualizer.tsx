@@ -1,19 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import {
-  AudioLines,
-  Activity,
-  Volume2,
-  Sparkles,
-  Play,
-  Square,
-  Music,
-  Sliders,
-  ChevronLeft,
-  ChevronRight,
-  Zap,
-} from "lucide-react";
+import { AudioLines, Activity, Play, Square, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";

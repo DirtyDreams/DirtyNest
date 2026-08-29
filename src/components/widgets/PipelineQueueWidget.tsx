@@ -1,6 +1,6 @@
 "use client";
 
-import { GitPullRequest, Play, CheckCircle2, Clock, GitBranch, ArrowRight } from "lucide-react";
+import { GitPullRequest, GitBranch, ArrowRight } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface PipelineJob {

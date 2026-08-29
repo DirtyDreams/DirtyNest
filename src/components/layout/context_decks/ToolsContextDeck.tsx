@@ -1,15 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Wrench,
-  Clock,
-  Code,
-  Copy,
-  Check,
-  Zap,
-  Lock,
-} from "lucide-react";
+import { Clock, Code, Copy, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function ToolsContextDeck() {

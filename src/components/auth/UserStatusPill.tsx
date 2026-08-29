@@ -1,18 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import {
-  Shield,
-  Lock,
-  LogOut,
-  Users,
-  Key,
-  ChevronDown,
-  Check,
-  Zap,
-  Copy,
-  CheckCheck,
-} from "lucide-react";
+import { Lock, LogOut, ChevronDown } from "lucide-react";
 import { AUTH_PERSONAS } from "@/types/auth";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { cyberAudio } from "@/lib/cyberAudio";

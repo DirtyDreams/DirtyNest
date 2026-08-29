@@ -1,32 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import {
-  LayoutGrid,
-  ArrowUp,
-  ArrowDown,
-  Check,
-  RotateCcw,
-  Sparkles,
-  Search,
-  Layers,
-  Eye,
-  EyeOff,
-  Sliders,
-  Shield,
-  Zap,
-  Grid,
-  Maximize2,
-  Minimize2,
-} from "lucide-react";
-import {
-  ALL_WIDGETS_METADATA,
-  DEFAULT_LAYOUT,
-  LAYOUT_PRESETS,
-  loadWidgetLayout,
-  saveWidgetLayout,
-  type WidgetLayoutItem,
-} from "@/lib/widgetLayout";
+import { LayoutGrid, ArrowUp, ArrowDown, RotateCcw, Search, Maximize2, Minimize2 } from "lucide-react";
+import { ALL_WIDGETS_METADATA, DEFAULT_LAYOUT, LAYOUT_PRESETS, loadWidgetLayout, saveWidgetLayout, type WidgetLayoutItem } from "@/lib/widgetLayout";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

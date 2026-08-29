@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Coffee,
-  Droplets,
-  Flame,
-  Plus,
-  Minus,
-  Check,
-  Sparkles,
-} from "lucide-react";
+import { Coffee, Droplets, Flame, Plus } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function DevHydrationStreak() {

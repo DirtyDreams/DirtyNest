@@ -1,19 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  X,
-  Sparkles,
-  ArrowRight,
-  User,
-  Camera,
-  Video,
-  Radio,
-  Globe,
-  DollarSign,
-  Tag,
-  Check,
-} from "lucide-react";
+import { X, Sparkles, ArrowRight } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { VirtualInfluencer } from "./InfluencerProfileModal";
 

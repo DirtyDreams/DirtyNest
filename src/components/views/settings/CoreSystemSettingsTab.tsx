@@ -4,15 +4,12 @@ import { useState, useEffect } from "react";
 import {
   Sliders,
   Palette,
-  Volume2,
   Monitor,
   Database,
   Download,
   Upload,
   RefreshCw,
   Check,
-  Sparkles,
-  Puzzle,
 } from "lucide-react";
 import { applyThemePreset, getAllThemes, type ThemePreset } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";

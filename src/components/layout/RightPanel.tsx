@@ -17,8 +17,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Zap,
-  Sliders,
-  Sparkles,
   Atom,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -1,25 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Radio,
-  TrendingUp,
-  Activity,
-  Sparkles,
-  Link,
-  Copy,
-  Check,
-  Flame,
-  Globe,
-  Share2,
-  BarChart3,
-  Search,
-  ExternalLink,
-  ArrowUpRight,
-  Shield,
-  Eye,
-  CheckCircle2,
-} from "lucide-react";
+import { Radio, Activity, Sparkles, Link, Copy, Check, Flame } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface KeywordMention {

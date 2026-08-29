@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Brain, Sparkles, Database, Zap, ArrowRight, Play, Terminal } from "lucide-react";
+import { Brain, ArrowRight, Play, Terminal } from "lucide-react";
 import { useHermesStore } from "@/lib/hermes/hermesStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 

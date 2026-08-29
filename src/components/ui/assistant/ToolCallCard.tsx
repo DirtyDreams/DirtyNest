@@ -1,21 +1,8 @@
 "use client";
 
-import * as React from "react";
+import {  } from "react";
 import { useState } from "react";
-import {
-  Terminal,
-  CheckCircle2,
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-  Cpu,
-  Database,
-  Search,
-  ExternalLink,
-  Code2,
-  Copy,
-  Check,
-} from "lucide-react";
+import { Terminal, ChevronDown, ChevronUp, Cpu, Database, Search, Copy, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

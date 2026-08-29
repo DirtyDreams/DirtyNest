@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, X, Check, Copy, Terminal, ShieldAlert, CheckCircle2, Wrench } from "lucide-react";
+import { Sparkles, X, Check, Copy, CheckCircle2, Wrench } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { SystemLog } from "@/db";
 

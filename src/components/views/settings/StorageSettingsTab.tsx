@@ -1,18 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Database,
-  Download,
-  Upload,
-  Sparkles,
-  Check,
-  RotateCcw,
-  RefreshCw,
-  HardDrive,
-  CheckCircle2,
-  Trash2,
-} from "lucide-react";
+import { Database, Download, Upload, Check, RefreshCw } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

@@ -1,19 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Users,
-  Radio,
-  Flame,
-  DollarSign,
-  TrendingUp,
-  Sparkles,
-  Plus,
-  Send,
-  Check,
-  Zap,
-  Award,
-} from "lucide-react";
+import { Sparkles, Check, Award } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function NexusContextDeck() {

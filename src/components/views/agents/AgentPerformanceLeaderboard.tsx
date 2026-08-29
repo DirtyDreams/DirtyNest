@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trophy, TrendingUp, Zap, Clock, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface AgentRankData {

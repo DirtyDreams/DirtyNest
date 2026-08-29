@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mic, Sliders, AudioLines, Sparkles, Volume2, Radio, Zap, Music } from "lucide-react";
+import { Mic, Sliders, AudioLines, Radio, Zap, Music } from "lucide-react";
 import VoiceCloningMatrix, { VOICE_MODELS, VoiceModel } from "./sound_studio/VoiceCloningMatrix";
 import TtsScriptEditor, { VocalSynthesisParams } from "./sound_studio/TtsScriptEditor";
 import DspVoiceChanger from "./sound_studio/DspVoiceChanger";

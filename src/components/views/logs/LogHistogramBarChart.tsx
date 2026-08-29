@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Activity, BarChart2 } from "lucide-react";
+import { BarChart2 } from "lucide-react";
 import { SystemLog } from "@/db";
 
 interface LogHistogramBarChartProps {

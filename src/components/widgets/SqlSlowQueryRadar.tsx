@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Database,
-  Clock,
-  AlertTriangle,
-  Flame,
-  CheckCircle2,
-  Code,
-  Layers,
-} from "lucide-react";
+import { Database } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface SlowQuery {

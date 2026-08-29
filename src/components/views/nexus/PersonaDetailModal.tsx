@@ -1,22 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  X,
-  MessageSquare,
-  Sparkles,
-  Heart,
-  Share2,
-  Copy,
-  Check,
-  Download,
-  BookOpen,
-  User,
-  Zap,
-  Tag,
-  Shield,
-  Layers,
-} from "lucide-react";
+import { X, MessageSquare, Heart, Copy, Check, Download } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface PersonaCharacter {

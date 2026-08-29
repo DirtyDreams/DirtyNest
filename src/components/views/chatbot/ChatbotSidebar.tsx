@@ -1,31 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Plus,
-  Search,
-  MessageSquare,
-  GitBranch,
-  Download,
-  Trash2,
-  Edit2,
-  Check,
-  Star,
-  Bot,
-  Sliders,
-  Sparkles,
-  ChevronDown,
-  ChevronRight,
-  Folder,
-  FolderPlus,
-  FolderOpen,
-  ArrowUpDown,
-  MoveRight,
-  MoreVertical,
-  X,
-  Layers,
-  Filter,
-} from "lucide-react";
+import { Plus, Search, MessageSquare, GitBranch, Download, Trash2, Edit2, Check, Star, Bot, Sliders, ChevronDown, ChevronRight, Folder, FolderPlus, X, Layers } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { HermesChatSession } from "./ChatbotSessionsDrawer";
 import { AgentPersona } from "./PersonaStudioModal";

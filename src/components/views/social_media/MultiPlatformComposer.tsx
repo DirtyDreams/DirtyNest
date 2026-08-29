@@ -1,36 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Send,
-  Sparkles,
-  Image as ImageIcon,
-  Paperclip,
-  Check,
-  Eye,
-  MessageSquare,
-  Heart,
-  Repeat,
-  Share,
-  Globe,
-  Radio,
-  Bookmark,
-  Smile,
-  Hash,
-  AtSign,
-  ArrowUp,
-  ArrowDown,
-  ThumbsUp,
-  MessageCircle,
-  Plus,
-  Trash2,
-  X,
-  Layers,
-  Flame,
-  CheckCircle2,
-  RefreshCw,
-  FolderOpen,
-} from "lucide-react";
+import { Send, Image as ImageIcon, Paperclip, Eye, Heart, Repeat, Share, Radio, MessageCircle, Trash2, CheckCircle2, RefreshCw, FolderOpen } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { SAMPLE_ASSETS } from "../image_studio/GeneratedAssetsGallery";
 

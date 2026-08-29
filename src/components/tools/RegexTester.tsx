@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, CheckCircle2, AlertCircle, Copy, Check, Sparkles, Sliders } from "lucide-react";
+import { Search, CheckCircle2, AlertCircle, Copy, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 const PRESETS = [

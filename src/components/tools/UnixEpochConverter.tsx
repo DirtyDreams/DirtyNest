@@ -1,15 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Clock,
-  Copy,
-  Check,
-  RefreshCw,
-  Sparkles,
-  ArrowRightLeft,
-  Calendar,
-} from "lucide-react";
+import { Clock, Copy, Check, RefreshCw } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function UnixEpochConverter() {

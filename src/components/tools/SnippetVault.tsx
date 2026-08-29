@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Code, Copy, Check, Plus, Trash2, Search, Tag, Sparkles } from "lucide-react";
+import { Code, Copy, Check, Plus, Trash2, Search } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface Snippet {

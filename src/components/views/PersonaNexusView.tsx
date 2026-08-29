@@ -5,27 +5,14 @@ import {
   Users,
   Search,
   Plus,
-  Filter,
-  Sparkles,
-  Heart,
   MessageSquare,
   Flame,
-  Clock,
-  Star,
-  Layers,
-  ArrowUpDown,
-  Download,
-  Upload,
   BookOpen,
-  Bot,
-  Zap,
   Radio,
   DollarSign,
   TrendingUp,
-  Award,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
-import { PersonaCharacter } from "./nexus/PersonaDetailModal";
 import PersonaChatRoom from "./nexus/PersonaChatRoom";
 import UserPersonaModal, { UserPersona } from "./nexus/UserPersonaModal";
 import LorebookManagerModal, { LorebookEntry, DEFAULT_LOREBOOK_ENTRIES } from "./nexus/LorebookManagerModal";
@@ -33,11 +20,8 @@ import InfluencerProfileModal, { VirtualInfluencer } from "./nexus/InfluencerPro
 import LivestreamSimulatorModal from "./nexus/LivestreamSimulatorModal";
 import CreateInfluencerModal from "./nexus/CreateInfluencerModal";
 import PersonaVisemeAvatarStudio from "./nexus/PersonaVisemeAvatarStudio";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import NumberFlow from "@number-flow/react";
-import { cn } from "@/lib/utils";
 
 const INITIAL_INFLUENCERS: VirtualInfluencer[] = [
   {

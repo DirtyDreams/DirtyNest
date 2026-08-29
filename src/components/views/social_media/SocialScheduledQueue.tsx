@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, CheckCircle2, AlertTriangle, Play, Trash2, Send, Calendar } from "lucide-react";
+import { Trash2, Calendar } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface ScheduledPost {

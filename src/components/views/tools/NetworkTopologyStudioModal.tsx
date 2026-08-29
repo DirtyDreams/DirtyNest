@@ -1,27 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
-import {
-  Network,
-  Server,
-  Database,
-  Shield,
-  Bot,
-  Activity,
-  Zap,
-  Play,
-  RotateCcw,
-  Download,
-  X,
-  Plus,
-  Radio,
-  FileCode,
-  Layers,
-  AlertTriangle,
-  CheckCircle2,
-  Copy,
-  Check,
-} from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Network, Zap, X, AlertTriangle, Copy, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface TopologyNode {

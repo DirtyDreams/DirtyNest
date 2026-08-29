@@ -1,25 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import {
-  Play,
-  Pause,
-  RotateCcw,
-  FastForward,
-  Download,
-  Upload,
-  X,
-  Terminal,
-  Clock,
-  Sparkles,
-  Layers,
-  CheckCircle2,
-  Circle,
-  Copy,
-  Check,
-  Radio,
-  FileCode,
-} from "lucide-react";
+import { Play, Pause, RotateCcw, Download, X, Terminal } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 // Asciinema v2 Frame: [timeOffsetInSeconds, "o", "text\n"]

@@ -1,23 +1,7 @@
 ﻿"use client";
 
 import { useState, useEffect } from "react";
-import {
-  Cpu,
-  Play,
-  Trash2,
-  Search,
-  CheckCircle2,
-  AlertTriangle,
-  RefreshCw,
-  Zap,
-  Radio,
-  FileCheck,
-  ShieldCheck,
-  Send,
-  Sliders,
-  Terminal,
-  Activity,
-} from "lucide-react";
+import { Cpu, Trash2, Search, CheckCircle2, AlertTriangle, RefreshCw, Zap, Radio, FileCheck, ShieldCheck, Send } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface AutomationStatus {

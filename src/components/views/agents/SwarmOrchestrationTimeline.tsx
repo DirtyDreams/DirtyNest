@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { GitMerge, Clock, CheckCircle2, AlertCircle, Play, Layers } from "lucide-react";
+import { GitMerge } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface SwarmTask {

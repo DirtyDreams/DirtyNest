@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bot, Cpu, ArrowRight, ShieldCheck, Zap, Radio, RefreshCw, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Radio } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface SwarmNode {

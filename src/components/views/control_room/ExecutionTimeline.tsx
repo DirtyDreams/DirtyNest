@@ -1,19 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  ShieldAlert,
-  ChevronDown,
-  ChevronRight,
-  Code2,
-  Terminal,
-  Activity,
-  Zap,
-} from "lucide-react";
+import { Clock, ChevronDown, ChevronRight, Code2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface TimelineStep {

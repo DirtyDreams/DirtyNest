@@ -1,25 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Minus,
-  Square,
-  X,
-  Terminal,
-  Activity,
-  Server,
-  Bot,
-  ShieldAlert,
-  Cpu,
-  Layers,
-  Sparkles,
-  Maximize2,
-  Minimize2,
-  Plus,
-  Play,
-  RotateCcw,
-  Zap,
-} from "lucide-react";
+import { Minus, X, Activity, Maximize2, Minimize2, Plus } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

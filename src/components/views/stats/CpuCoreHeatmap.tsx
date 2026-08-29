@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Cpu, Flame, Activity, Zap, RefreshCw } from "lucide-react";
+import { Cpu } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface CoreStats {

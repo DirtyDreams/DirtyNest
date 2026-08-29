@@ -1,19 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Key,
-  Eye,
-  EyeOff,
-  Sparkles,
-  Check,
-  Shield,
-  Activity,
-  Zap,
-  Globe,
-  Radio,
-  ExternalLink,
-} from "lucide-react";
+import { Key, Eye, EyeOff, Sparkles, ExternalLink } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

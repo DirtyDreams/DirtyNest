@@ -4,33 +4,22 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import {
   ArrowLeft,
   Send,
-  Sparkles,
   Sliders,
-  RotateCcw,
   Edit2,
-  Check,
   ChevronLeft,
   ChevronRight,
   BookOpen,
-  Trash2,
   Volume2,
   VolumeX,
-  StopCircle,
   Copy,
-  Cpu,
-  Layers,
-  Heart,
   Bot,
-  User,
   GitBranch,
-  Download,
   Zap,
-  Tag,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { PersonaCharacter } from "./PersonaDetailModal";
 import { UserPersona } from "./UserPersonaModal";
-import { LorebookEntry, DEFAULT_LOREBOOK_ENTRIES } from "./LorebookManagerModal";
+import { LorebookEntry } from "./LorebookManagerModal";
 import ChatSessionsDrawer, { ChatSession } from "./ChatSessionsDrawer";
 import TokenContextInspector from "./TokenContextInspector";
 

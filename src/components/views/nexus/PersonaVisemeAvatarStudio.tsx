@@ -1,19 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Mic,
-  Volume2,
-  Play,
-  Pause,
-  Sparkles,
-  Zap,
-  Sliders,
-  Smile,
-  Activity,
-  User,
-  Radio,
-} from "lucide-react";
+import { useState } from "react";
+import { Volume2, Smile } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 type VisemeMouthShape = "NEUTRAL" | "AA" | "EE" | "OH" | "OO" | "CH";

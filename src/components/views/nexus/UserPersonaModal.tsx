@@ -1,17 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  X,
-  User,
-  Plus,
-  Check,
-  Sparkles,
-  Trash2,
-  Edit2,
-  Shield,
-  Zap,
-} from "lucide-react";
+import { X, User, Plus, Check, Trash2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface UserPersona {

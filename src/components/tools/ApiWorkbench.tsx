@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Send, Copy, Check, Clock, Globe, ArrowRight, Trash2, History, Code2, ShieldAlert } from "lucide-react";
+import { Send, Copy, Check, Globe, ArrowRight, History, Code2, ShieldAlert } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface RequestHistoryItem {

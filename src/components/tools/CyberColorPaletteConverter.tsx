@@ -1,17 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  Sparkles,
-  Copy,
-  Check,
-  RefreshCw,
-  Sliders,
-  CheckCircle2,
-  AlertTriangle,
-  Download,
-  Layers,
-} from "lucide-react";
+import { Sparkles, Copy, Check, CheckCircle2, AlertTriangle, Download } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface CyberColor {

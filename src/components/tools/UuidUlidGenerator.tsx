@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Key,
-  Copy,
-  Check,
-  RefreshCw,
-  Sparkles,
-  Sliders,
-  Layers,
-} from "lucide-react";
+import { Key, Copy, Check, RefreshCw } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 type IdFormat = "UUID_V4" | "UUID_V7" | "ULID" | "NANOID";

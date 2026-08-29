@@ -1,18 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  X,
-  Upload,
-  Sparkles,
-  Bot,
-  Check,
-  ArrowRight,
-  Download,
-  FileCode,
-  Layers,
-  Zap,
-} from "lucide-react";
+import { X, Upload, Sparkles, ArrowRight } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { PersonaCharacter } from "./PersonaDetailModal";
 

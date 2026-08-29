@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Image as ImageIcon, Sliders, Wand2, Save, RotateCcw, CheckCircle2, Maximize2 } from "lucide-react";
+import { Image as ImageIcon, Save } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

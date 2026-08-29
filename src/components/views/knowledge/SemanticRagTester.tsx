@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Sparkles, Database, Layers, ArrowRight, CheckCircle2, Sliders } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface RetrievedChunk {

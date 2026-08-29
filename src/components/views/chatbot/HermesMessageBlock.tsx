@@ -1,33 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Brain,
-  Wrench,
-  Code2,
-  CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  Sparkles,
-  Terminal,
-  Copy,
-  Check,
-  Zap,
-  Volume2,
-  VolumeX,
-  Database,
-  FileCode,
-  CheckCheck,
-  Table,
-  Play,
-  RotateCcw,
-  Edit2,
-} from "lucide-react";
+import { Brain, Copy, Check, Volume2, VolumeX, Database, FileCode, CheckCheck, Play, RotateCcw, Edit2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { ReasoningAccordion } from "@/components/ui/assistant/ReasoningAccordion";
 import { ToolCallCard } from "@/components/ui/assistant/ToolCallCard";
-import { GlassBadge } from "@/components/ui/glass/GlassBadge";
-import { Button } from "@/components/ui/button";
+import {  } from "@/components/ui/glass/GlassBadge";
+import {  } from "@/components/ui/button";
 
 interface Props {
   content: string;

@@ -1,20 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Sparkles,
-  Bot,
-  Cpu,
-  Shield,
-  Sliders,
-  CheckCircle2,
-  ArrowRight,
-  ArrowLeft,
-  Terminal,
-  Database,
-  Globe,
-  Layers,
-} from "lucide-react";
+import { Sparkles, Bot, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface BlueprintData {

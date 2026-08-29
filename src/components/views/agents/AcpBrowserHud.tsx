@@ -1,17 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Globe,
-  Camera,
-  RefreshCw,
-  ArrowRight,
-  ExternalLink,
-  Code,
-  CheckCircle,
-  AlertCircle,
-  Eye,
-} from "lucide-react";
+import { Globe, Camera, RefreshCw, ArrowRight, Code, Eye } from "lucide-react";
 import { useHermesAcpStore } from "@/lib/hermes/hermesAcpStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Input } from "@/components/ui/input";
@@ -172,7 +162,6 @@ export default function AcpBrowserHud() {
       <div className="relative rounded-xl border border-white/10 bg-black/80 overflow-hidden flex flex-col items-center justify-center min-h-[220px] max-h-[340px]">
         {browserState.screenshotB64 ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`data:image/png;base64,${browserState.screenshotB64}`}
               alt="Chrome CDP Live Viewport"

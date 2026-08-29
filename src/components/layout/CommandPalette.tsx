@@ -1,47 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import {
-  Search,
-  ArrowRight,
-  ExternalLink,
-  Command,
-  Sliders,
-  Terminal,
-  Activity,
-  Calendar,
-  Sparkles,
-  Layers,
-  Wrench,
-  Headphones,
-  Timer,
-  Palette,
-  Bot,
-  Cpu,
-  Database,
-  Settings,
-  ScrollText,
-  FileText,
-  CheckCircle2,
-  Lock,
-  Wifi,
-  Rss,
-  Users,
-  Image as ImageIcon,
-  Mic,
-  Share2,
-  Radio,
-  ShieldAlert,
-  Server,
-  FileCode,
-  Tag,
-  Clock,
-  Filter,
-  Network,
-  Keyboard,
-  Music,
-  Waves,
-} from "lucide-react";
+import { Search, ArrowRight, Command, Terminal, Activity, Calendar, Sparkles, Layers, Wrench, Bot, Cpu, Database, ScrollText, FileText, Wifi, Rss, Users, Image as ImageIcon, Mic, Share2, Radio, ShieldAlert, Server, Network, Keyboard, Music, Waves } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";

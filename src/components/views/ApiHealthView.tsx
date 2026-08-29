@@ -1,32 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Wifi,
-  Radio,
   CheckCircle2,
-  AlertTriangle,
-  Clock,
-  Shield,
   RefreshCw,
-  Play,
   Globe,
-  Lock,
-  ArrowUpRight,
   Server,
   Zap,
-  Activity,
   Send,
-  Sliders,
-  Check,
   Settings,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
 import ApiEndpointProbeModal from "./api_health/ApiEndpointProbeModal";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import NumberFlow from "@number-flow/react";
 import { cn } from "@/lib/utils";
 
 interface ServiceHealthItem {

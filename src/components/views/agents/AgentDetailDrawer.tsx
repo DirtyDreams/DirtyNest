@@ -1,30 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  X,
-  Cpu,
-  Activity,
-  Bot,
-  Terminal,
-  Shield,
-  Zap,
-  Play,
-  Pause,
-  RotateCcw,
-  Trash2,
-  Layers,
-  Database,
-  Sliders,
-  CheckCircle2,
-  Clock,
-  Sparkles,
-  ExternalLink,
-  Code2,
-  HardDrive,
-  Copy,
-  Check,
-} from "lucide-react";
+import { X, Cpu, Activity, Bot, Terminal, Zap, Play, Pause, Trash2, Database, Sliders, HardDrive, Copy, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface SwarmAgent {

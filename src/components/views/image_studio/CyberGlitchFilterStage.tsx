@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, Sliders, Download, RotateCcw, Zap, Eye, Flame, Wand2, Layers } from "lucide-react";
+import { Download, RotateCcw, Eye, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";

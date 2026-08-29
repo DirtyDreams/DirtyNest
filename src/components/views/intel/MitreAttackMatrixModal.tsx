@@ -1,18 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  X,
-  ShieldAlert,
-  ShieldCheck,
-  Search,
-  ExternalLink,
-  Zap,
-  Activity,
-  Layers,
-  Terminal,
-  AlertTriangle,
-} from "lucide-react";
+import { X, ShieldAlert } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface MitreAttackMatrixModalProps {

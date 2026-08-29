@@ -1,18 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Wrench,
-  X,
-  Copy,
-  Check,
-  RefreshCw,
-  Hash,
-  Binary,
-  Clock,
-  Code2,
-  Key,
-} from "lucide-react";
+import { Wrench, Copy, Check, RefreshCw, Hash, Binary, Clock, Code2, Key } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

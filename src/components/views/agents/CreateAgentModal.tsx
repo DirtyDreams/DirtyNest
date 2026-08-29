@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, Cpu, Shield, Sparkles, X, Check, ArrowRight, Wrench, Layers } from "lucide-react";
+import { Bot, X, Check, ArrowRight } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface Props {

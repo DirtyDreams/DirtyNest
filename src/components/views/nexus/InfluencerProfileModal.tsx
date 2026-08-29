@@ -1,25 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  X,
-  Radio,
-  MessageSquare,
-  Sparkles,
-  Heart,
-  DollarSign,
-  Share2,
-  TrendingUp,
-  Award,
-  Plus,
-  Flame,
-  Check,
-  Zap,
-  Globe,
-  Camera,
-  Video,
-  Layers,
-} from "lucide-react";
+import { X, Radio, MessageSquare, Heart, Plus, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { PersonaCharacter } from "./PersonaDetailModal";
 

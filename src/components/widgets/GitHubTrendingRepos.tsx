@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Star,
-  GitFork,
-  TrendingUp,
-  ExternalLink,
-  Code2,
-  Sparkles,
-} from "lucide-react";
+import { Star, TrendingUp } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface TrendingRepo {

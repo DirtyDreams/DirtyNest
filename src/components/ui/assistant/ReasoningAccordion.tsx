@@ -1,8 +1,8 @@
 "use client";
 
-import * as React from "react";
+import {  } from "react";
 import { useState } from "react";
-import { Brain, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 

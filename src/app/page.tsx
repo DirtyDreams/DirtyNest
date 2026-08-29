@@ -43,14 +43,13 @@ import ThemeCustomizerModal from "@/components/modals/ThemeCustomizerModal";
 import AudioMixerModal from "@/components/modals/AudioMixerModal";
 import HermesQuickCommandModal from "@/components/modals/HermesQuickCommandModal";
 import HermesMasterStatusBadge from "@/components/common/HermesMasterStatusBadge";
-import HeaderSubsystemsHud from "@/components/common/HeaderSubsystemsHud";
 import TerminalDock from "@/components/terminal/TerminalDock";
 import CyberWindowManager from "@/components/desktop/CyberWindowManager";
 import KeyboardHotkeyStudioModal from "@/components/views/tools/KeyboardHotkeyStudioModal";
 import { ParticleMeshBackground } from "@/components/ui/animated/ParticleMeshBackground";
 import dynamic from "next/dynamic";
 import ViewLoadingSkeleton from "@/components/common/ViewLoadingSkeleton";
-import { loadWidgetLayout, saveWidgetLayout, type WidgetLayoutItem, DEFAULT_LAYOUT, LAYOUT_PRESETS, ALL_WIDGETS_METADATA } from "@/lib/widgetLayout";
+import { loadWidgetLayout, saveWidgetLayout, type WidgetLayoutItem, LAYOUT_PRESETS, ALL_WIDGETS_METADATA } from "@/lib/widgetLayout";
 
 const ChatbotView = dynamic(() => import("@/components/views/ChatbotView"), {
   ssr: false,
@@ -127,7 +126,6 @@ import { cyberAudio } from "@/lib/cyberAudio";
 import { applyThemePreset } from "@/lib/theme";
 import { ToastProvider } from "@/components/common/ToastProvider";
 import AuthLockScreen from "@/components/auth/AuthLockScreen";
-import UserStatusPill from "@/components/auth/UserStatusPill";
 import ProtectedAccessGate from "@/components/auth/ProtectedAccessGate";
 import { useAuthStore } from "@/stores/useAuthStore";
 import {
@@ -156,7 +154,6 @@ import {
   Mic,
   Share2,
   Waves,
-  Square,
   GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";

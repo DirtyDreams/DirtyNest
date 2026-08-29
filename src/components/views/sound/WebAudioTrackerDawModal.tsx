@@ -1,24 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Music,
-  Play,
-  Square,
-  Volume2,
-  VolumeX,
-  Sliders,
-  Download,
-  RotateCcw,
-  X,
-  Sparkles,
-  Zap,
-  Activity,
-  Radio,
-  FileCode,
-  Check,
-  Disc,
-} from "lucide-react";
+import { Music, Play, Square, Volume2, VolumeX, Download, X, FileCode, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface DawTrack {

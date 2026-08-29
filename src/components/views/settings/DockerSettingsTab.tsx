@@ -1,17 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Container,
-  Sparkles,
-  Sliders,
-  Terminal,
-  RefreshCw,
-  Trash2,
-  Cpu,
-  Check,
-  Zap,
-} from "lucide-react";
+import { Container, Sparkles, Terminal, RefreshCw, Trash2, Zap } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

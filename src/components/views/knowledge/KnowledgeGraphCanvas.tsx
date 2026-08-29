@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import * as THREE from "three";
 import {
   Maximize2,
@@ -9,30 +9,13 @@ import {
   ZoomIn,
   ZoomOut,
   Sparkles,
-  Network,
   Search,
   SlidersHorizontal,
-  Play,
-  Pause,
-  Compass,
   X,
   ArrowUpRight,
   Orbit,
-  Layers,
-  Box,
-  Circle,
-  Eye,
   Sliders,
   Globe,
-  Radio,
-  Share2,
-  Tag,
-  Shield,
-  Zap,
-  Filter,
-  EyeOff,
-  Focus,
-  MousePointer,
   Keyboard,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

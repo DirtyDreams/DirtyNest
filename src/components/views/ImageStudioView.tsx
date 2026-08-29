@@ -4,12 +4,9 @@ import { useState } from "react";
 import {
   Wand2,
   Sparkles,
-  Layers,
   Image as ImageIcon,
   Grid,
   Wrench,
-  Flame,
-  Activity,
   Paintbrush,
   Zap,
 } from "lucide-react";

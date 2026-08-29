@@ -1,16 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  ScrollText,
-  Sparkles,
-  Sliders,
-  Filter,
-  HardDrive,
-  Download,
-  Trash2,
-  Check,
-} from "lucide-react";
+import { ScrollText, Sparkles, Sliders, Filter, HardDrive, Download, Trash2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

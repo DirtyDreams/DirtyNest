@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Split, GitCompare, Check, Sparkles, Copy, ArrowRight } from "lucide-react";
+import { Split, Check, Sparkles, Copy } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface DiffCandidate {

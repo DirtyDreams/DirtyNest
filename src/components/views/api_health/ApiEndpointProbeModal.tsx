@@ -1,20 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  X,
-  Play,
-  Send,
-  Radio,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  Copy,
-  Check,
-  Shield,
-  Layers,
-  Activity,
-} from "lucide-react";
+import { X, Send, Radio, Copy, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface ApiEndpointProbeModalProps {

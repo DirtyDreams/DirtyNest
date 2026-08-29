@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import reactHooks from "eslint-plugin-react-hooks";
 import nextTs from "eslint-config-next/typescript";
+import unusedImports from "eslint-plugin-unused-imports";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -16,10 +17,12 @@ const eslintConfig = defineConfig([
   ]),
   // Project-level rule overrides — must come AFTER the preset spreads
   {
-    plugins: { "react-hooks": reactHooks },
+    plugins: { "react-hooks": reactHooks, "unused-imports": unusedImports },
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "warn",
+      // flag unused import statements so `eslint --fix` can strip them
+      "unused-imports/no-unused-imports": "warn",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/set-state-in-render": "off",
       "react-hooks/purity": "off",
@@ -35,6 +38,13 @@ const eslintConfig = defineConfig([
       "react/jsx-no-target-blank": "off",
       "prefer-const": "off",
       "@typescript-eslint/no-require-imports": "warn",
+    },
+  },
+  // CommonJS patch scripts in scripts/ legitimately use require()
+  {
+    files: ["scripts/**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ]);

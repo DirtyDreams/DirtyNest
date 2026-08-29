@@ -1,29 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import {
-  Puzzle,
-  Search,
-  Plus,
-  Sliders,
-  Check,
-  RotateCcw,
-  Sparkles,
-  Shield,
-  ShieldAlert,
-  Code,
-  Download,
-  Upload,
-  Zap,
-  Globe,
-  Lock,
-  Layers,
-  FileCode,
-  Trash2,
-  Copy,
-  ExternalLink,
-  Cpu,
-} from "lucide-react";
+import { Puzzle, Search, Plus, Code } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

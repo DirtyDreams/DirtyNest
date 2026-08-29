@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Brain, Search, Plus, Trash2, Tag, Sparkles, RefreshCw, Layers } from "lucide-react";
+import { Brain, Search, Plus, Trash2, Tag, Sparkles, RefreshCw } from "lucide-react";
 import { useHermesAcpStore, AcpMemoryItem } from "@/lib/hermes/hermesAcpStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Input } from "@/components/ui/input";

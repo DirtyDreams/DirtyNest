@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Clock,
-  Globe,
-  Sun,
-  Moon,
-  Sparkles,
-} from "lucide-react";
+import { Clock, Globe } from "lucide-react";
 
 interface TimezoneNode {
   city: string;

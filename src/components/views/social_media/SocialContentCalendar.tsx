@@ -1,22 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Calendar as CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Sparkles,
-  Plus,
-  Flame,
-  CheckCircle2,
-  Share2,
-  Filter,
-  Eye,
-  Trash2,
-} from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Flame, Trash2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
-import { ScheduledPost } from "./SocialScheduledQueue";
+import {  } from "./SocialScheduledQueue";
 
 interface CalendarDay {
   dayNumber: number;

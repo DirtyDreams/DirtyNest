@@ -1,18 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Users,
-  Sparkles,
-  Sliders,
-  DollarSign,
-  Image as ImageIcon,
-  Clock,
-  RotateCcw,
-  Zap,
-  TrendingUp,
-  MessageSquare,
-} from "lucide-react";
+import { Users, Sparkles, DollarSign, Image as ImageIcon, Clock, TrendingUp, MessageSquare } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

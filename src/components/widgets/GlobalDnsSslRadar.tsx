@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Globe,
-  ShieldCheck,
-  RotateCcw,
-  Clock,
-  CheckCircle2,
-  Wifi,
-} from "lucide-react";
+import { Globe, ShieldCheck, RotateCcw, Clock } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface RegionLatency {

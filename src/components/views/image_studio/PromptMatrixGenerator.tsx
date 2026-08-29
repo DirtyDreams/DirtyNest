@@ -1,22 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Sparkles,
-  Sliders,
-  Wand2,
-  RefreshCw,
-  Layers,
-  ShieldCheck,
-  Flame,
-  ChevronDown,
-  Cpu,
-  Zap,
-  CheckCircle2,
-  Maximize2,
-  Activity,
-  Layers3,
-} from "lucide-react";
+import { Sparkles, Sliders, Wand2, RefreshCw, Flame, ChevronDown, Cpu } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface StylePreset {

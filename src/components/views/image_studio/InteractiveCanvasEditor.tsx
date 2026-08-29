@@ -1,45 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  Paintbrush,
-  Eraser,
-  Sparkles,
-  Sliders,
-  RotateCw,
-  FlipHorizontal,
-  Type,
-  Sticker,
-  Undo,
-  Redo,
-  Download,
-  Upload,
-  Layers,
-  Wand2,
-  Trash2,
-  CheckCircle2,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Eye,
-  EyeOff,
-  Lock,
-  Unlock,
-  Copy,
-  ArrowUp,
-  ArrowDown,
-  Plus,
-  Crosshair,
-  Square,
-  Circle,
-  MoveRight,
-  Move,
-  Grid,
-  Zap,
-  Shield,
-  Palette,
-  Minus,
-} from "lucide-react";
+import { Paintbrush, Eraser, Sparkles, Sliders, Type, Download, Upload, Layers, Wand2, Trash2, ZoomIn, ZoomOut, Maximize2, Eye, EyeOff, Lock, Unlock, ArrowUp, ArrowDown, Plus, Crosshair, Square, Circle, MoveRight, Zap } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { AssetItem, SAMPLE_ASSETS } from "./GeneratedAssetsGallery";
 

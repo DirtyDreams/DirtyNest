@@ -1,21 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Sparkles,
-  Bot,
-  Shield,
-  Code2,
-  Search,
-  Terminal,
-  Sliders,
-  Check,
-  X,
-  Flame,
-  Zap,
-  CheckCircle2,
-  RotateCcw,
-} from "lucide-react";
+import { Bot, X, RotateCcw } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface AgentPersona {

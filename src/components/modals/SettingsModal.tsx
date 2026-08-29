@@ -1,24 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Settings as SettingsIcon,
-  X,
-  Shield,
-  Volume2,
-  Sliders,
-  Database,
-  Key,
-  RefreshCw,
-  Check,
-  Download,
-  Trash2,
-  Bot,
-  Cpu,
-  Palette,
-  Server,
-  Lock,
-} from "lucide-react";
+import { Settings as SettingsIcon, Sliders, Database, Key, RefreshCw, Download, Bot, Cpu, Server } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

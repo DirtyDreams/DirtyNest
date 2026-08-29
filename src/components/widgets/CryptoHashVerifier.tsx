@@ -1,16 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Lock,
-  Key,
-  Copy,
-  Check,
-  ShieldCheck,
-  ShieldX,
-  RotateCcw,
-  Sparkles,
-} from "lucide-react";
+import { Lock, Copy, Check, ShieldCheck, ShieldX } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 // Quick synchronous lightweight hashing for browser runtime demo

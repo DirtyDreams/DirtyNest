@@ -1,17 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Database,
-  Sparkles,
-  Sliders,
-  Layers,
-  Cpu,
-  RefreshCw,
-  FolderSync,
-  Check,
-  Zap,
-} from "lucide-react";
+import { Database, Sparkles, Cpu, RefreshCw, FolderSync, Zap } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

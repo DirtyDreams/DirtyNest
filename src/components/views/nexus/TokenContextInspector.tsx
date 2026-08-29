@@ -1,6 +1,6 @@
 "use client";
 
-import { Cpu, Zap, Database, MessageSquare, User, BookOpen } from "lucide-react";
+import { Cpu } from "lucide-react";
 
 interface Props {
   charTokens: number;

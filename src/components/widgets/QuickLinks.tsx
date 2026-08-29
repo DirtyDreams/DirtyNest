@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Link2, Plus, Trash2, ExternalLink, X, Compass } from "lucide-react";
+import { Plus, Trash2, ExternalLink, X, Compass } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import {  } from "@/components/ui/badge";
+import {  } from "@/lib/utils";
 
 interface QuickLink {
   id: number;

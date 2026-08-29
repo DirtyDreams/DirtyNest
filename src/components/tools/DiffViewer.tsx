@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { GitCompare, Copy, Sparkles, Check, ArrowRightLeft, Sliders, FileText, CheckCircle2 } from "lucide-react";
+import { GitCompare, Copy, Check, ArrowRightLeft } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 const ORIGINAL_SAMPLE = `// Version 1.0 - Auth Handler

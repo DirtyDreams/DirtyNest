@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  X,
-  Terminal,
-  Headphones,
-  Search,
-  Wrench,
-  Activity,
-  Radio,
-  Sliders,
-} from "lucide-react";
+import { Terminal, Headphones, Wrench, Sliders } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { navItems, NavViewId } from "./Sidebar";

@@ -1,21 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import {
-  X,
-  Radio,
-  Users,
-  Heart,
-  Send,
-  Sparkles,
-  Gift,
-  Zap,
-  Volume2,
-  VolumeX,
-  MessageSquare,
-  DollarSign,
-  Flame,
-} from "lucide-react";
+import { X, Radio, Users, Send, Gift, Volume2, VolumeX, Flame } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface ViewerComment {

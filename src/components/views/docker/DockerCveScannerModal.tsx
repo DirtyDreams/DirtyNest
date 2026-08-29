@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldCheck, ShieldAlert, X, AlertTriangle, CheckCircle2, RefreshCw, Terminal } from "lucide-react";
+import { ShieldAlert, X, RefreshCw } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface Props {

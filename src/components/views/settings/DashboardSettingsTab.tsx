@@ -1,28 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  LayoutDashboard,
-  Eye,
-  EyeOff,
-  Sparkles,
-  ArrowUp,
-  ArrowDown,
-  RotateCcw,
-  Sliders,
-  Check,
-  Zap,
-  Activity,
-  Maximize2,
-  Minimize2,
-} from "lucide-react";
-import {
-  ALL_WIDGETS_METADATA,
-  WidgetLayoutItem,
-  loadWidgetLayout,
-  saveWidgetLayout,
-  LAYOUT_PRESETS,
-} from "@/lib/widgetLayout";
+import { LayoutDashboard, Eye, EyeOff, Sparkles, ArrowUp, ArrowDown, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
+import { ALL_WIDGETS_METADATA, WidgetLayoutItem, loadWidgetLayout, saveWidgetLayout, LAYOUT_PRESETS } from "@/lib/widgetLayout";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

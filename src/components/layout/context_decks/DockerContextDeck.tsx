@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Container,
-  Activity,
-  RotateCcw,
-  Trash2,
-  Zap,
-  Check,
-  Server,
-  Shield,
-} from "lucide-react";
+import { Container, RotateCcw, Trash2, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function DockerContextDeck() {

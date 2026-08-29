@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Cpu,
-  Shield,
-  Activity,
-  Zap,
-  Check,
-  AlertTriangle,
-  Radio,
-  Lock,
-} from "lucide-react";
+import { Shield, Check, Radio } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function AgentsContextDeck() {

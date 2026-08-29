@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Palette,
-  Copy,
-  Check,
-  RefreshCw,
-  Sparkles,
-} from "lucide-react";
+import { Palette, Check, RefreshCw } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface PalettePreset {

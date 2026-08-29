@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  FileCode,
-  Copy,
-  Check,
-  Sparkles,
-  RefreshCw,
-  Code2,
-} from "lucide-react";
+import { FileCode, Copy, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 const DEFAULT_JSON = `{

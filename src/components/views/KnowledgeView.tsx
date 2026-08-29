@@ -5,50 +5,28 @@ import {
   Database,
   Search,
   Plus,
-  FileText,
-  ShieldAlert,
-  Server,
-  Code2,
   Cpu,
-  Layers,
-  UploadCloud,
   CheckCircle2,
   Copy,
   ExternalLink,
   Trash2,
   Sparkles,
-  RefreshCw,
-  SlidersHorizontal,
   FolderOpen,
-  Share2,
-  Eye,
-  Terminal,
   Activity,
   Zap,
-  Tag,
   BookOpen,
-  Bot,
-  Compass,
-  Network,
-  Workflow,
   BrainCircuit,
-  FileCode,
   Link2,
   FolderSync,
   Play,
   ArrowUpRight,
-  Sliders,
-  Check,
   Settings,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
 import SemanticRagTester from "./knowledge/SemanticRagTester";
 import KnowledgeGraphCanvas, { GraphNode } from "./knowledge/KnowledgeGraphCanvas";
-import CyberMarkdownViewer from "./knowledge/CyberMarkdownViewer";
 import { CyberMarkdownEditor } from "@/components/ui/editor/CyberMarkdownEditor";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 export interface KnowledgeDoc {
   id: string;

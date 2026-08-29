@@ -1,23 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  X,
-  GitBranch,
-  Plus,
-  Trash2,
-  Download,
-  Calendar,
-  MessageSquare,
-  Check,
-  Clock,
-  Sparkles,
-  Star,
-  Search,
-  Edit2,
-  FileText,
-  Copy,
-} from "lucide-react";
+import { X, GitBranch, Plus, Trash2, Download, MessageSquare, Check, Star, Search, Edit2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface HermesChatSession {

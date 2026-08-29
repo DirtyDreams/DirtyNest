@@ -1,41 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Sliders,
-  Check,
-  RotateCcw,
-  LayoutDashboard,
-  Cpu,
-  Boxes,
-  Radio,
-  Eye,
-  EyeOff,
-  Sparkles,
-  ShieldCheck,
-  CheckCircle2,
-  DollarSign,
-  Calendar,
-  Rss,
-  Wifi,
-  GitBranch,
-  Rocket,
-  Zap,
-  Server,
-  GitPullRequest,
-  TrendingUp,
-  ShieldAlert,
-  Database,
-  Lock,
-  Globe,
-  ClipboardList,
-  Headphones,
-  Palette,
-  Terminal,
-  Droplets,
-  Clock,
-  Brain,
-} from "lucide-react";
+import { Sliders, Check, RotateCcw, LayoutDashboard, Cpu, Sparkles, ShieldCheck, DollarSign, Calendar, Rss, Wifi, GitBranch, Rocket, Zap, Server, GitPullRequest, TrendingUp, ShieldAlert, Database, Lock, Globe, ClipboardList, Headphones, Palette, Terminal, Droplets, Clock, Brain } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";

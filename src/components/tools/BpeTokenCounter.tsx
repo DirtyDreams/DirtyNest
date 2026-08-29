@@ -1,15 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  Calculator,
-  Zap,
-  DollarSign,
-  Copy,
-  Check,
-  RotateCcw,
-  Sparkles,
-} from "lucide-react";
+import { Calculator, Copy, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 const SAMPLE_TEXT = `You are Antigravity, an advanced AI coding assistant designed by Google DeepMind.

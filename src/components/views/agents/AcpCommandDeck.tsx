@@ -11,9 +11,6 @@ import {
   Loader2,
   Brain,
   Sparkles,
-  Search,
-  CheckCircle2,
-  Layers,
   Clock,
 } from "lucide-react";
 import { useHermesAcpStore } from "@/lib/hermes/hermesAcpStore";

@@ -1,16 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import {
-  Headphones,
-  Volume2,
-  VolumeX,
-  Play,
-  Pause,
-  Sliders,
-  Sparkles,
-  Zap,
-} from "lucide-react";
+import { useState } from "react";
+import { Headphones, Play, Pause } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface SoundTrack {

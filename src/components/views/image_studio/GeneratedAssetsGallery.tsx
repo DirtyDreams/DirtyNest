@@ -1,30 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Sparkles,
-  Download,
-  Copy,
-  Check,
-  Eye,
-  Tag,
-  Calendar,
-  FolderPlus,
-  Folder,
-  Star,
-  Search,
-  Sliders,
-  Wand2,
-  Paintbrush,
-  X,
-  Trash2,
-  Edit2,
-  ExternalLink,
-  Cpu,
-  Layers,
-  Flame,
-  CheckCircle2,
-} from "lucide-react";
+import { Sparkles, Download, Copy, Check, FolderPlus, Folder, Star, Search, Wand2, Paintbrush, X } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface AlbumItem {

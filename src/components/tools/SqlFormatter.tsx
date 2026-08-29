@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Database,
-  Copy,
-  Check,
-  Sparkles,
-  Sliders,
-  AlignLeft,
-  Minimize2,
-} from "lucide-react";
+import { Database, Copy, Check, Minimize2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 const SQL_KEYWORDS = [

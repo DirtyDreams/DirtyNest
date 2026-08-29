@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Cpu, HardDrive, Wifi, Activity, Sparkles } from "lucide-react";
+import { Cpu } from "lucide-react";
 
 interface GaugeData {
   id: string;

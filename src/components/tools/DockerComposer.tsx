@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Container,
-  Copy,
-  Check,
-  Sparkles,
-  Server,
-  Layers,
-  FileCode,
-} from "lucide-react";
+import { Container, Copy, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 type StackPreset = "Next.js" | "FastAPI" | "Go Alpine" | "Node.js";
