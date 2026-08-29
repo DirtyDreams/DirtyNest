@@ -24,6 +24,7 @@ transport with no network access.
 
 from __future__ import annotations
 
+import asyncio
 import httpx
 import json
 import logging
@@ -252,11 +253,28 @@ class CdpSocialAdapter(SocialAdapter):
     # Tab lifecycle (one tab per op, closed in finally)
     # ------------------------------------------------------------------
     def _new_tab(self, url: str) -> Tuple[Optional[str], Optional[str]]:
-        """Open a new CDP tab at url -> (webSocketDebuggerUrl, tab_id)."""
+        """Open a new CDP tab at url -> (webSocketDebuggerUrl, tab_id).
+
+        Chrome >= 128 answers /json/new only via PUT (405 on GET); older
+        builds accepted GET. Try PUT first, fall back to GET.
+        """
+        # GET first (older Chrome; also the test seam), escalate to PUT on
+        # Chrome >= 128 where /json/new answers 405 to GET.
         target = self._http_get_json("/json/new?" + urllib.parse.quote(url, safe=""))
+        if not isinstance(target, dict) or not target.get("webSocketDebuggerUrl"):
+            target = self._http_put_json("/json/new?" + urllib.parse.quote(url, safe=""))
         if not isinstance(target, dict) or not target.get("webSocketDebuggerUrl"):
             return None, None
         return target["webSocketDebuggerUrl"], target.get("id")
+
+    def _http_put_json(self, path: str) -> Any:
+        """PUT http://{host}:{port}{path} on the CDP HTTP API; None if unreachable."""
+        try:
+            resp = httpx.put(f"http://{self.host}:{self.cdp_port}{path}", timeout=5.0)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception:  # noqa: BLE001
+            return None
 
     def _close_tab(self, tab_id: str) -> None:
         if not tab_id:
@@ -445,8 +463,6 @@ class CdpSocialAdapter(SocialAdapter):
 
     def _extract_id_from_url(self, url: str) -> Optional[str]:
         """Extract the post id from a permalink URL using post_url_pattern."""
-        import re
-
         regex = self._post_id_regex()
         if regex is None:
             return None
