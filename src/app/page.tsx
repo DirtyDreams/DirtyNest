@@ -116,6 +116,10 @@ const SocialMediaView = dynamic(() => import("@/components/views/SocialMediaView
   ssr: false,
   loading: () => <ViewLoadingSkeleton title="SOCIAL MEDIA COMMAND HUB" />,
 });
+const ZbiornikOpsView = dynamic(() => import("@/components/views/ZbiornikOpsView"), {
+  ssr: false,
+  loading: () => <ViewLoadingSkeleton title="ZBIORNIK OPS — HITL GATEKEEPER" />,
+});
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { UptimeBadge } from "@/components/common/UptimeBadge";
 import { useAppStore } from "@/stores/useAppStore";
@@ -151,6 +155,7 @@ import {
   Image as ImageIcon,
   Mic,
   Share2,
+  Waves,
   Square,
   GripVertical,
 } from "lucide-react";
@@ -824,6 +829,20 @@ export default function Home() {
 
               <button
                 role="tab"
+                aria-selected={activeView === "zbiornik_ops"}
+                onClick={() => handleSelectView("zbiornik_ops")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeView === "zbiornik_ops"
+                    ? "bg-[#BF40FF]/15 text-[#BF40FF] font-bold border border-[#BF40FF]/30 shadow-[0_0_8px_rgba(191,64,255,0.2)]"
+                    : "text-[#9499B3] hover:text-[#BF40FF]"
+                }`}
+              >
+                <Waves size={13} />
+                <span>ZBIORNIK OPS</span>
+              </button>
+
+              <button
+                role="tab"
                 aria-selected={activeView === "chatbot"}
                 onClick={() => handleSelectView("chatbot")}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
@@ -1280,6 +1299,14 @@ export default function Home() {
             <ProtectedAccessGate minClearance={1} viewName="Social Media Broadcast Hub">
               <ErrorBoundary fallbackTitle="SOCIAL MEDIA COMMAND MALFUNCTION">
                 <SocialMediaView />
+              </ErrorBoundary>
+            </ProtectedAccessGate>
+          )}
+
+          {activeView === "zbiornik_ops" && (
+            <ProtectedAccessGate minClearance={2} viewName="Zbiornik Ops — HITL Gatekeeper">
+              <ErrorBoundary fallbackTitle="ZBIORNIK OPS MALFUNCTION">
+                <ZbiornikOpsView />
               </ErrorBoundary>
             </ProtectedAccessGate>
           )}

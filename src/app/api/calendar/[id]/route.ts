@@ -1,4 +1,6 @@
-import { getDb, persistDb, queryAll, type CalendarEvent } from "@/db";
+import { db, initDb } from "@/db";
+import * as schema from "@/lib/schema";
+import { eq, asc } from "drizzle-orm";
 
 export async function PATCH(
   request: Request,
@@ -11,40 +13,35 @@ export async function PATCH(
       return Response.json({ error: "Invalid event ID" }, { status: 400 });
     }
 
-    const db = await getDb();
+    await initDb();
     const body = await request.json();
 
-    const updates: string[] = [];
-    const values: unknown[] = [];
+    const updateData: Partial<typeof schema.calendarEvents.$inferInsert> = {};
 
     if (typeof body.title === "string" && body.title.trim()) {
-      updates.push("title = ?");
-      values.push(body.title.trim());
+      updateData.title = body.title.trim();
     }
     if (typeof body.description === "string" || body.description === null) {
-      updates.push("description = ?");
-      values.push(body.description);
+      updateData.description = body.description;
     }
     if (typeof body.date === "string" && body.date.trim()) {
-      updates.push("date = ?");
-      values.push(body.date.trim());
+      updateData.date = body.date.trim();
     }
     if (typeof body.time === "string" || body.time === null) {
-      updates.push("time = ?");
-      values.push(body.time);
+      updateData.time = body.time;
     }
     if (typeof body.color === "string" && body.color.trim()) {
-      updates.push("color = ?");
-      values.push(body.color.trim());
+      updateData.color = body.color.trim();
     }
 
-    if (updates.length > 0) {
-      values.push(numId);
-      db.run(`UPDATE calendar_events SET ${updates.join(", ")} WHERE id = ?`, values);
-      persistDb();
+    if (Object.keys(updateData).length > 0) {
+      await db.update(schema.calendarEvents).set(updateData).where(eq(schema.calendarEvents.id, numId));
     }
 
-    const events = queryAll<CalendarEvent>(db, "SELECT * FROM calendar_events ORDER BY date ASC, time ASC");
+    const events = await db
+      .select()
+      .from(schema.calendarEvents)
+      .orderBy(asc(schema.calendarEvents.date), asc(schema.calendarEvents.time));
     return Response.json(events);
   } catch (err) {
     console.error("Error updating calendar event:", err);
@@ -63,13 +60,17 @@ export async function DELETE(
       return Response.json({ error: "Invalid event ID" }, { status: 400 });
     }
 
-    const db = await getDb();
-    db.run("DELETE FROM calendar_events WHERE id = ?", [numId]);
-    persistDb();
-    const events = queryAll<CalendarEvent>(db, "SELECT * FROM calendar_events ORDER BY date ASC, time ASC");
+    await initDb();
+    await db.delete(schema.calendarEvents).where(eq(schema.calendarEvents.id, numId));
+
+    const events = await db
+      .select()
+      .from(schema.calendarEvents)
+      .orderBy(asc(schema.calendarEvents.date), asc(schema.calendarEvents.time));
     return Response.json(events);
   } catch (err) {
     console.error("Error deleting calendar event:", err);
     return Response.json({ error: "Failed to delete event" }, { status: 500 });
   }
 }
+

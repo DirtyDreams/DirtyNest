@@ -1,19 +1,41 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dirtynest-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dirtynest
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: dirtynest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dirtynest-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dirtynest -d dirtynest"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   web:
     build:
       context: .
       dockerfile: Dockerfile.next
+    container_name: dirtynest-web
     ports:
       - "3000:3000"
-    volumes:
-      - ./data:/app/data
     environment:
-      - DATABASE_URL=file:/app/data/dirtynest.db
+      - DATABASE_URL=postgresql://dirtynest:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres:5432/dirtynest
       - NEXT_PUBLIC_SIDECAR_URL=http://localhost:8000
     depends_on:
-      - sidecar
+      postgres:
+        condition: service_healthy
+      sidecar:
+        condition: service_started
     networks:
       - dirtynest-network
 
@@ -21,14 +43,20 @@ services:
     build:
       context: ./sidecar
       dockerfile: Dockerfile
+    container_name: dirtynest-sidecar
     ports:
       - "8000:8000"
-    volumes:
-      - ./data:/app/data
     environment:
-      - DATABASE_URL=sqlite:////app/data/dirtynest.db
+      - DATABASE_URL=postgresql://dirtynest:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres:5432/dirtynest
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - dirtynest-network
+
+volumes:
+  postgres_data:
+    driver: local
 
 networks:
   dirtynest-network:

@@ -1,4 +1,6 @@
-import { getDb, persistDb, queryAll, insertLog, type Todo } from "@/db";
+import { db, initDb, insertLog } from "@/db";
+import * as schema from "@/lib/schema";
+import { eq, asc } from "drizzle-orm";
 
 export async function PATCH(
   request: Request,
@@ -11,40 +13,33 @@ export async function PATCH(
       return Response.json({ error: "Invalid todo ID" }, { status: 400 });
     }
 
-    const db = await getDb();
+    await initDb();
     const body = await request.json();
 
-    const updates: string[] = [];
-    const values: unknown[] = [];
+    const updateData: Partial<typeof schema.todos.$inferInsert> = {};
 
     if (typeof body.completed === "boolean") {
-      updates.push("completed = ?");
-      values.push(body.completed ? 1 : 0);
+      updateData.completed = body.completed ? 1 : 0;
     }
     if (typeof body.text === "string" && body.text.trim()) {
-      updates.push("text = ?");
-      values.push(body.text.trim());
+      updateData.text = body.text.trim();
     }
     if (body.priority) {
-      updates.push("priority = ?");
-      values.push(body.priority);
+      updateData.priority = body.priority;
     }
     if (body.due_date !== undefined) {
-      updates.push("due_date = ?");
-      values.push(body.due_date);
+      updateData.due_date = body.due_date;
     }
 
-    if (updates.length > 0) {
-      values.push(numId);
-      db.run(`UPDATE todos SET ${updates.join(", ")} WHERE id = ?`, values);
-      persistDb();
+    if (Object.keys(updateData).length > 0) {
+      await db.update(schema.todos).set(updateData).where(eq(schema.todos.id, numId));
 
       try {
         await insertLog("INFO", "UI", "TODO_ITEM_UPDATED", "User-Operator", { id: numId, changes: body });
       } catch {}
     }
 
-    const todos = queryAll<Todo>(db, "SELECT * FROM todos ORDER BY sort_order ASC");
+    const todos = await db.select().from(schema.todos).orderBy(asc(schema.todos.sort_order));
     return Response.json(todos);
   } catch (err) {
     console.error("Error updating todo:", err);
@@ -63,18 +58,18 @@ export async function DELETE(
       return Response.json({ error: "Invalid todo ID" }, { status: 400 });
     }
 
-    const db = await getDb();
-    db.run("DELETE FROM todos WHERE id = ?", [numId]);
-    persistDb();
+    await initDb();
+    await db.delete(schema.todos).where(eq(schema.todos.id, numId));
 
     try {
       await insertLog("WARN", "UI", "TODO_ITEM_DELETED", "User-Operator", { id: numId });
     } catch {}
 
-    const todos = queryAll<Todo>(db, "SELECT * FROM todos ORDER BY sort_order ASC");
+    const todos = await db.select().from(schema.todos).orderBy(asc(schema.todos.sort_order));
     return Response.json(todos);
   } catch (err) {
     console.error("Error deleting todo:", err);
     return Response.json({ error: "Failed to delete todo item" }, { status: 500 });
   }
 }
+

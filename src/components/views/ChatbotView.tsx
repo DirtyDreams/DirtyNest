@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   Bot,
   Brain,
@@ -58,7 +58,7 @@ import HermesMessageBlock from "./chatbot/HermesMessageBlock";
 import ChatbotSessionsDrawer, { HermesChatSession } from "./chatbot/ChatbotSessionsDrawer";
 import ChatbotSidebar, { ChatFolder } from "./chatbot/ChatbotSidebar";
 import PersonaStudioModal, { AgentPersona, AGENT_PERSONAS } from "./chatbot/PersonaStudioModal";
-
+import { useHermesAcpStore } from "@/lib/hermes/hermesAcpStore";
 export type ChatMode = "standard" | "reasoning" | "deep_research" | "code_interpreter";
 
 export interface ResearchSource {
@@ -121,7 +121,20 @@ const DEEP_RESEARCH_TEMPLATES = [
 
 export default function ChatbotView() {
   const { setActiveView } = useAppStore();
-  const [activeMode, setActiveMode] = useState<ChatMode>("deep_research");
+  const {
+    activeSessionId: acpActiveSessionId,
+    sessions: acpSessions,
+    messages: acpMessages,
+    fetchSessions,
+    createSession: acpCreateSession,
+    selectSession: acpSelectSession,
+    deleteSession: acpDeleteSession,
+    sendPromptDirective,
+    isStreaming: acpIsStreaming,
+    currentReasoningTrace,
+  } = useHermesAcpStore();
+
+  const [activeMode, setActiveMode] = useState<ChatMode>("standard");
   const [selectedModel, setSelectedModel] = useState("gemini-2.5-pro");
   const [researchDepth, setResearchDepth] = useState<"fast" | "standard" | "exhaustive">("standard");
   const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(true);
@@ -197,7 +210,31 @@ export default function ChatbotView() {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [activePersona, setActivePersona] = useState<AgentPersona>(AGENT_PERSONAS[0]);
   const [showPersonaModal, setShowPersonaModal] = useState<boolean>(false);
+  const isAcpMode = activeMode === "standard" || activeMode === "reasoning";
 
+  useEffect(() => {
+    if (isAcpMode) {
+      fetchSessions();
+    }
+  }, [isAcpMode, fetchSessions]);
+
+  const displaySessions = useMemo(() => {
+    if (!isAcpMode) return sessions;
+    return acpSessions.map((s): HermesChatSession => ({
+      id: s.id,
+      title: s.name,
+      personaId: "hermes-master",
+      personaName: "Hermes Master",
+      model: s.model || "Nous-Hermes-3-70B",
+      messageCount: 0,
+      lastMessageSnippet: s.status,
+      updatedAt: s.updated_at ? new Date(s.updated_at).toLocaleTimeString("en-US", { hour12: false }) : "just now",
+      isPinned: false,
+      folderId: undefined,
+    }));
+  }, [isAcpMode, sessions, acpSessions]);
+
+  const displayActiveSessionId = isAcpMode ? (acpActiveSessionId || "") : activeSessionId;
   const [attachments, setAttachments] = useState<{ id: string; name: string; type: "image" | "video" | "file"; size: string }[]>([
     { id: "att-1", name: "system_architecture.png", type: "image", size: "2.4 MB" },
     { id: "att-2", name: "auth_service.ts", type: "file", size: "14 KB" }
@@ -230,7 +267,30 @@ Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator powerin
       tokens: 68,
     },
   ]);
+  const displayMessages = useMemo(() => {
+    if (!isAcpMode) return messages;
 
+    const mapped: Message[] = acpMessages.map((m) => ({
+      id: m.id,
+      sender: m.role === "user" ? "user" : m.role === "system" ? "system" : "ai",
+      text: m.content,
+      timestamp: m.created_at ? new Date(m.created_at).toLocaleTimeString("en-US", { hour12: false }) : new Date().toLocaleTimeString("en-US", { hour12: false }),
+      model: "Nous-Hermes-3-70B",
+      thinkingTrace: m.reasoning_trace || undefined,
+    }));
+
+    if (acpIsStreaming && currentReasoningTrace) {
+      mapped.push({
+        id: "streaming-thought-trace",
+        sender: "ai",
+        text: "Hermes is computing response...",
+        timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
+        thinkingTrace: currentReasoningTrace,
+      });
+    }
+
+    return mapped;
+  }, [isAcpMode, messages, acpMessages, acpIsStreaming, currentReasoningTrace]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
@@ -277,7 +337,7 @@ Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator powerin
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isGenerating]);
+  }, [displayMessages, isGenerating]);
 
   const copyMessage = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -308,7 +368,28 @@ Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator powerin
 
   const handleSend = async (customPrompt?: string) => {
     const textToSend = customPrompt || input;
-    if (!textToSend.trim() || isGenerating) return;
+    if (!textToSend.trim()) return;
+
+    if (isAcpMode) {
+      if (acpIsStreaming) return;
+      if (!customPrompt) setInput("");
+      cyberAudio.play("click");
+
+      let sId = acpActiveSessionId;
+      if (!sId) {
+        const newSession = await acpCreateSession(`Hermes Thread - ${textToSend.slice(0, 20)}...`);
+        if (newSession) {
+          sId = newSession.id;
+        }
+      }
+
+      if (sId) {
+        await sendPromptDirective(textToSend);
+      }
+      return;
+    }
+
+    if (isGenerating) return;
 
     const timeStr = new Date().toLocaleTimeString("en-US", { hour12: false });
     const userMsg: Message = {
@@ -591,33 +672,41 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
   };
 
   const handleSelectSession = (id: string) => {
-    setActiveSessionId(id);
+    if (isAcpMode) {
+      acpSelectSession(id);
+    } else {
+      setActiveSessionId(id);
+    }
     setShowSessionsDrawer(false);
   };
 
-  const handleCreateSession = (folderId?: string) => {
-    const newId = `session-${Date.now()}`;
-    const newSession: HermesChatSession = {
-      id: newId,
-      title: `Neural Thread #${sessions.length + 1}`,
-      personaId: activePersona.id,
-      personaName: activePersona.name.split(" ")[0],
-      model: selectedModel,
-      messageCount: 1,
-      lastMessageSnippet: "Session initialized. Ready for operational directives.",
-      updatedAt: "Just now",
-      folderId,
-    };
-    setSessions([newSession, ...sessions]);
-    setActiveSessionId(newId);
-    setMessages([
-      {
-        id: `sys-${Date.now()}`,
-        sender: "system",
-        text: `NEW NEURAL SESSION INITIALIZED // PERSONA: ${activePersona.name.toUpperCase()} // READY`,
-        timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
-      },
-    ]);
+  const handleCreateSession = async (folderId?: string) => {
+    if (isAcpMode) {
+      await acpCreateSession(`Hermes Thread #${acpSessions.length + 1}`);
+    } else {
+      const newId = `session-${Date.now()}`;
+      const newSession: HermesChatSession = {
+        id: newId,
+        title: `Neural Thread #${sessions.length + 1}`,
+        personaId: activePersona.id,
+        personaName: activePersona.name.split(" ")[0],
+        model: selectedModel,
+        messageCount: 1,
+        lastMessageSnippet: "Session initialized. Ready for operational directives.",
+        updatedAt: "Just now",
+        folderId,
+      };
+      setSessions([newSession, ...sessions]);
+      setActiveSessionId(newId);
+      setMessages([
+        {
+          id: `sys-${Date.now()}`,
+          sender: "system",
+          text: `NEW NEURAL SESSION INITIALIZED // PERSONA: ${activePersona.name.toUpperCase()} // READY`,
+          timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
+        },
+      ]);
+    }
   };
 
   const handleTogglePinSession = (id: string) => {
@@ -668,11 +757,15 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
     setActiveSessionId(newId);
   };
 
-  const handleDeleteSession = (id: string) => {
-    if (sessions.length <= 1) return;
-    const filtered = sessions.filter((s) => s.id !== id);
-    setSessions(filtered);
-    if (activeSessionId === id) setActiveSessionId(filtered[0].id);
+  const handleDeleteSession = async (id: string) => {
+    if (isAcpMode) {
+      await acpDeleteSession(id);
+    } else {
+      if (sessions.length <= 1) return;
+      const filtered = sessions.filter((s) => s.id !== id);
+      setSessions(filtered);
+      if (activeSessionId === id) setActiveSessionId(filtered[0].id);
+    }
   };
 
   const handleRenameSession = (id: string, newTitle: string) => {
@@ -1011,8 +1104,8 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
         {isSidebarOpen && (
           <div className="w-full lg:w-auto shrink-0 sticky top-4 self-start z-20 animate-fade-in">
             <ChatbotSidebar
-              sessions={sessions}
-              activeSessionId={activeSessionId}
+              sessions={displaySessions}
+              activeSessionId={displayActiveSessionId}
               onSelectSession={handleSelectSession}
               onCreateSession={handleCreateSession}
               onBranchSession={handleBranchSession}
@@ -1039,7 +1132,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
             className={`relative cyber-card p-4 flex flex-col justify-between gap-4 w-full transition-colors ${activeArtifact ? "lg:col-span-6" : showSourcesDrawer ? "lg:col-span-8" : "lg:col-span-12"} ${isDragging ? "border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.1)]" : ""}`}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
-            onDrop={(e) => { e.preventDefault(); setIsDragging(false); /* in a real app, handle files here */ }}
+            onDrop={(e) => { e.preventDefault(); setIsDragging(false); }}
           >
           {/* Mock Drag Overlay */}
           {isDragging && (
@@ -1051,7 +1144,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
 
           {/* Natural Full-Page Messages Stream (No inner scrollbar) */}
           <div className="flex flex-col gap-3.5 w-full max-w-[88%] 2xl:max-w-[80%] mx-auto pb-44">
-            {messages.map((msg) => {
+            {displayMessages.map((msg: Message) => {
               if (msg.sender === "system") {
                 return (
                   <div key={msg.id} className="p-2 rounded-full bg-white/[0.02] border border-white/10 text-center text-[10px] text-[#9499B3] font-mono tracking-wider mx-auto max-w-lg my-1">
@@ -1079,7 +1172,7 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                       }
                     }}
                     onRegenerate={() => {
-                      const lastUser = [...messages].reverse().find((m) => m.sender === "user");
+                      const lastUser = [...displayMessages].reverse().find((m) => m.sender === "user");
                       if (lastUser) {
                         handleSend(lastUser.text);
                       }

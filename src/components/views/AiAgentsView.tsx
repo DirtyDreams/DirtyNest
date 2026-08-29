@@ -28,6 +28,7 @@ import {
   Users,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { useHermesStore } from "@/lib/hermes/hermesStore";
 import AgentMemoryInspector from "./agents/AgentMemoryInspector";
 import CreateAgentModal from "./agents/CreateAgentModal";
 import AgentBlueprintDesigner from "./agents/AgentBlueprintDesigner";
@@ -145,6 +146,32 @@ type AgentsSubTab = "fleet" | "blueprint" | "orchestration" | "permissions" | "c
 
 export default function AiAgentsView() {
   const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
+  const { minionsList } = useHermesStore();
+
+  useEffect(() => {
+    if (minionsList && minionsList.length > 0) {
+      setAgents((prevAgents) => {
+        return minionsList.map((m: any, idx: number): SwarmAgent => {
+          const existing = prevAgents.find((a) => a.id === m.id || a.name === m.name);
+          return {
+            id: m.id || `minion-${idx}`,
+            name: m.name || "Swarm-Minion",
+            role: m.role || "Autonomous Worker Node",
+            type: m.model || "Nous Hermes 3",
+            status: m.status?.toLowerCase() === "active" ? "executing" : "idle",
+            cpuUsage: m.load || 10,
+            memoryMb: existing?.memoryMb || 128,
+            tasksCompleted: existing?.tasksCompleted || Math.floor(Math.random() * 500) + 100,
+            successRate: existing?.successRate || 99.4,
+            lastAction: m.role || "Ready for operational directives",
+            tags: [m.model || "hermes-3"],
+            color: idx % 3 === 0 ? "#00FF41" : idx % 3 === 1 ? "#00F0FF" : "#BF40FF",
+          };
+        });
+      });
+    }
+  }, [minionsList]);
+
   const [isSwarmActive, setIsSwarmActive] = useState(true);
   const [swarmSpeed, setSwarmSpeed] = useState<number>(1);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");

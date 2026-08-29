@@ -1,14 +1,16 @@
-import { getDb, persistDb, queryAll, insertLog, type Note } from "@/db";
+import { db, initDb, insertLog } from "@/db";
+import * as schema from "@/lib/schema";
+import { asc, eq } from "drizzle-orm";
 
 export async function GET() {
-  const db = await getDb();
-  const notes = queryAll<Note>(db, "SELECT * FROM notes ORDER BY id ASC LIMIT 1");
+  await initDb();
+  const notes = await db.select().from(schema.notes).orderBy(asc(schema.notes.id)).limit(1);
   return Response.json(notes[0] || { id: 0, content: "", updated_at: new Date().toISOString() });
 }
 
 export async function PUT(request: Request) {
   try {
-    const db = await getDb();
+    await initDb();
     const body = await request.json();
     const { content } = body || {};
     if (typeof content !== "string") {
@@ -17,14 +19,18 @@ export async function PUT(request: Request) {
     if (content.length > 50000) {
       return Response.json({ error: "Content exceeds maximum limit of 50,000 characters" }, { status: 400 });
     }
+
     const now = new Date().toISOString();
-    const existing = queryAll<Note>(db, "SELECT * FROM notes LIMIT 1");
+    const existing = await db.select().from(schema.notes).limit(1);
+
     if (existing.length > 0) {
-      db.run("UPDATE notes SET content = ?, updated_at = ? WHERE id = ?", [content, now, existing[0].id]);
+      await db
+        .update(schema.notes)
+        .set({ content, updated_at: now })
+        .where(eq(schema.notes.id, existing[0].id));
     } else {
-      db.run("INSERT INTO notes (content, updated_at) VALUES (?, ?)", [content, now]);
+      await db.insert(schema.notes).values({ content, updated_at: now });
     }
-    persistDb();
 
     try {
       await insertLog("INFO", "DATABASE", "NOTES_SCRATCHPAD_SAVED", "User-Operator", {
@@ -33,10 +39,11 @@ export async function PUT(request: Request) {
       });
     } catch {}
 
-    const note = queryAll<Note>(db, "SELECT * FROM notes ORDER BY id ASC LIMIT 1");
+    const note = await db.select().from(schema.notes).orderBy(asc(schema.notes.id)).limit(1);
     return Response.json(note[0] || { id: 1, content, updated_at: now });
   } catch (err) {
     console.error("Error saving note:", err);
     return Response.json({ error: "Invalid JSON or server error" }, { status: 400 });
   }
 }
+

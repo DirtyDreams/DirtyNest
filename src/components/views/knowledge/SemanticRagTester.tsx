@@ -47,22 +47,37 @@ export default function SemanticRagTester() {
   const [isQuerying, setIsQuerying] = useState(false);
   const [results, setResults] = useState<RetrievedChunk[]>(SAMPLE_CHUNKS);
 
-  const handleTestSearch = (e: React.FormEvent) => {
+  const handleTestSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
     cyberAudio.play("warp");
     setIsQuerying(true);
 
-    setTimeout(() => {
+    try {
+      const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
+      const res = await fetch(`${sidecarUrl}/api/hermes/memories/search?q=${encodeURIComponent(query.trim())}&limit=${topK}&threshold=${similarityThreshold}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+          const mapped: RetrievedChunk[] = data.results.map((r: any, idx: number) => ({
+            id: r.id || `chunk-${idx}`,
+            docTitle: r.payload?.title || "Semantic Memory Match",
+            category: r.payload?.category || "Facts",
+            similarity: r.score || 0.85,
+            tokens: r.payload?.content ? Math.round(r.payload.content.split(/\s+/).length * 1.3) : 100,
+            snippet: r.payload?.content || "",
+          }));
+          setResults(mapped);
+          cyberAudio.play("chime");
+        } else {
+          setResults([]);
+        }
+      }
+    } catch {
+      // demo fallback
+    } finally {
       setIsQuerying(false);
-      setResults(
-        SAMPLE_CHUNKS.map((c) => ({
-          ...c,
-          similarity: Math.min(0.99, Math.max(0.7, c.similarity + (Math.random() * 0.08 - 0.04))),
-        }))
-      );
-      cyberAudio.play("chime");
-    }, 800);
+    }
   };
 
   return (
@@ -83,7 +98,7 @@ export default function SemanticRagTester() {
         </div>
 
         <span className="text-[10px] font-bold text-[#00FF41] px-2 py-0.5 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
-          QDRANT / SQLITE-VEC (1536-DIM)
+          QDRANT / BGE-SMALL (384-DIM)
         </span>
       </div>
 

@@ -1,4 +1,6 @@
-import { getDb, persistDb, queryAll, type QuickLink } from "@/db";
+import { db, initDb } from "@/db";
+import * as schema from "@/lib/schema";
+import { eq, asc } from "drizzle-orm";
 
 export async function PATCH(
   request: Request,
@@ -11,15 +13,13 @@ export async function PATCH(
       return Response.json({ error: "Invalid link ID" }, { status: 400 });
     }
 
-    const db = await getDb();
+    await initDb();
     const body = await request.json();
 
-    const updates: string[] = [];
-    const values: unknown[] = [];
+    const updateData: Partial<typeof schema.quickLinks.$inferInsert> = {};
 
     if (typeof body.name === "string" && body.name.trim()) {
-      updates.push("name = ?");
-      values.push(body.name.trim());
+      updateData.name = body.name.trim();
     }
     if (typeof body.url === "string" && body.url.trim()) {
       const trimmedUrl = body.url.trim();
@@ -27,22 +27,18 @@ export async function PATCH(
         try { return new URL(trimmedUrl).protocol === p; } catch { return false; }
       });
       if (isValid) {
-        updates.push("url = ?");
-        values.push(trimmedUrl);
+        updateData.url = trimmedUrl;
       }
     }
-    if (typeof body.icon === "string" || body.icon === null) {
-      updates.push("icon = ?");
-      values.push(body.icon);
+    if (body.icon !== undefined) {
+      updateData.icon = body.icon;
     }
 
-    if (updates.length > 0) {
-      values.push(numId);
-      db.run(`UPDATE quick_links SET ${updates.join(", ")} WHERE id = ?`, values);
-      persistDb();
+    if (Object.keys(updateData).length > 0) {
+      await db.update(schema.quickLinks).set(updateData).where(eq(schema.quickLinks.id, numId));
     }
 
-    const links = queryAll<QuickLink>(db, "SELECT * FROM quick_links ORDER BY sort_order ASC");
+    const links = await db.select().from(schema.quickLinks).orderBy(asc(schema.quickLinks.sort_order));
     return Response.json(links);
   } catch (err) {
     console.error("Error updating quick link:", err);
@@ -61,13 +57,14 @@ export async function DELETE(
       return Response.json({ error: "Invalid link ID" }, { status: 400 });
     }
 
-    const db = await getDb();
-    db.run("DELETE FROM quick_links WHERE id = ?", [numId]);
-    persistDb();
-    const links = queryAll<QuickLink>(db, "SELECT * FROM quick_links ORDER BY sort_order ASC");
+    await initDb();
+    await db.delete(schema.quickLinks).where(eq(schema.quickLinks.id, numId));
+
+    const links = await db.select().from(schema.quickLinks).orderBy(asc(schema.quickLinks.sort_order));
     return Response.json(links);
   } catch (err) {
     console.error("Error deleting quick link:", err);
     return Response.json({ error: "Failed to delete link" }, { status: 500 });
   }
 }
+

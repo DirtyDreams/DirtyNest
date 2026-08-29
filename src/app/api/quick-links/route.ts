@@ -1,8 +1,10 @@
-import { getDb, persistDb, queryAll, type QuickLink } from "@/db";
+import { db, initDb } from "@/db";
+import * as schema from "@/lib/schema";
+import { asc, sql } from "drizzle-orm";
 
 export async function GET() {
-  const db = await getDb();
-  const links = queryAll<QuickLink>(db, "SELECT * FROM quick_links ORDER BY sort_order ASC");
+  await initDb();
+  const links = await db.select().from(schema.quickLinks).orderBy(asc(schema.quickLinks.sort_order));
   return Response.json(links);
 }
 
@@ -20,7 +22,7 @@ export function isValidUrl(url: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDb();
+    await initDb();
     const body = await request.json();
     const { name, url, icon } = body || {};
 
@@ -37,22 +39,24 @@ export async function POST(request: Request) {
       return Response.json({ error: "URL must not exceed 500 characters" }, { status: 400 });
     }
 
-    const maxOrder = db.exec("SELECT COALESCE(MAX(sort_order), -1) + 1 as next_order FROM quick_links");
-    const nextOrder = maxOrder.length > 0 ? (maxOrder[0].values[0][0] as number) : 0;
-    db.run(
-      "INSERT INTO quick_links (name, url, icon, sort_order) VALUES (?, ?, ?, ?)",
-      [
-        name.trim().slice(0, 100),
-        url.trim().slice(0, 500),
-        typeof icon === "string" ? icon.trim().slice(0, 50) : null,
-        nextOrder
-      ]
-    );
-    persistDb();
-    const links = queryAll<QuickLink>(db, "SELECT * FROM quick_links ORDER BY sort_order ASC");
+    const maxOrder = await db
+      .select({ next_order: sql<number>`COALESCE(MAX(${schema.quickLinks.sort_order}), -1) + 1` })
+      .from(schema.quickLinks);
+    const nextOrder = Number(maxOrder[0]?.next_order || 0);
+
+    await db.insert(schema.quickLinks).values({
+      name: name.trim().slice(0, 100),
+      url: url.trim().slice(0, 500),
+      icon: typeof icon === "string" ? icon.trim().slice(0, 50) : null,
+      sort_order: nextOrder,
+      created_at: new Date().toISOString(),
+    });
+
+    const links = await db.select().from(schema.quickLinks).orderBy(asc(schema.quickLinks.sort_order));
     return Response.json(links, { status: 201 });
   } catch (err) {
     console.error("Error creating quick link:", err);
     return Response.json({ error: "Invalid JSON or internal error" }, { status: 400 });
   }
 }
+

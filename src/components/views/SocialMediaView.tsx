@@ -26,13 +26,15 @@ import SocialContentCalendar from "./social_media/SocialContentCalendar";
 import ThreadHookArchitect from "./social_media/ThreadHookArchitect";
 import UnifiedSocialInbox from "./social_media/UnifiedSocialInbox";
 import SocialListeningIntel from "./social_media/SocialListeningIntel";
+import AutomationsMatrix from "./social_media/AutomationsMatrix";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { Bot } from "lucide-react";
 
 export default function SocialMediaView() {
   const [posts, setPosts] = useState<ScheduledPost[]>(INITIAL_SCHEDULE);
   const [activeSubTab, setActiveSubTab] = useState<
-    "composer" | "calendar" | "thread" | "inbox" | "listening" | "copywriter" | "queue" | "radar"
-  >("composer");
+    "composer" | "automations" | "calendar" | "thread" | "inbox" | "listening" | "copywriter" | "queue" | "radar"
+  >("automations");
   const [injectedText, setInjectedText] = useState<string | null>(null);
 
   const handleSchedulePost = (newPost: { platform: SocialPlatform; text: string; hasMedia: boolean }) => {
@@ -126,6 +128,7 @@ export default function SocialMediaView() {
       {/* Sub-Navigation Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {[
+          { id: "automations" as const, label: "Automations Matrix", icon: Bot },
           { id: "composer" as const, label: "Omnichannel Composer", icon: Send },
           { id: "calendar" as const, label: "Visual Content Calendar", icon: CalendarDays },
           { id: "thread" as const, label: "Viral Thread Architect", icon: Repeat },
@@ -160,6 +163,12 @@ export default function SocialMediaView() {
       </div>
 
       {/* Main Content Areas */}
+      {activeSubTab === "automations" && (
+        <div className="animate-fade-in">
+          <AutomationsMatrix />
+        </div>
+      )}
+
       {activeSubTab === "composer" && (
         <div className="animate-fade-in">
           <MultiPlatformComposer onSchedulePost={handleSchedulePost} />
@@ -215,3 +224,4 @@ export default function SocialMediaView() {
     </div>
   );
 }
+

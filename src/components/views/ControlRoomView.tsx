@@ -1,6 +1,5 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useHermesAcpStore } from "@/lib/hermes/hermesAcpStore";
 import {
   Radio,
   Cpu,
@@ -177,209 +176,102 @@ type ControlRoomSubTab = "trace" | "telemetry" | "skills_memory" | "topology" | 
 
 export default function ControlRoomView() {
   const [selectedHarnessId, setSelectedHarnessId] = useState<HarnessId>("hermes");
-  const [sessions, setSessions] = useState<AgentSession[]>(INITIAL_SESSIONS);
-  const [activeSessionId, setActiveSessionId] = useState<string>("sess-hermes-8821");
   const [temperature, setTemperature] = useState(0.2);
   const [promptInjection, setPromptInjection] = useState("");
   const [isKillswitchActive, setIsKillswitchActive] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<ControlRoomSubTab>("trace");
   const [pendingModalApproval, setPendingModalApproval] = useState<PendingApproval | null>(null);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+
+  const {
+    activeSessionId,
+    sessions,
+    messages,
+    currentReasoningTrace,
+    isStreaming,
+    isLoading,
+    fetchSessions,
+    createSession,
+    selectSession,
+    deleteSession,
+    sendPromptDirective,
+    pendingGate,
+    resolveGateClearance,
+  } = useHermesAcpStore();
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
 
   const activeHarness = HARNESSES.find((h) => h.id === selectedHarnessId) || HARNESSES[0];
-  const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0];
+  const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0] || {
+    id: "none",
+    name: "No Active Session",
+    status: "IDLE",
+    cwd: "",
+    model: "",
+  };
 
   const handleStepForward = () => {
     cyberAudio.play("click");
-    setSessions((prev) =>
-      prev.map((sess) => {
-        if (sess.id === activeSessionId) {
-          const nextStepNum = sess.steps.length + 1;
-          const simulatedSteps: CognitiveStep[] = [
-            {
-              step: nextStepNum,
-              title: `AST Transformation & Verification #${nextStepNum}`,
-              thought: "Synthesizing safe memory boundary constraints and linting against React 19 compiler rules.",
-              output: `Generated optimized AST delta. Verification status: PASS (0 errors, 42ms runtime).`,
-            },
-            {
-              step: nextStepNum,
-              title: `Execute Runtime Security Clearance Check`,
-              thought: "Requesting clearance for elevated database connection pool expansion.",
-              toolCall: {
-                name: "sqlite_pool_expand",
-                args: '{"max_connections": 16, "wal_mode": true, "timeout_ms": 5000}',
-                requiresApproval: true,
-                status: "pending",
-              },
-            },
-          ];
-          const newStep = simulatedSteps[(nextStepNum - 1) % simulatedSteps.length];
-          newStep.step = nextStepNum;
-          return {
-            ...sess,
-            currentTokens: Math.min(sess.maxTokens, sess.currentTokens + 1420),
-            steps: [...sess.steps, newStep],
-          };
-        }
-        return sess;
-      })
-    );
   };
 
   const handleResetSteps = () => {
     cyberAudio.play("click");
-    setSessions((prev) =>
-      prev.map((sess) => {
-        if (sess.id === activeSessionId) {
-          return {
-            ...sess,
-            currentTokens: 12400,
-            steps: sess.steps.slice(0, 1),
-          };
-        }
-        return sess;
-      })
-    );
   };
 
-  const handleOpenApprovalModal = (stepIdx: number, toolCall: NonNullable<CognitiveStep["toolCall"]>) => {
+  const handleOpenApprovalModal = (stepIdx: number, toolCall: any) => {
     cyberAudio.play("click");
     setPendingModalApproval({
-      id: `${activeSessionId}-${stepIdx}`,
+      id: pendingGate?.request_id || "gate-1",
       stepIdx,
       agent: activeHarness.name,
-      toolName: toolCall.name,
-      argsJson: toolCall.args,
-      risk: toolCall.requiresApproval ? "CRITICAL" : "STANDARD",
-      description: `Autonomous agent ${activeHarness.name} requested execution of tool ${toolCall.name} in session ${activeSession.name}.`,
+      toolName: pendingGate?.tool_name || "unknown",
+      argsJson: JSON.stringify(pendingGate?.parameters || {}),
+      risk: pendingGate?.risk_level === "critical" ? "CRITICAL" : "STANDARD",
+      description: `ACP Gate Clearance request for tool: ${pendingGate?.tool_name}`,
     });
   };
 
-  const handleModalApprove = (id: string, modifiedArgs?: string) => {
-    if (!pendingModalApproval || pendingModalApproval.stepIdx === undefined) return;
-    const stepIdx = pendingModalApproval.stepIdx;
-    setSessions((prev) =>
-      prev.map((sess) => {
-        if (sess.id === activeSessionId) {
-          const updatedSteps = [...sess.steps];
-          if (updatedSteps[stepIdx]?.toolCall) {
-            updatedSteps[stepIdx].toolCall!.status = "approved";
-            if (modifiedArgs) {
-              updatedSteps[stepIdx].toolCall!.args = modifiedArgs;
-            }
-            updatedSteps[stepIdx].output = `[APPROVED BY OPERATOR${modifiedArgs ? " (MODIFIED ARGS)" : ""}] Tool executed successfully · returncode=0 · telemetry verified.`;
-          }
-          return { ...sess, status: "STREAMING", steps: updatedSteps };
-        }
-        return sess;
-      })
-    );
+  const handleModalApprove = async (id: string, modifiedArgs?: string) => {
+    cyberAudio.play("chime");
+    if (pendingGate) {
+      await resolveGateClearance(pendingGate.request_id, "ALLOW_ONCE");
+    }
     setPendingModalApproval(null);
   };
 
-  const handleModalDeny = (id: string, reason: string) => {
-    if (!pendingModalApproval || pendingModalApproval.stepIdx === undefined) return;
-    const stepIdx = pendingModalApproval.stepIdx;
-    setSessions((prev) =>
-      prev.map((sess) => {
-        if (sess.id === activeSessionId) {
-          const updatedSteps = [...sess.steps];
-          if (updatedSteps[stepIdx]?.toolCall) {
-            updatedSteps[stepIdx].toolCall!.status = "denied";
-            updatedSteps[stepIdx].output = `[DENIED BY OPERATOR] ${reason}`;
-          }
-          return { ...sess, status: "PAUSED", steps: updatedSteps };
-        }
-        return sess;
-      })
-    );
+  const handleModalDeny = async (id: string, reason: string) => {
+    cyberAudio.play("error");
+    if (pendingGate) {
+      await resolveGateClearance(pendingGate.request_id, "DENY");
+    }
     setPendingModalApproval(null);
   };
 
-  const handleApproveTool = (stepIdx: number) => {
+  const handleApproveTool = async (stepIdx: number) => {
     cyberAudio.play("chime");
-    setSessions((prev) =>
-      prev.map((sess) => {
-        if (sess.id === activeSessionId) {
-          const updatedSteps = [...sess.steps];
-          if (updatedSteps[stepIdx]?.toolCall) {
-            updatedSteps[stepIdx].toolCall!.status = "approved";
-            updatedSteps[stepIdx].output = "[APPROVED BY OPERATOR] Tool executed successfully · returncode=0 · telemetry verified.";
-          }
-          return { ...sess, status: "STREAMING", steps: updatedSteps };
-        }
-        return sess;
-      })
-    );
+    if (pendingGate) {
+      await resolveGateClearance(pendingGate.request_id, "ALLOW_ONCE");
+    }
   };
 
-  const handleDenyTool = (stepIdx: number) => {
+  const handleDenyTool = async (stepIdx: number) => {
     cyberAudio.play("click");
-    setSessions((prev) =>
-      prev.map((sess) => {
-        if (sess.id === activeSessionId) {
-          const updatedSteps = [...sess.steps];
-          if (updatedSteps[stepIdx]?.toolCall) {
-            updatedSteps[stepIdx].toolCall!.status = "denied";
-            updatedSteps[stepIdx].output = "[DENIED BY OPERATOR] Execution blocked by AirGap security protocol.";
-          }
-          return { ...sess, status: "PAUSED", steps: updatedSteps };
-        }
-        return sess;
-      })
-    );
+    if (pendingGate) {
+      await resolveGateClearance(pendingGate.request_id, "DENY");
+    }
   };
 
-  const handleForkSession = () => {
+  const handleForkSession = async () => {
     cyberAudio.play("click");
-    const newSessionId = `sess-${selectedHarnessId}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newSession: AgentSession = {
-      id: newSessionId,
-      harnessId: selectedHarnessId,
-      name: `Session #${newSessionId.toUpperCase()} // Forked Branch`,
-      status: "THINKING",
-      currentTokens: Math.floor(activeSession.currentTokens * 0.7),
-      maxTokens: activeSession.maxTokens,
-      steps: [
-        ...activeSession.steps,
-        {
-          step: activeSession.steps.length + 1,
-          title: "Forked Execution Branch Initiated",
-          thought: "Rewound state to current checkpoint and branched decision path.",
-          output: "Ready for operator prompt injection.",
-        },
-      ],
-    };
-    setSessions((prev) => [newSession, ...prev]);
-    setActiveSessionId(newSessionId);
-    cyberAudio.play("chime");
+    await createSession(`Forked Session // ${activeHarness.name}`, "dirtydaily", activeHarness.model);
   };
 
-  const handleInjectPrompt = (e: React.FormEvent) => {
+  const handleInjectPrompt = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!promptInjection.trim()) return;
     cyberAudio.play("click");
-    setSessions((prev) =>
-      prev.map((s) => {
-        if (s.id === activeSessionId) {
-          return {
-            ...s,
-            status: "THINKING",
-            steps: [
-              ...s.steps,
-              {
-                step: s.steps.length + 1,
-                title: "Operator Injected Directive",
-                thought: `Parsing operator input: "${promptInjection.trim()}"`,
-                output: `Directive queued for execution by ${activeHarness.name}.`,
-              },
-            ],
-          };
-        }
-        return s;
-      })
-    );
+    await sendPromptDirective(promptInjection.trim());
     setPromptInjection("");
   };
 
@@ -565,7 +457,7 @@ export default function ControlRoomView() {
                         key={sess.id}
                         onClick={() => {
                           cyberAudio.play("click");
-                          setActiveSessionId(sess.id);
+                          selectSession(sess.id);
                         }}
                         className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
                           isSelected
@@ -577,9 +469,9 @@ export default function ControlRoomView() {
                           <span className="text-xs font-bold text-[#F1F3F9] truncate">{sess.name}</span>
                           <span
                             className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
-                              sess.status === "AWAITING_CLEARANCE"
+                              sess.status === "WAITING_CLEARANCE"
                                 ? "bg-[#FFB800]/20 text-[#FFB800] border-[#FFB800]/40 animate-pulse"
-                                : sess.status === "STREAMING"
+                                : sess.status === "RUNNING"
                                 ? "bg-[#00F0FF]/20 text-[#00F0FF] border-[#00F0FF]/40"
                                 : "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/40"
                             }`}
@@ -589,10 +481,7 @@ export default function ControlRoomView() {
                         </div>
 
                         <div className="flex items-center justify-between text-[10px] text-[#4F536E]">
-                          <span>{sess.steps.length} Reasoning Steps</span>
-                          <span>
-                            {Math.round((sess.currentTokens / sess.maxTokens) * 100)}% Context
-                          </span>
+                          <span>Model: {sess.model}</span>
                         </div>
                       </div>
                     );
@@ -607,12 +496,12 @@ export default function ControlRoomView() {
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-[#9499B3]">Context Window:</span>
-                    <span className="text-[#00FF41] font-bold">{activeSession.currentTokens.toLocaleString()} / {activeSession.maxTokens.toLocaleString()} tok</span>
+                    <span className="text-[#00FF41] font-bold">128,000 max budget</span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-black/60 border border-white/10 overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-[#00FF41] to-[#00F0FF] rounded-full transition-all"
-                      style={{ width: `${(activeSession.currentTokens / activeSession.maxTokens) * 100}%` }}
+                      style={{ width: "35%" }}
                     />
                   </div>
                 </div>
@@ -677,91 +566,44 @@ export default function ControlRoomView() {
 
               {/* Reasoning Steps Stream */}
               <div className="flex flex-col gap-3 max-h-[460px] overflow-y-auto pr-1">
-                {activeSession.steps.map((step, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-black/50 border border-white/10 flex flex-col gap-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-white/10 text-xs font-bold text-[#00FF41] flex items-center justify-center">
-                          {step.step}
-                        </span>
-                        <h4 className="text-xs font-bold text-[#F1F3F9]">{step.title}</h4>
-                      </div>
-                      <span className="text-[10px] text-[#4F536E] font-mono">TRACE_OK</span>
+                {messages.length === 0 && !currentReasoningTrace && (
+                  <div className="py-12 text-center text-xs text-[#4F536E]">
+                    No messages in this session yet. Transmit a directive below to begin execution.
+                  </div>
+                )}
+
+                {messages.map((msg, idx) => (
+                  <div key={msg.id || idx} className="p-4 rounded-xl bg-black/50 border border-white/10 flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between pb-1 border-b border-white/5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#00FF41]">
+                        {msg.role === "user" ? "OPERATOR INJECTION" : "HERMES COGNITION"}
+                      </span>
+                      <span className="text-[9px] text-[#4F536E] font-mono">
+                        {new Date(msg.created_at).toLocaleTimeString()}
+                      </span>
                     </div>
 
-                    <p className="text-xs text-[#9499B3] leading-relaxed italic bg-black/30 p-2.5 rounded-lg border border-white/5 font-mono">
-                      &quot;{step.thought}&quot;
+                    {msg.reasoning_trace && (
+                      <div className="p-3 rounded-lg bg-black/60 border border-[#00FF41]/20 text-xs text-[#9499B3] leading-relaxed italic font-mono">
+                        {msg.reasoning_trace}
+                      </div>
+                    )}
+
+                    <p className="text-xs text-[#F1F3F9] leading-relaxed font-mono whitespace-pre-wrap">
+                      {msg.content}
                     </p>
-
-                    {step.toolCall && (
-                      <div
-                        className={`p-3 rounded-xl border flex flex-col gap-2 ${
-                          step.toolCall.status === "pending"
-                            ? "bg-[#FFB800]/10 border-[#FFB800]/40 shadow-[0_0_12px_rgba(255,184,0,0.15)]"
-                            : step.toolCall.status === "approved"
-                            ? "bg-[#00FF41]/10 border-[#00FF41]/30"
-                            : "bg-[#FF2A6D]/10 border-[#FF2A6D]/30"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-1.5">
-                            <ShieldAlert size={14} className={step.toolCall.status === "pending" ? "text-[#FFB800]" : "text-[#00FF41]"} />
-                            <span className="font-black text-[#F1F3F9]">TOOL INVOCATION: {step.toolCall.name}</span>
-                          </div>
-                          <span
-                            className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-bold ${
-                              step.toolCall.status === "pending"
-                                ? "bg-[#FFB800]/20 text-[#FFB800]"
-                                : step.toolCall.status === "approved"
-                                ? "bg-[#00FF41]/20 text-[#00FF41]"
-                                : "bg-[#FF2A6D]/20 text-[#FF2A6D]"
-                            }`}
-                          >
-                            {step.toolCall.status.toUpperCase()}
-                          </span>
-                        </div>
-
-                        <code className="p-2 rounded bg-black/80 text-[#00F0FF] text-[11px] font-mono break-all">
-                          {step.toolCall.args}
-                        </code>
-
-                        {step.toolCall.status === "pending" && (
-                          <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenApprovalModal(idx, step.toolCall!)}
-                              className="px-3 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 text-xs font-bold transition-colors cursor-pointer"
-                            >
-                              INSPECT & EDIT PAYLOAD
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDenyTool(idx)}
-                              className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-[#FF2A6D]/15 border border-[#FF2A6D]/40 text-[#FF2A6D] hover:bg-[#FF2A6D]/25 text-xs font-bold cursor-pointer"
-                            >
-                              <XCircle size={12} />
-                              <span>DENY</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleApproveTool(idx)}
-                              className="flex items-center justify-center gap-1 px-4 py-1.5 rounded-lg bg-[#00FF41]/20 border border-[#00FF41]/40 text-[#00FF41] hover:bg-[#00FF41]/30 text-xs font-bold shadow-[0_0_8px_rgba(0,255,65,0.2)] cursor-pointer"
-                            >
-                              <CheckCircle2 size={12} />
-                              <span>APPROVE</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {step.output && (
-                      <div className="p-2.5 rounded-lg bg-black/60 border border-white/5 text-xs text-[#00FF41] font-mono leading-relaxed">
-                        {step.output}
-                      </div>
-                    )}
                   </div>
                 ))}
+
+                {currentReasoningTrace && (
+                  <div className="p-4 rounded-xl bg-[#00FF41]/5 border border-[#00FF41]/30 flex flex-col gap-2 animate-pulse">
+                    <span className="text-[10px] font-bold text-[#00FF41]">STREAMING THOUGHT TRACE...</span>
+                    <pre className="text-xs text-[#00FF41] font-mono whitespace-pre-wrap leading-relaxed">
+                      {currentReasoningTrace}
+                      <span className="inline-block w-1.5 h-3.5 bg-[#00FF41] ml-1 animate-ping" />
+                    </pre>
+                  </div>
+                )}
               </div>
 
               {/* Direct Prompt Injection */}
