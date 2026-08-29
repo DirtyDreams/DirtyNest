@@ -274,4 +274,4 @@ Plan zmieniamy przez PR/commit z aktualizacją tego pliku + odpowiedni ADR w [do
 | 7.6 | Graf wiedzy na realnych danych | ✅ useKnowledgeGraph + GraphStateOverlay; mock-mapowanie usunięte; KnowledgeView pobiera docs na montowaniu (bug wykryty przez e2e) |
 | 7.7 | Katalog API z kodu | ✅ scripts/gen-api-docs.mjs -> docs/api-catalog.md (npm run docs:api) |
 
-**Otwarte po F7 (wymaga operatora):** publikacja testowa przez HITL na Reddit + X — selektory adapterów CDP trzeba skalibrować na zalogowanej sesji Chrome (dry-run już działa); wtedy odejdzie też ostatni MockAdapter z twardej piątki.
+**Status HITL publish (2026-08-29):** ✅ wykonany na żywej sesji — post z pełnym tekstem kalibracyjnym jest live na X (`x.com/MinaReilly26739/status/2093704991470985516`), adapterowy `verify()` potwierdza, metryki scrapują (1 view). Poprawki po live-run: zaufane kliknięcie przycisku (el.click() był niezaufany i X je ignorował), elementFromPoint-guard na zakryte przyciski, permalink-fallback z matchem tekstu. Reddit zostaje na następny krok (adapter gotowy, wymaga kolejnej sesji).
