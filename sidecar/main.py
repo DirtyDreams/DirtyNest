@@ -6,6 +6,9 @@ import socket
 import time
 from typing import Dict, List, Optional, Any
 from contextlib import asynccontextmanager
+import base64
+import hashlib
+import hmac
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,6 +39,36 @@ verification_service = VerificationService()
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("dirtynest-sidecar")
+
+# ---------------------------------------------------------------------------
+# JWT verification (HS256) for WebSocket handshakes. No external dependency —
+# HMAC-SHA256 via stdlib. Shares JWT_SECRET with the Next.js web app.
+# ---------------------------------------------------------------------------
+
+def _b64url_decode(data: str) -> bytes:
+    padding = "=" * (-len(data) % 4)
+    return base64.urlsafe_b64decode(data + padding)
+
+
+def verify_jwt(token: str, secret: str) -> Optional[dict]:
+    """Return the JWT payload if the token is a valid HS256 JWT signed with
+    `secret` and not expired; otherwise None."""
+    if not token or not secret:
+        return None
+    try:
+        header_b64, payload_b64, sig_b64 = token.split(".")
+        signing_input = f"{header_b64}.{payload_b64}".encode()
+        expected = hmac.new(secret.encode(), signing_input, hashlib.sha256).digest()
+        actual = _b64url_decode(sig_b64)
+        if not hmac.compare_digest(expected, actual):
+            return None
+        payload = json.loads(_b64url_decode(payload_b64))
+        exp = payload.get("exp")
+        if exp and time.time() > exp:
+            return None
+        return payload
+    except Exception:
+        return None
 
 # Global Telemetry & Status Cache
 ecosystem_status = {
@@ -509,6 +542,12 @@ async def chat_endpoint(req: PromptRequest):
 @app.websocket("/ws/telemetry")
 @app.websocket("/ws/acp")
 async def websocket_unified_endpoint(websocket: WebSocket):
+    # F2 auth: require a valid JWT (passed as ?token=) at handshake.
+    token = websocket.query_params.get("token", "")
+    secret = os.environ.get("JWT_SECRET", "")
+    if not verify_jwt(token, secret):
+        await websocket.close(code=4401)
+        return
     await manager.connect(websocket)
     # Send initial snapshot immediately
     initial_snapshot = {

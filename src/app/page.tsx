@@ -130,6 +130,7 @@ import AuthLockScreen from "@/components/auth/AuthLockScreen";
 import UserStatusPill from "@/components/auth/UserStatusPill";
 import ProtectedAccessGate from "@/components/auth/ProtectedAccessGate";
 import { useAuthStore } from "@/stores/useAuthStore";
+import RealAuthGate from "@/components/auth/RealAuthGate";
 import {
   Terminal,
   Activity,
@@ -554,6 +555,7 @@ export default function Home() {
   };
 
   return (
+    <RealAuthGate>
     <ToastProvider>
       {/* Cyber Security Lock Screen Gateway */}
       {(!isAuthenticated || isLocked) && <AuthLockScreen />}
@@ -1474,5 +1476,6 @@ export default function Home() {
         isTerminalOpen={isTerminalOpen}
       />
     </ToastProvider>
+    </RealAuthGate>
   );
 }

@@ -103,6 +103,12 @@ services:
     environment:
       - DATABASE_URL=postgresql://dirtynest:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres:5432/dirtynest
       - NEXT_PUBLIC_SIDECAR_URL=http://localhost:8000
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
+      - API_KEY_ENC_KEY=${API_KEY_ENC_KEY:?API_KEY_ENC_KEY must be set in .env}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set in .env}
+      - OPERATOR_USERNAME=${OPERATOR_USERNAME:-operator}
+      - OPERATOR_PASSWORD=${OPERATOR_PASSWORD:?OPERATOR_PASSWORD must be set in .env}
     depends_on:
       postgres:
         condition: service_healthy
@@ -125,6 +131,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - SEARXNG_URL=http://searxng:8080
       - OLLAMA_URL=http://ollama:11434
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
       # Telemetry prober: probe compose services by their network names
       - PROBE_HOST_POSTGRES=postgres
       - PROBE_HOST_QDRANT=qdrant

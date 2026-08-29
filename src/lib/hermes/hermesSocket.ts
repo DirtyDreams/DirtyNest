@@ -51,11 +51,11 @@ class HermesSocketClient {
   private isExplicitClose = false;
   private statusListeners: Array<(status: ConnectionStatus) => void> = [];
   private telemetryListeners: Array<(data: TelemetryPayload) => void> = [];
-  private acpListeners: Array<(event: any) => void> = [];
+  private acpListeners: Array<(event: Record<string, unknown>) => void> = [];
   public currentStatus: ConnectionStatus = "DISCONNECTED";
   public latestTelemetry: TelemetryPayload | null = null;
 
-  public onAcpEvent(cb: (event: any) => void): () => void {
+  public onAcpEvent(cb: (event: Record<string, unknown>) => void): () => void {
     this.acpListeners.push(cb);
     return () => {
       this.acpListeners = this.acpListeners.filter((c) => c !== cb);
@@ -67,10 +67,10 @@ class HermesSocketClient {
     return process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
   }
 
-  public getWsUrl(): string {
+  public getWsUrl(token: string): string {
     const httpUrl = this.getSidecarBaseUrl();
     const wsUrl = httpUrl.replace(/^http/, "ws");
-    return `${wsUrl}/ws/telemetry`;
+    return `${wsUrl}/ws/telemetry?token=${encodeURIComponent(token)}`;
   }
 
   public connect(): void {
@@ -82,62 +82,70 @@ class HermesSocketClient {
     this.isExplicitClose = false;
     this.setStatus("CONNECTING");
 
-    try {
-      const url = this.getWsUrl();
-      this.socket = new WebSocket(url);
-
-      this.socket.onopen = () => {
-        this.setStatus("CONNECTED");
-        if (this.reconnectTimer) {
-          clearTimeout(this.reconnectTimer);
-          this.reconnectTimer = null;
-        }
-      };
-
-      this.socket.onmessage = (event) => {
-        try {
-          const rawData = JSON.parse(event.data);
-          const data: TelemetryPayload = rawData;
-          this.latestTelemetry = data;
-          this.notifyTelemetry(data);
-          
-          // Forward ACP events to registered listeners
-          if (typeof rawData.type === "string" && (rawData.type.startsWith("ACP_") || rawData.type.startsWith("SWARM_"))) {
-            this.acpListeners.forEach((cb) => cb(rawData));
-          }
-
-          // Update zustand store if connected
-          if (data.type === "TELEMETRY_UPDATE" || data.type === "INITIAL_SNAPSHOT") {
-            const store = useHermesStore.getState();
-            if (data.services) {
-              store.updateServicesStatus(data.services);
-            }
-            if (data.minions) {
-              store.updateMinionsList(data.minions);
-            }
-            if (data.host) {
-              store.updateHostTelemetry(data.host);
-            }
-          }
-        } catch {
-          // ignore non-json
-        }
-      };
-
-      this.socket.onerror = () => {
+    // Fetch a short-lived WS token (access cookie is httpOnly, invisible to JS).
+    fetch("/api/auth/ws-token", { credentials: "same-origin" })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("ws-token failed"))))
+      .then((data) => {
+        if (this.isExplicitClose) return;
+        this.openSocket(this.getWsUrl(data.token));
+      })
+      .catch(() => {
         this.setStatus("ERROR");
-      };
+        this.scheduleReconnect();
+      });
+  }
 
-      this.socket.onclose = () => {
-        this.setStatus("DISCONNECTED");
-        if (!this.isExplicitClose) {
-          this.scheduleReconnect();
+  private openSocket(url: string): void {
+    this.socket = new WebSocket(url);
+
+    this.socket.onopen = () => {
+      this.setStatus("CONNECTED");
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+    };
+
+    this.socket.onmessage = (event) => {
+      try {
+        const rawData = JSON.parse(event.data);
+        const data: TelemetryPayload = rawData;
+        this.latestTelemetry = data;
+        this.notifyTelemetry(data);
+
+        // Forward ACP events to registered listeners
+        if (typeof rawData.type === "string" && (rawData.type.startsWith("ACP_") || rawData.type.startsWith("SWARM_"))) {
+          this.acpListeners.forEach((cb) => cb(rawData));
         }
-      };
-    } catch {
+
+        // Update zustand store if connected
+        if (data.type === "TELEMETRY_UPDATE" || data.type === "INITIAL_SNAPSHOT") {
+          const store = useHermesStore.getState();
+          if (data.services) {
+            store.updateServicesStatus(data.services);
+          }
+          if (data.minions) {
+            store.updateMinionsList(data.minions);
+          }
+          if (data.host) {
+            store.updateHostTelemetry(data.host);
+          }
+        }
+      } catch {
+        // ignore non-json
+      }
+    };
+
+    this.socket.onerror = () => {
       this.setStatus("ERROR");
-      this.scheduleReconnect();
-    }
+    };
+
+    this.socket.onclose = () => {
+      this.setStatus("DISCONNECTED");
+      if (!this.isExplicitClose) {
+        this.scheduleReconnect();
+      }
+    };
   }
 
   public disconnect(): void {

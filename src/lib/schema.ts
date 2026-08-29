@@ -145,3 +145,15 @@ export const zbRules = pgTable("zb_rules", {
   value: varchar("value", { length: 300 }).notNull(),
   updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
 });
+// ---------------------------------------------------------------------------
+// Auth (F2) — operator accounts. api_keys holds AES-GCM-encrypted JSON.
+// ---------------------------------------------------------------------------
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 100 }).notNull().unique(),
+  password_hash: varchar("password_hash", { length: 255 }).notNull(),
+  role: varchar("role", { length: 50 }).notNull().default("operator"),
+  api_keys: text("api_keys"),
+  created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
+});

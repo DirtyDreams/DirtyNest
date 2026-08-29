@@ -46,6 +46,9 @@ yarn-error.log*
 
 # sidecar runtime data
 sidecar/data/
+# python
+__pycache__/
+*.pyc
 
 # typescript
 *.tsbuildinfo

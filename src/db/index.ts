@@ -3,6 +3,7 @@ import postgres from "postgres";
 import * as schema from "@/lib/schema";
 import { eq, desc, asc, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
+import bcrypt from "bcryptjs";
 
 const connectionString = process.env.DATABASE_URL!;
 
@@ -90,6 +91,30 @@ export async function initDb() {
     }
 
     isInitialized = true;
+    // Seed operator accounts (F2) — exactly 2, passwords from env with dev defaults.
+    const usersCount = await db.select({ count: sql<number>`count(*)::int` }).from(schema.users);
+    if (usersCount[0]?.count === 0) {
+      const seedUsers = [
+        {
+          username: process.env.ADMIN_USERNAME || "admin",
+          password: process.env.ADMIN_PASSWORD || "admin123",
+          role: "admin",
+        },
+        {
+          username: process.env.OPERATOR_USERNAME || "operator",
+          password: process.env.OPERATOR_PASSWORD || "operator123",
+          role: "operator",
+        },
+      ];
+      for (const u of seedUsers) {
+        await db.insert(schema.users).values({
+          username: u.username,
+          password_hash: bcrypt.hashSync(u.password, 10),
+          role: u.role,
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
   } catch (error) {
     console.error("Postgres initDb error:", error);
   }

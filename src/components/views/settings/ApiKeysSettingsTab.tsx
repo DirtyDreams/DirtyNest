@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
+import { fetchApiKeys, saveApiKeys } from "@/lib/auth/apiKeys";
 
 interface ProviderKey {
   id: string;
@@ -71,23 +72,21 @@ export default function ApiKeysSettingsTab() {
   const [testResults, setTestResults] = useState<Record<string, { ok: boolean; latency: number }>>({});
 
   useEffect(() => {
-    try {
-      const savedGemini = localStorage.getItem("gemini_api_key") || "";
-      const savedHf = localStorage.getItem("hf_api_key") || "";
-      const savedSupaUrl = localStorage.getItem("supabase_url") || "";
-      const savedSupaKey = localStorage.getItem("supabase_key") || "";
-      const savedDiscord = localStorage.getItem("discord_webhook") || "";
-
+    let cancelled = false;
+    (async () => {
+      const saved = await fetchApiKeys();
+      if (cancelled) return;
       setKeys({
-        gemini: savedGemini,
-        huggingface: savedHf,
-        supabase_url: savedSupaUrl,
-        supabase_anon: savedSupaKey,
-        discord_webhook: savedDiscord,
+        gemini: saved.gemini || "",
+        huggingface: saved.huggingface || "",
+        supabase_url: saved.supabase_url || "",
+        supabase_anon: saved.supabase_anon || "",
+        discord_webhook: saved.discord_webhook || "",
       });
-    } catch {
-      // ignore
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleKeyChange = (id: string, val: string) => {
@@ -99,16 +98,14 @@ export default function ApiKeysSettingsTab() {
     setRevealed((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     cyberAudio.play("chime");
-    try {
-      if (keys.gemini) localStorage.setItem("gemini_api_key", keys.gemini);
-      if (keys.huggingface) localStorage.setItem("hf_api_key", keys.huggingface);
-      if (keys.supabase_url) localStorage.setItem("supabase_url", keys.supabase_url);
-      if (keys.supabase_anon) localStorage.setItem("supabase_key", keys.supabase_anon);
-      if (keys.discord_webhook) localStorage.setItem("discord_webhook", keys.discord_webhook);
-    } catch {}
-    toast.success("API Credentials Saved", "Encrypted mesh keys stored in local vault.");
+    const ok = await saveApiKeys(keys);
+    if (ok) {
+      toast.success("API Credentials Saved", "Encrypted mesh keys stored in the server vault.");
+    } else {
+      toast.error("Save Failed", "Could not persist API keys to the encrypted vault.");
+    }
   };
 
   const testConnection = async (id: string) => {
