@@ -83,7 +83,14 @@ def _js_login_wall() -> str:
 
 
 def _js_fill(selector: str, text: str) -> str:
-    """Type text into the compose box and fire input events (React-friendly)."""
+    """Fill the compose box via a synthetic paste event.
+
+    Live calibration (X web composer on Chrome 151): execCommand('insertText')
+    DOUBLES the text (Draft.js applies both the default-insert and the command
+    path); a ClipboardEvent('paste') with a DataTransfer payload inserts
+    exactly once. We clear any persisted draft first (X restores /compose/post
+    drafts on reopen), then paste.
+    """
     sel_json = json.dumps(selector)
     txt_json = json.dumps(text)
     return (
@@ -91,7 +98,11 @@ def _js_fill(selector: str, text: str) -> str:
         " if (!el) return 'NOT_FOUND';"
         " el.focus();"
         " if (el.isContentEditable) {"
-        "  document.execCommand('insertText', false, " + txt_json + ");"
+        "  document.execCommand('selectAll', false, null);"
+        "  document.execCommand('delete', false, null);"
+        "  const dt = new DataTransfer();"
+        "  dt.setData('text/plain', " + txt_json + ");"
+        "  el.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));"
         " } else {"
         "  el.value = " + txt_json + ";"
         " }"
@@ -208,6 +219,44 @@ class CdpSocialAdapter(SocialAdapter):
                     if msg.get("error"):
                         raise RuntimeError(f"CDP {method}: {msg['error']}")
                     return msg.get("result") or {}
+
+    async def _trusted_click_type(self, ws_url: str, selector: str, text: str) -> str:
+        """Real-CDP caret placement + Input.insertText (trusted input path).
+
+        Synthetic ClipboardEvent/execCommand paths double or drop text in the
+        X web composer (Draft.js + Chrome 151, live-calibrated 2026-08-29).
+        Trusted CDP input (mouse click to place caret, then Input.insertText)
+        inserts exactly once - same lesson as the FB trusted-input gate.
+        """
+        box = await self._cdp_call(
+            ws_url, "Runtime.evaluate",
+            {"returnByValue": True, "expression": (
+                "(() => { const el = document.querySelector(" + json.dumps(selector) + ");"
+                " if (!el) return null; el.focus();"
+                " const r = el.getBoundingClientRect();"
+                " return JSON.stringify({x: r.x + r.width/2, y: r.y + Math.min(r.height/2, 30)}); })()"
+            )})
+        raw = (box or {}).get("result", {}).get("value")
+        if not raw:
+            return "NOT_FOUND"
+        pos = json.loads(raw)
+        await self._cdp_call(ws_url, "Input.dispatchMouseEvent",
+                             {"type": "mousePressed", "x": pos["x"], "y": pos["y"],
+                              "button": "left", "clickCount": 1})
+        await self._cdp_call(ws_url, "Input.dispatchMouseEvent",
+                             {"type": "mouseReleased", "x": pos["x"], "y": pos["y"],
+                              "button": "left", "clickCount": 1})
+        await asyncio.sleep(0.3)
+        # select-all + delete any persisted draft, then type fresh
+        await self._cdp_call(ws_url, "Input.dispatchKeyEvent",
+                             {"type": "rawKeyDown", "windowsVirtualKeyCode": 65, "code": "KeyA",
+                              "modifiers": 2, "commands": ["selectAll"]})
+        await self._cdp_call(ws_url, "Input.dispatchKeyEvent",
+                             {"type": "keyDown", "windowsVirtualKeyCode": 46, "code": "Delete"})
+        await self._cdp_call(ws_url, "Input.dispatchKeyEvent",
+                             {"type": "keyUp", "windowsVirtualKeyCode": 46, "code": "Delete"})
+        await self._cdp_call(ws_url, "Input.insertText", {"text": text})
+        return "TYPED"
 
     def _launch_browser(self) -> bool:  # pragma: no cover - OS process
         """Spawn Chrome/Chromium with the debug port + persistent profile dir.
@@ -406,7 +455,8 @@ class CdpSocialAdapter(SocialAdapter):
                     )
                 return self._err(OP_FAILED, "composer box not found; selectors need calibration")
 
-            typed = self._eval(ws_url, _js_fill(composer_sel, text))
+            typed_result = self._trusted_click_type(ws_url, composer_sel, text)
+            typed = asyncio.run(typed_result) if hasattr(typed_result, "__await__") else typed_result
             if typed != "TYPED":
                 return self._err(OP_FAILED, f"failed to type into composer ({composer_sel})")
 

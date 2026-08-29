@@ -107,6 +107,13 @@ class FakeCdpTransport:
     def attach(self, adapter):
         adapter._http_get_json = lambda path: self.handle_http(adapter, path)
         adapter._eval = lambda ws_url, expr: self.evaluate(adapter, expr)
+
+        def fake_trusted(ws_url, selector, text):
+            self.evaluate(adapter, f"trusted-click {selector}")
+            self.evaluate(adapter, f"[trusted-insert] {text}")
+            return "TYPED"
+
+        adapter._trusted_click_type = fake_trusted
         adapter._launch_browser = lambda: False  # tests never spawn Chrome
         return adapter
 
@@ -244,8 +251,8 @@ def test_publish_confirm_uses_first_matching_candidate(transport):
     # button never found in this dom -> OP_FAILED but composer worked
     assert result["ok"] is False
     assert result["code"] == OP_FAILED
-    fill_calls = [c for c in transport_.evaluate_calls if "insertText" in c]
-    assert fill_calls and 'div[role=' in fill_calls[0] and 'textbox' in fill_calls[0]
+    click_calls = [c for c in transport_.evaluate_calls if c.startswith("trusted-click ")]
+    assert click_calls and 'div[role=' in click_calls[0] and 'textbox' in click_calls[0]
 
 
 def test_publish_confirm_flow_tab_lifecycle(transport):
