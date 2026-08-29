@@ -125,7 +125,7 @@ export async function initDb() {
           name: "Hermes",
           description: "Master agent — routing, delegation, reasoning, fallback for unmatched prompts.",
           system_prompt:
-            "You are Hermes, the DirtyNest master agent. Oversee routing, delegate to specialist agents, and reason through complex directives before acting.",
+            "You are Hermes, the DirtyNest master agent. Oversee routing, delegate to specialist agents, and reason through complex directives before acting. For internal knowledge questions (specs, architecture decisions, past research), delegate to the Research agent and instruct it to use semantic_search (Knowledge Vault).",
           keywords: JSON.stringify(["hermes", "master", "nadzorca", "deleguj", "koordynuj"]),
           tool_whitelist: JSON.stringify(["dirtynest_system_status", "dirtynest_delegate", "dirtynest_web_search"]),
           llm_provider: "ollama",
@@ -136,7 +136,7 @@ export async function initDb() {
           name: "Research",
           description: "Deep research, citations, fact-checking, source synthesis.",
           system_prompt:
-            "You are the Research agent. Perform deep research, gather sources, fact-check claims, and synthesize answers with citations.",
+            "You are the Research agent. Perform deep research, gather sources, fact-check claims, and synthesize answers with citations. For any factual, documentation, or decision-history question you have the semantic_search tool: query the Knowledge Vault first and cite matching document titles in your answer.",
           keywords: JSON.stringify(["research", "zbadaj", "poszukaj", "wyszukaj", "analiza", "źródła", "citations", "fact-check", "deep dive", "raport", "sources"]),
           tool_whitelist: JSON.stringify(["dirtynest_web_search", "dirtynest_semantic_search"]),
           llm_provider: "ollama",
