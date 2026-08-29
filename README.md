@@ -32,14 +32,52 @@ npm run dev
 
 Otwórz [http://localhost:3000](http://localhost:3000) · Sidecar API: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### Pełny homelab (Docker Compose)
+Usługi: `web` (:3000) · `sidecar` (:8000) · `postgres` (:5432) · `qdrant` (:6333/:6334) · `redis` (:6379) · `searxng` (:8080) · `ollama` (:11434) — wszystkie w sieci `dirtynest-network`.
+
+> **SkillClaw / Minions / CDP** pozostają procesami hostowymi (nie w compose) — telemetria sidecar pokazuje je jako DOWN w trybie kontenerowym, chyba że wystawisz je na `host.docker.internal`.
+
+---
+
+## 🏗️ Homelab
+
+### Usługi i porty
+
+| Usługa | Port | Wolumen | Rola |
+|---|---|---|---|
+| `postgres` | 5432 | `postgres_data` | baza główna (Drizzle) |
+| `qdrant` | 6333/6334 | `qdrant_data` | wektory RAG (F4) |
+| `redis` | 6379 | `redis_data` | kolejka cron (fallback in-memory) |
+| `searxng` | 8080 | `./searxng` | metasearch JSON (F3/F4) |
+| `ollama` | 11434 | `ollama_data` | lokalny LLM (ADR-05) |
+| `web` | 3000 | — | Next.js frontend |
+| `sidecar` | 8000 | — | FastAPI + telemetria + automations |
+
+### Ollama — pobranie modelu
 
 ```bash
-cp .env.example .env    # uzupełnij sekrety (patrz .env.example)
-docker compose up -d --build
+# po `docker compose up -d`:
+./scripts/ollama-init.sh            # *nix
+# lub ręcznie:
+docker compose exec ollama ollama pull llama3.1:8b
 ```
 
-Usługi: `web` (:3000) · `sidecar` (:8000) · `postgres` (:5432) — docelowo także `qdrant`, `redis`, `searxng`, `ollama` (faza F1 planu).
+GPU: na Windows/Docker Desktop włącz WSL2 GPU w ustawieniach Docker Desktop, potem odkomentuj blok `deploy.resources` dla `ollama` w `docker-compose.yml`.
+
+### Backup i odtworzenie bazy
+
+```bash
+# backup (pg_dump do pliku .sql.gz w ./backups):
+./scripts/backup.sh
+
+# odtworzenie z backupu:
+gunzip -c backups/dirtynest-<timestamp>.sql.gz | docker compose exec -T postgres psql -U dirtynest -d dirtynest
+```
+
+Backup można dodać do cronu hosta (np. `0 3 * * * /path/to/scripts/backup.sh`).
+
+### Telemetria
+
+`GET http://localhost:8000/api/hermes/status` pokazuje status wszystkich usług (postgres, qdrant, redis, searxng, ollama + procesy hostowe). W trybie compose prober używa nazw sieciowych (`PROBE_HOST_*`); w trybie dev — `127.0.0.1`.
 
 ---
 

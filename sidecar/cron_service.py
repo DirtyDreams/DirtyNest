@@ -6,11 +6,18 @@ from typing import Dict, List, Optional, Any, Callable
 import httpx
 import redis
 
+import os
+
+
+def _redis_url() -> str:
+    return os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+
+
 logger = logging.getLogger("dirtynest-cron-hub")
 
 class RedisCronManager:
-    def __init__(self, redis_url: str = "redis://localhost:6379/0"):
-        self.redis_url = redis_url
+    def __init__(self, redis_url: Optional[str] = None):
+        self.redis_url = redis_url or _redis_url()
         self.r: Optional[redis.Redis] = None
         self._init_redis()
         

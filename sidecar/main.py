@@ -51,6 +51,9 @@ ecosystem_status = {
         "minions": {"port": 6969, "status": "checking", "latency_ms": 0, "name": "Hermes Minions Master"},
         "postgres": {"port": 5432, "status": "checking", "latency_ms": 0, "name": "PostgreSQL Primary DB"},
         "qdrant": {"port": 6333, "status": "checking", "latency_ms": 0, "name": "Qdrant Vector Engine"},
+        "redis": {"port": 6379, "status": "checking", "latency_ms": 0, "name": "Redis Task Queue"},
+        "searxng": {"port": 8080, "status": "checking", "latency_ms": 0, "name": "SearXNG Metasearch"},
+        "ollama": {"port": 11434, "status": "checking", "latency_ms": 0, "name": "Ollama LLM Runtime"},
         "cdp_main": {"port": 9222, "status": "checking", "latency_ms": 0, "name": "Chrome CDP Primary"},
         "cdp_mina": {"port": 9333, "status": "checking", "latency_ms": 0, "name": "Mina Chrome CDP"},
     },
@@ -117,6 +120,10 @@ def probe_tcp_port(host: str, port: int, timeout: float = 0.5) -> tuple[bool, fl
     except (socket.timeout, ConnectionRefusedError, OSError):
         return False, 0.0
 
+def probe_host(key: str, default: str = "127.0.0.1") -> str:
+    """Resolve a service probe host from env (PROBE_HOST_<KEY>), for compose in-network probing."""
+    return os.environ.get(f"PROBE_HOST_{key.upper()}", default)
+
 async def background_telemetry_prober():
     """Continuously probe local Hermes ports and broadcast telemetry."""
     while True:
@@ -128,7 +135,7 @@ async def background_telemetry_prober():
 
             # Check Services
             for key, svc in ecosystem_status["services"].items():
-                is_up, latency = probe_tcp_port("127.0.0.1", svc["port"], timeout=0.3)
+                is_up, latency = probe_tcp_port(probe_host(key), svc["port"], timeout=0.3)
                 svc["status"] = "UP" if is_up else "DOWN"
                 svc["latency_ms"] = latency
 
