@@ -41,6 +41,7 @@ class HermesAcpBridge:
         self.listeners: List[Callable[[Dict[str, Any]], Awaitable[None]]] = []
         self.is_running = False
         self._lock = asyncio.Lock()
+        self.running_tasks: Dict[str, asyncio.Task] = {}
 
     def add_listener(self, callback: Callable[[Dict[str, Any]], Awaitable[None]]):
         self.listeners.append(callback)
@@ -83,8 +84,8 @@ class HermesAcpBridge:
             return "critical"
         return "medium"
 
-    async def start_session(self, name: str = "Hermes-ACP-Mission", profile: str = "dirtydaily", cwd: Optional[str] = None) -> AcpSession:
-        session_id = f"acp-{int(time.time()*1000)}"
+    async def start_session(self, name: str = "Hermes-ACP-Mission", profile: str = "dirtydaily", cwd: Optional[str] = None, session_id: Optional[str] = None) -> AcpSession:
+        session_id = session_id or f"acp-{int(time.time()*1000)}"
         session = AcpSession(
             id=session_id,
             name=name,
@@ -100,6 +101,20 @@ class HermesAcpBridge:
             "session": session.dict()
         })
         return session
+
+    async def cancel_session(self, session_id: str) -> bool:
+        """Abort a running ACP session execution and clean up its state.
+
+        The cancelled task's own `except asyncio.CancelledError` handler emits
+        the ACP_EXECUTION_CANCELLED event, so we don't broadcast here (avoids
+        duplicate persistence of the cancelled assistant message)."""
+        task = self.running_tasks.pop(session_id, None)
+        if task and not task.done():
+            task.cancel()
+        session = self.sessions.get(session_id)
+        if session and session.status == "RUNNING":
+            session.status = "COMPLETED"
+        return True
 
     async def resolve_gate(self, request_id: str, decision: str) -> bool:
         """Resolve a Human-In-The-Loop gate decision (ALLOW_ONCE, ALLOW_SESSION, DENY)."""
@@ -127,7 +142,24 @@ class HermesAcpBridge:
     async def execute_prompt(self, session_id: str, prompt: str, system_prompt: Optional[str] = None):
         session = self.sessions.get(session_id)
         if not session:
-            session = await self.start_session(name=f"Session-{session_id[-4:]}")
+            session = await self.start_session(name=f"Session-{session_id[-4:]}", session_id=session_id)
+        self.running_tasks[session_id] = asyncio.current_task()
+        try:
+            await self._execute_prompt_inner(session_id, prompt, system_prompt)
+        except asyncio.CancelledError:
+            session.status = "COMPLETED"
+            await self.broadcast_event({
+                "type": "ACP_EXECUTION_CANCELLED",
+                "session_id": session_id,
+                "status": "CANCELLED",
+                "result": "Execution cancelled by operator."
+            })
+            raise
+        finally:
+            self.running_tasks.pop(session_id, None)
+
+    async def _execute_prompt_inner(self, session_id: str, prompt: str, system_prompt: Optional[str] = None):
+        session = self.sessions.get(session_id)
 
         session.status = "RUNNING"
         session.updated_at = time.time()
@@ -178,7 +210,10 @@ class HermesAcpBridge:
                 })
                 await asyncio.sleep(0.3)
 
+            lower_prompt = prompt.lower()
             needs_browser = "browse" in lower_prompt or "cdp" in lower_prompt or "web" in lower_prompt or "scrape" in lower_prompt or "screenshot" in lower_prompt or "http" in lower_prompt
+            needs_fs_patch = "patch" in lower_prompt or "edit" in lower_prompt or "modify" in lower_prompt or "write file" in lower_prompt or "refactor" in lower_prompt
+            needs_inspect = "inspect" in lower_prompt or "status" in lower_prompt or "check" in lower_prompt or "scan" in lower_prompt or "health" in lower_prompt
 
             if needs_browser:
                 target_url = "http://localhost:3000"

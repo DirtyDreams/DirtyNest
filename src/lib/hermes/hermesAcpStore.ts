@@ -84,6 +84,7 @@ interface HermesAcpStoreState {
   deleteSession: (sessionId: string) => Promise<void>;
   sendPromptDirective: (promptText: string) => Promise<void>;
   resolveGateClearance: (requestId: string, decision: "ALLOW_ONCE" | "ALLOW_SESSION" | "DENY") => Promise<void>;
+  cancelSession: (sessionId: string) => Promise<void>;
   handleIncomingAcpEvent: (event: Record<string, unknown>) => void;
   clearReasoningTrace: () => void;
 
@@ -259,10 +260,9 @@ export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
       decision,
     });
 
-    // Also call REST fallback
+    // Also call the auth-gated Next.js route, which proxies to the sidecar.
     try {
-      const sidecarUrl = hermesSocket.getSidecarBaseUrl();
-      await fetch(`${sidecarUrl}/api/hermes/acp/gate/resolve`, {
+      await fetch("/api/hermes/acp/gate/resolve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ request_id: requestId, decision }),
@@ -272,6 +272,19 @@ export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
     }
 
     set({ pendingGate: null });
+  },
+  cancelSession: async (sessionId: string) => {
+    // Best-effort: cancel via the auth-gated Next.js route (proxies to sidecar).
+    try {
+      await fetch("/api/hermes/acp/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId }),
+      });
+    } catch {
+      // ignore — the sidecar will time out on its own
+    }
+    set({ isStreaming: false, pendingGate: null });
   },
 
   fetchMemories: async (searchQuery?: string) => {

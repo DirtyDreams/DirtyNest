@@ -8,6 +8,7 @@ import { loadAgents } from "@/lib/orchestrator/registry";
 import { routePrompt } from "@/lib/orchestrator/classifier";
 import { persistUserMessage, countSessionMessages } from "@/lib/orchestrator/persist";
 import { createAcpSession, callAcpPrompt } from "@/lib/orchestrator/sidecar";
+import { startAcpBridge } from "@/lib/orchestrator/acpBridge";
 
 const sendMessageSchema = z.object({
   message: z.string().trim().min(1).max(50000),
@@ -92,6 +93,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const agent = agents.find((a) => a.agentType === decision.agentType);
     await callAcpPrompt(harnessSessionId, parsed.data.message, agent?.systemPrompt);
   }
+  // 4. Ensure the server-side ACP bridge is subscribed so the assistant
+  //    response (trace, tool calls, final message) is persisted to chat_messages.
+  startAcpBridge();
 
   return NextResponse.json({
     routedAgent: decision.agentType,

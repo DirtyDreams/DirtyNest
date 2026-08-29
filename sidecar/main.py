@@ -5,6 +5,7 @@ import os
 import socket
 import time
 from typing import Dict, List, Optional, Any
+from datetime import datetime
 from contextlib import asynccontextmanager
 import base64
 import hashlib
@@ -107,6 +108,36 @@ minions_registry = [
     {"id": "minion-03", "name": "Nexus-Gamma", "role": "Social & Engagement", "status": "IDLE", "model": "mistral-nemo-12b", "load": 5, "last_ping": "now"},
     {"id": "minion-04", "name": "Chronos-Delta", "role": "Cron & Health Orchestrator", "status": "ACTIVE", "model": "hermes-3-llama-3.1-8b", "load": 41, "last_ping": "now"},
 ]
+MINIONS_MASTER_URL = os.environ.get("MINIONS_MASTER_URL", "http://localhost:6969")
+
+
+async def sync_minions_registry() -> None:
+    """Best-effort sync with the Minions master (:6969). On failure, mark the
+    static registry as unreachable with a last-seen timestamp instead of
+    failing startup."""
+    global minions_registry
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            res = await client.get(f"{MINIONS_MASTER_URL}/api/minions")
+            if res.status_code == 200:
+                live = res.json()
+                if isinstance(live, list) and live:
+                    minions_registry = live
+                    logger.info(f"Minions registry synced from {MINIONS_MASTER_URL} ({len(live)} minions).")
+                    return
+    except Exception as exc:  # noqa: BLE001 - best-effort sync
+        logger.warning(f"Minions master unreachable at {MINIONS_MASTER_URL}: {exc}")
+    # Mark the static registry as unreachable with a last-seen timestamp.
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    for m in minions_registry:
+        m["status"] = "UNREACHABLE"
+        m["last_ping"] = now
+
+
+async def minions_sync_loop() -> None:
+    while True:
+        await sync_minions_registry()
+        await asyncio.sleep(60)
 
 cron_jobs_registry = [
     {"name": "dirtydaily-daily-health", "schedule": "0 6 * * *", "script": "daily-health.sh", "status": "SUCCESS", "last_run": "2026-08-27 07:00:00"},
@@ -199,20 +230,26 @@ async def lifespan(app: FastAPI):
     acp_bridge.add_listener(manager.broadcast)
     cron_manager.set_broadcast_callback(manager.broadcast)
 
-    # Startup: Launch background probe & cron scheduler tasks
+    # Startup: Launch background probe, cron scheduler, and minions sync tasks
     probe_task = asyncio.create_task(background_telemetry_prober())
     cron_task = asyncio.create_task(cron_manager.scheduler_loop())
-    logger.info("DirtyNest Sidecar started, telemetry prober and Redis cron scheduler initialized.")
+    minions_task = asyncio.create_task(minions_sync_loop())
+    logger.info("DirtyNest Sidecar started, telemetry prober, Redis cron scheduler, and minions sync initialized.")
     yield
     # Shutdown
     probe_task.cancel()
     cron_task.cancel()
+    minions_task.cancel()
     try:
         await probe_task
     except asyncio.CancelledError:
         pass
     try:
         await cron_task
+    except asyncio.CancelledError:
+        pass
+    try:
+        await minions_task
     except asyncio.CancelledError:
         pass
     logger.info("DirtyNest Sidecar stopped.")
@@ -312,6 +349,13 @@ async def resolve_acp_gate_endpoint(req: AcpGateResolveRequest):
     if not success:
         raise HTTPException(status_code=404, detail="Gate request ID not found or already resolved.")
     return {"status": "success", "request_id": req.request_id, "decision": req.decision}
+class AcpCancelRequest(BaseModel):
+    session_id: str
+
+@app.post("/api/hermes/acp/cancel")
+async def cancel_acp_session_endpoint(req: AcpCancelRequest):
+    await acp_bridge.cancel_session(req.session_id)
+    return {"status": "success", "session_id": req.session_id, "message": "Session cancellation requested."}
 
 class MemoryCreateRequest(BaseModel):
     title: str = Field(..., description="Title of the memory fact")
