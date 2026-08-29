@@ -22,7 +22,7 @@
 | Infrastruktura (compose) | 🟢 **Pełna (F1)** | 7 usług: postgres/qdrant/redis/searxng/ollama/web/sidecar; `${POSTGRES_PASSWORD:?}` egzekwowane; backup + ollama-init scripts. |
 | Auth / użytkownicy | 🟢 **F2 gotowe** | Tabela `users` (seed 2 kont), JWT (jose) + middleware, szyfrowane klucze API, rate limit, ekran logowania. |
 | Knowledge Vault (RAG) | 🟡 **F4 zbudowane, jakość do kalibracji** | Ingest Qdrant + `/api/knowledge/*` + obsidian sync + narzędzie `semantic_search`; ewaluacja jakości top-5 do zrobienia. |
-| Social Media backend | 🟠 **Reddit realny; X/IG/FB/TikTok = MockAdapter** | Registry z F5 mapuje 4 platformy na stuby; ścieżka docelowa: CDP-first (ADR-0013), HITL przed publikacją. |
+| Social Media backend | 🟠 **Reddit + X realne (HITL publish live-verified 2026-08-29); IG/FB/TikTok = CDP adapters** | Registry z F7.2; ścieżka CDP-first (ADR-0013); X selektory skalibrowane na żywej sesji. |
 | Docker Hub / Threat Intel / audyt | 🟡 **F6 zbudowane** | CVE feed, audit_logs, strumienie logów; część ekranów wymaga docięcia do realnych danych. |
 | Testy | 🟢 **55 pytest + vitest (orchestrator) + CI** | `.github/workflows/ci.yml`: typecheck/lint/vitest/build + pytest vs postgres:16. E2E (Playwright) nadal brak. |
 | Lint | 🟢 **0 błędów / 1241 ostrzeżeń** | Naprawiony w F0 (wcześniej „zepsuty" wg tamtego audytu); ostrzeżenia = dług na F7. |

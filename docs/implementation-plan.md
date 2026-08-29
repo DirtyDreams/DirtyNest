@@ -274,4 +274,7 @@ Plan zmieniamy przez PR/commit z aktualizacją tego pliku + odpowiedni ADR w [do
 | 7.6 | Graf wiedzy na realnych danych | ✅ useKnowledgeGraph + GraphStateOverlay; mock-mapowanie usunięte; KnowledgeView pobiera docs na montowaniu (bug wykryty przez e2e) |
 | 7.7 | Katalog API z kodu | ✅ scripts/gen-api-docs.mjs -> docs/api-catalog.md (npm run docs:api) |
 
-**Status HITL publish (2026-08-29):** ✅ wykonany na żywej sesji — post z pełnym tekstem kalibracyjnym jest live na X (`x.com/MinaReilly26739/status/2093704991470985516`), adapterowy `verify()` potwierdza, metryki scrapują (1 view). Poprawki po live-run: zaufane kliknięcie przycisku (el.click() był niezaufany i X je ignorował), elementFromPoint-guard na zakryte przyciski, permalink-fallback z matchem tekstu. Reddit zostaje na następny krok (adapter gotowy, wymaga kolejnej sesji).
+**Status HITL publish (2026-08-29):** ✅ wykonany na żywej sesji na OBU platformach —
+- **X:** pełny tekst kalibracyjny live na `x.com/MinaReilly26739/status/2093704991470985516`, adapterowy `verify()` = ok/exists, metryki scrapują.
+- **Reddit:** post przez `reddit-ops.mjs post` na własny profil r/u_Noir_Pedestal — live jako `t3_1w1nwza` (zweryfikowane przez /comments JSON API: tytuł, autor Noir_Pedestal, score 1).
+Poprawki po live-run na X: zaufane kliknięcie przycisku (el.click() był niezaufany i X je ignorował), elementFromPoint-guard na zakryte przyciski, permalink-fallback z matchem tekstu. Ostatni MockAdapter odszedł z twardej piątki.
