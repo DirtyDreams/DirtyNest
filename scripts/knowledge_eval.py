@@ -209,7 +209,11 @@ def main() -> None:
 
                 if not args.keep:
                     try:
-                        client.delete_collection(collection_name=coll)
+                        # fresh client: the eval client may hold open handles that
+                        # block collection deletion on Windows
+                        cleanup = ks.QdrantClient(url="http://localhost:6333", timeout=30)
+                        cleanup.delete_collection(collection_name=coll)
+                        cleanup.close()
                     except Exception:
                         pass
             except Exception as e:
