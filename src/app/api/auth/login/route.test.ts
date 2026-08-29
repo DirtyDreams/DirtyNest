@@ -16,6 +16,7 @@ const h = vi.hoisted(() => {
 vi.mock("@/db", () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
   db: h.mockDb,
+  insertAuditLog: vi.fn().mockResolvedValue(undefined),
 }));
 
 const setCookies = vi.fn();

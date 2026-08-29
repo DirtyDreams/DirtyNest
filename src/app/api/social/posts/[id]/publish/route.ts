@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { db, initDb, insertLog } from "@/lib/db";
+import { db, initDb, insertAuditLog, insertLog } from "@/lib/db";
 import { socialPosts } from "@/lib/schema";
 import { and, eq } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/auth/currentUser";
@@ -72,6 +72,15 @@ export async function POST(
       { postId, platform: post.platform, ok: outcome.ok, error: outcome.error },
     );
   } catch {}
+
+  await insertAuditLog(
+    outcome.ok ? "AUDIT" : "ERROR",
+    "UI",
+    "SOCIAL_POST_PUBLISHED",
+    "User-Operator",
+    { postId, platform: post.platform, ok: outcome.ok, error: outcome.error },
+    userId,
+  );
 
   return NextResponse.json({
     post_id: postId,

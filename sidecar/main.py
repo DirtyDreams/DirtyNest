@@ -22,6 +22,8 @@ from memory_service import memory_engine
 from knowledge_service import COLLECTION_NAME, knowledge_service
 from cdp_service import cdp_engine
 from cron_service import cron_manager
+from docker_service import docker_engine
+from intel_service import intel_service
 from automations import (
     EngagementManager,
     TopicManager,
@@ -600,10 +602,15 @@ async def post_docker_container_action(container_id: str, req: DockerActionReque
     result = await docker_engine.manage_container(container_id, req.action)
     return result
 
-@app.get("/api/docker/containers/{container_id}/logs")
-async def get_docker_container_logs(container_id: str, tail: int = 100):
-    logs = await docker_engine.get_container_logs(container_id, tail)
-    return {"container_id": container_id, "logs": logs, "tail": tail}
+@app.get("/api/docker/stacks")
+async def get_docker_stacks():
+    stacks = await docker_engine.list_stacks()
+    return {"stacks": stacks, "count": len(stacks), "timestamp": time.time()}
+
+@app.get("/api/intel/cve")
+async def get_intel_cve(force: bool = False):
+    cves = await intel_service.fetch_cve_feed(force=force)
+    return {"cves": cves, "count": len(cves), "timestamp": time.time()}
 
 @app.post("/api/chat")
 async def chat_endpoint(req: PromptRequest):
@@ -907,6 +914,64 @@ async def websocket_terminal_endpoint(websocket: WebSocket):
     finally:
         stdout_task.cancel()
         stderr_task.cancel()
+        if proc.returncode is None:
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+
+@app.websocket("/ws/docker/logs/{container_id}")
+async def websocket_docker_logs(websocket: WebSocket, container_id: str):
+    # F2 auth: require a valid JWT at handshake.
+    token = websocket.query_params.get("token", "")
+    secret = os.environ.get("JWT_SECRET", "")
+    if not verify_jwt(token, secret):
+        await websocket.close(code=4401)
+        return
+    await websocket.accept()
+    logger.info("Docker logs client connected for %s", container_id)
+
+    if not docker_engine.docker_bin:
+        await websocket.send_text(json.dumps({"type": "ERROR", "message": "Docker binary not found on host."}))
+        await websocket.close()
+        return
+
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            docker_engine.docker_bin,
+            "logs",
+            "-f",
+            "--tail",
+            "100",
+            container_id,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+    except Exception as e:
+        await websocket.send_text(json.dumps({"type": "ERROR", "message": str(e)}))
+        await websocket.close()
+        return
+
+    async def forward_stream(stream):
+        while True:
+            try:
+                chunk = await stream.read(1024)
+                if not chunk:
+                    break
+                await websocket.send_text(json.dumps({"type": "LOG", "data": chunk.decode("utf-8", errors="replace")}))
+            except Exception:
+                break
+
+    stream_task = asyncio.create_task(forward_stream(proc.stdout))
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        logger.info("Docker logs client disconnected for %s", container_id)
+    except Exception as e:
+        logger.error(f"Docker logs socket error: {e}")
+    finally:
+        stream_task.cancel()
         if proc.returncode is None:
             try:
                 proc.terminate()

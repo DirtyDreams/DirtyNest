@@ -309,3 +309,53 @@ export async function insertLog(
   }
 }
 
+export interface AuditLog {
+  id: number;
+  user_id: number | null;
+  timestamp: string;
+  level: LogLevel;
+  category: LogCategory;
+  action: string;
+  actor: string;
+  details: string | null;
+  ip_origin: string;
+  hash_sig: string;
+}
+
+export async function insertAuditLog(
+  level: LogLevel,
+  category: LogCategory,
+  action: string,
+  actor: string,
+  details?: Record<string, unknown> | string,
+  user_id: number | null = null,
+  ip_origin = "127.0.0.1"
+): Promise<number> {
+  await initDb();
+  const timestamp = new Date().toISOString();
+  const detailsStr = typeof details === "object" ? JSON.stringify(details) : details || "";
+  const hash_sig = "0x" + crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
+
+  try {
+    const res = await db
+      .insert(schema.auditLogs)
+      .values({
+        user_id,
+        timestamp,
+        level,
+        category,
+        action,
+        actor,
+        details: detailsStr,
+        ip_origin,
+        hash_sig,
+      })
+      .returning({ id: schema.auditLogs.id });
+
+    return res[0]?.id || 0;
+  } catch (err) {
+    console.error("Error inserting audit log to Postgres:", err);
+    return 0;
+  }
+}
+

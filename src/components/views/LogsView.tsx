@@ -44,7 +44,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type SubTab = "stream" | "analytics" | "traces" | "security";
+type SubTab = "stream" | "analytics" | "traces" | "security" | "audit";
 type ViewMode = "table" | "raw";
 
 export default function LogsView() {
@@ -62,6 +62,8 @@ export default function LogsView() {
   const [aiExplainingLog, setAiExplainingLog] = useState<SystemLog | null>(null);
   const [expandedLogIds, setExpandedLogIds] = useState<Set<number>>(new Set());
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [auditLogs, setAuditLogs] = useState<Array<Record<string, unknown>>>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
   const [stats, setStats] = useState<{
     totalLogs: number;
     levelCounts: Record<string, number>;
@@ -104,6 +106,26 @@ export default function LogsView() {
   useEffect(() => {
     fetchLogs(true);
   }, [fetchLogs]);
+
+  // Fetch audit ledger (admin-only route)
+  const fetchAuditLogs = useCallback(async () => {
+    setAuditLoading(true);
+    try {
+      const res = await fetch("/api/audit/logs?limit=200");
+      if (res.ok) {
+        const data = (await res.json()) as { logs?: Array<Record<string, unknown>> };
+        setAuditLogs(data.logs ?? []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setAuditLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (subTab === "audit") fetchAuditLogs();
+  }, [subTab, fetchAuditLogs]);
 
   // Live polling stream
   useEffect(() => {
@@ -670,6 +692,21 @@ export default function LogsView() {
             <ShieldCheck size={13} />
             <span>SECURITY AUDIT ({securityLogs.length})</span>
           </button>
+
+          <button
+            onClick={() => {
+              cyberAudio.play("click");
+              setSubTab("audit");
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              subTab === "audit"
+                ? "bg-[#BF40FF]/15 text-[#BF40FF] font-bold border border-[#BF40FF]/30 shadow-[0_0_8px_rgba(191,64,255,0.2)]"
+                : "text-[#9499B3] hover:text-[#F1F3F9]"
+            }`}
+          >
+            <ScrollText size={13} />
+            <span>AUDIT LEDGER ({auditLogs.length})</span>
+          </button>
         </div>
 
         {/* View Mode Switcher (Table vs Raw Console) */}
@@ -1186,6 +1223,91 @@ export default function LogsView() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* SUB-TAB 5: AUDIT LEDGER (audit_logs table, admin-only) */}
+      {subTab === "audit" && (
+        <div className="cyber-card p-5 flex flex-col gap-4 animate-fade-in">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <ScrollText size={18} className="text-[#BF40FF]" />
+              <div>
+                <h3 className="text-sm font-bold text-white">AUDIT LEDGER</h3>
+                <span className="text-xs text-[#9499B3]">
+                  Immutable audit trail of privileged actions (login, publish, docker ops)
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  cyberAudio.play("click");
+                  fetchAuditLogs();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#9499B3] hover:text-[#00FF41] text-xs font-bold transition-all cursor-pointer"
+              >
+                <RefreshCw size={13} />
+                <span>REFRESH</span>
+              </button>
+              <span className="text-xs font-bold text-[#BF40FF] px-2.5 py-1 rounded-full bg-[#BF40FF]/15 border border-[#BF40FF]/30">
+                {auditLogs.length} ENTRIES
+              </span>
+            </div>
+          </div>
+
+          {auditLoading ? (
+            <div className="py-12 text-center text-[#4F536E] text-xs">LOADING AUDIT LEDGER...</div>
+          ) : (
+            <div className="space-y-2.5">
+              {auditLogs.map((log, idx) => {
+                const row = log as Record<string, unknown>;
+                const id = String(row.id ?? idx);
+                const action = String(row.action ?? "UNKNOWN");
+                const category = String(row.category ?? "");
+                const actor = String(row.actor ?? "system");
+                const level = String(row.level ?? "AUDIT");
+                const timestamp = String(row.timestamp ?? "");
+                const details = row.details ? String(row.details) : "";
+                return (
+                  <div
+                    key={id}
+                    className="p-3.5 rounded-xl bg-black/40 border border-[#BF40FF]/20 hover:border-[#BF40FF]/50 transition-all flex flex-wrap items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-[#BF40FF]/10 text-[#BF40FF]">
+                        <ShieldCheck size={16} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white text-xs">{action}</span>
+                          <span className="text-[9px] px-1.5 rounded border bg-[#BF40FF]/15 text-[#BF40FF] border-[#BF40FF]/40">
+                            {level}
+                          </span>
+                          {category && (
+                            <span className="text-[9px] px-1.5 rounded border bg-white/5 text-[#9499B3] border-white/10">
+                              {category}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-[#9499B3] mt-0.5 block">
+                          Actor: <strong className="text-white">@{actor}</strong>
+                          {details ? ` · ${details.slice(0, 120)}` : ""}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono text-[#4F536E]">{timestamp}</span>
+                  </div>
+                );
+              })}
+
+              {auditLogs.length === 0 && (
+                <div className="py-12 text-center text-[#4F536E] text-xs">
+                  NO AUDIT ENTRIES RECORDED
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

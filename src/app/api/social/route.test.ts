@@ -48,6 +48,7 @@ const h = vi.hoisted(() => {
 vi.mock("@/db", () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
   insertLog: vi.fn().mockResolvedValue(undefined),
+  insertAuditLog: vi.fn().mockResolvedValue(undefined),
   db: h.mockDb,
 }));
 

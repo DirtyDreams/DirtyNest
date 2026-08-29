@@ -190,6 +190,7 @@ export default function DockerView() {
   const [streamingLogsContainer, setStreamingLogsContainer] = useState<string | null>(null);
   const [showPruneModal, setShowPruneModal] = useState(false);
   const [isPruning, setIsPruning] = useState(false);
+  const [composeStacks, setComposeStacks] = useState<ComposeStack[]>(COMPOSE_STACKS);
 
   // Live Logs Simulation
   const [logs, setLogs] = useState<string[]>([
@@ -238,6 +239,29 @@ export default function DockerView() {
 
     fetchContainers();
     const interval = setInterval(fetchContainers, 4000);
+
+    const fetchStacks = async () => {
+      try {
+        const res = await fetch("/api/docker/stacks");
+        if (res.ok) {
+          const data = (await res.json()) as { stacks?: Array<{ name: string; status: string; config_files: string; services_count: number }> };
+          if (data.stacks && data.stacks.length > 0) {
+            const mapped: ComposeStack[] = data.stacks.map((s) => ({
+              name: s.name,
+              servicesCount: s.services_count,
+              status: s.status.toLowerCase().includes("running") ? "active" : "inactive",
+              path: s.config_files || "unknown",
+              services: [],
+            }));
+            setComposeStacks(mapped);
+          }
+        }
+      } catch {
+        // graceful demo fallback
+      }
+    };
+    fetchStacks();
+
     return () => {
       active = false;
       clearInterval(interval);
@@ -258,8 +282,7 @@ export default function DockerView() {
     );
 
     try {
-      const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
-      const res = await fetch(`${sidecarUrl}/api/docker/containers/${id}/action`, {
+      const res = await fetch(`/api/docker/containers/${id}/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
@@ -501,7 +524,7 @@ export default function DockerView() {
             }`}
           >
             <Boxes size={13} />
-            <span>COMPOSE STACKS ({COMPOSE_STACKS.length})</span>
+            <span>COMPOSE STACKS ({composeStacks.length})</span>
           </button>
 
           <button
@@ -791,7 +814,7 @@ export default function DockerView() {
       {/* 3. COMPOSE STACKS */}
       {activeSubTab === "compose" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
-          {COMPOSE_STACKS.map((stack) => (
+          {composeStacks.map((stack) => (
             <div key={stack.name} className="cyber-card p-4 flex flex-col justify-between gap-3 bg-black/40">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">

@@ -101,9 +101,25 @@ class DockerOrchestratorEngine:
             return {"status": "success", "action": action, "container_id": container_id}
         return {"status": "error", "error": err, "container_id": container_id}
 
-    async def get_container_logs(self, container_id: str, tail: int = 100) -> str:
-        code, out, err = await self._run_docker_cmd("logs", "--tail", str(tail), container_id)
-        combined = (out + "\n" + err).strip()
-        return combined
+    async def list_stacks(self) -> List[Dict[str, Any]]:
+        """List Compose stacks via `docker compose ls` (read-only)."""
+        code, out, err = await self._run_docker_cmd("compose", "ls", "--format", "json")
+        if code != 0 or not out.strip():
+            logger.warning("Docker compose ls failed or returned empty: %s", err)
+            return []
+        try:
+            data = json.loads(out)
+        except json.JSONDecodeError:
+            logger.warning("Docker compose ls returned non-JSON output: %s", out[:200])
+            return []
+        stacks = []
+        for entry in data:
+            stacks.append({
+                "name": entry.get("Name", ""),
+                "status": entry.get("Status", ""),
+                "config_files": entry.get("ConfigFiles", ""),
+                "services_count": entry.get("Services", 0),
+            })
+        return stacks
 
 docker_engine = DockerOrchestratorEngine()

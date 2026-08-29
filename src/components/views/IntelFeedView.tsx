@@ -134,6 +134,49 @@ export default function IntelFeedView() {
     } catch {}
   }, []);
 
+  // Fetch real CVE intel from the API (best-effort; keep mock fallback).
+  useEffect(() => {
+    let active = true;
+    const fetchCves = async () => {
+      try {
+        const res = await fetch("/api/intel/cve");
+        if (res.ok) {
+          const data = (await res.json()) as {
+            cves?: Array<{
+              cve_id: string;
+              title: string;
+              description: string;
+              severity: string;
+              cvss_score: string;
+              published_at: string;
+              url: string;
+            }>;
+          };
+          if (active && data.cves && data.cves.length > 0) {
+            const mapped: IntelItem[] = data.cves.map((c) => ({
+              id: c.cve_id,
+              title: c.title || c.cve_id,
+              source: "NVD CVE Feed",
+              channel: "SECURITY",
+              snippet: c.description || c.cve_id,
+              timestamp: c.published_at ? new Date(c.published_at).toLocaleString() : "recent",
+              url: c.url,
+              score: c.cvss_score ? Math.round(Number(c.cvss_score) * 100) : 0,
+              tags: [c.severity, c.cve_id],
+            }));
+            setIntelList(mapped);
+          }
+        }
+      } catch {
+        // graceful demo fallback
+      }
+    };
+    fetchCves();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const handleToggleSave = (id: string) => {
     cyberAudio.play("chime");
     setIntelList((prev) =>

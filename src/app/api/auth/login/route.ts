@@ -1,4 +1,4 @@
-import { db, initDb } from "@/db";
+import { db, initDb, insertAuditLog } from "@/db";
 import * as schema from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -27,6 +27,8 @@ export async function POST(request: Request) {
     const access = await signAccessToken(payload);
     const refresh = await signRefreshToken(payload);
     await setAuthCookies(access, refresh);
+
+    await insertAuditLog("AUDIT", "AUTH", "login", user.username, { user_id: user.id }, user.id);
 
     return Response.json({ id: user.id, username: user.username, role: user.role });
   } catch (err) {

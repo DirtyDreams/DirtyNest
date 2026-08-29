@@ -50,6 +50,13 @@
       "when": 1787966456775,
       "tag": "0006_even_runaways",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787967299053,
+      "tag": "0007_groovy_moon_knight",
+      "breakpoints": true
     }
   ]
 }

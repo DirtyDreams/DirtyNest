@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: dirtynest
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: dirtynest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dirtynest -d dirtynest"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://dirtynest:testpass@localhost:5432/dirtynest
+      JWT_SECRET: ci-secret
+      API_KEY_ENC_KEY: ci-enc-key
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+      OPERATOR_USERNAME: operator
+      OPERATOR_PASSWORD: operator123
+      NEXT_PUBLIC_SIDECAR_URL: http://localhost:8000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests (vitest)
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Set up sidecar venv
+        run: |
+          cd sidecar
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements.txt
+
+      - name: Sidecar tests (pytest)
+        run: |
+          cd sidecar
+          .venv/bin/python -m pytest tests -q

@@ -276,3 +276,48 @@ export const socialMetrics = pgTable("social_metrics", {
   shares: integer("shares").notNull().default(0),
   collected_at: timestamp("collected_at", { withTimezone: true, mode: "string" }),
 });
+// ---------------------------------------------------------------------------
+// F6 — audit trail, docker container cache, threat-intel CVE feed.
+// ---------------------------------------------------------------------------
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  timestamp: timestamp("timestamp", { withTimezone: true, mode: "string" }),
+  level: varchar("level", { length: 50 }).notNull(),
+  category: varchar("category", { length: 50 }).notNull(),
+  action: text("action").notNull(),
+  actor: text("actor").notNull(),
+  details: text("details"),
+  ip_origin: varchar("ip_origin", { length: 100 }).default("127.0.0.1"),
+  hash_sig: varchar("hash_sig", { length: 100 }),
+});
+
+export const dockerContainersCache = pgTable("docker_containers_cache", {
+  id: varchar("id", { length: 100 }).primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  image: varchar("image", { length: 255 }).notNull(),
+  status: varchar("status", { length: 50 }).notNull(),
+  ports: text("ports"),
+  cpu_percent: text("cpu_percent"),
+  memory_usage: text("memory_usage"),
+  net_io: text("net_io"),
+  uptime: text("uptime"),
+  stack: varchar("stack", { length: 100 }),
+  raw_json: text("raw_json"),
+  last_seen: timestamp("last_seen", { withTimezone: true, mode: "string" }),
+});
+
+export const intelCves = pgTable("intel_cves", {
+  id: serial("id").primaryKey(),
+  cve_id: varchar("cve_id", { length: 50 }).notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  severity: varchar("severity", { length: 20 }).notNull().default("unknown"),
+  cvss_score: text("cvss_score"),
+  published_at: timestamp("published_at", { withTimezone: true, mode: "string" }),
+  source: varchar("source", { length: 100 }).notNull().default("nvd"),
+  url: text("url"),
+  raw_json: text("raw_json"),
+  created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
+});
