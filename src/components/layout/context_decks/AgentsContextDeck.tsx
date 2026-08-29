@@ -2,14 +2,9 @@
 
 import { useState } from "react";
 import {
-  Cpu,
   Shield,
-  Activity,
-  Zap,
   Check,
-  AlertTriangle,
   Radio,
-  Lock,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

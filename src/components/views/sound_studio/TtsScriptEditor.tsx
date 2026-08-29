@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Sliders, Volume2, Play, AudioLines, Flame, Radio } from "lucide-react";
+import { AudioLines, Flame } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { VoiceModel } from "./VoiceCloningMatrix";
 

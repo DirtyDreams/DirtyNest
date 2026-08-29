@@ -4,14 +4,10 @@ import { useState } from "react";
 import {
   X,
   ShieldAlert,
-  ShieldCheck,
   Check,
   Edit3,
-  Terminal,
   Code2,
-  AlertTriangle,
   RotateCcw,
-  Copy,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

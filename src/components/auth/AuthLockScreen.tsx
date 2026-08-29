@@ -3,22 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Shield,
-  ShieldAlert,
-  ShieldCheck,
   Fingerprint,
   Key,
   Users,
-  Terminal,
   Lock,
-  Unlock,
-  Zap,
-  Cpu,
   Radio,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import { AUTH_PERSONAS, type AuthPresetPersona } from "@/types/auth";
 import { useAuthStore } from "@/stores/useAuthStore";

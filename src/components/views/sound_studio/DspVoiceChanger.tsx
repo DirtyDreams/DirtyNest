@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sliders, Volume2, Sparkles, Activity, Play, Pause, Radio, Zap } from "lucide-react";
+import { Sliders, Play, Pause } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface DspParams {

@@ -7,37 +7,23 @@ import {
   HardDrive,
   Wifi,
   Download,
-  Clock,
-  TrendingUp,
   Flame,
   Zap,
-  BarChart3,
-  Calendar,
-  Layers,
   ShieldCheck,
   Sparkles,
-  RefreshCw,
   Server,
-  DollarSign,
-  AlertTriangle,
   Radio,
   Network,
   Bot,
   Database,
   ShieldAlert,
-  Sliders,
-  CheckCircle2,
-  Filter,
   Play,
   Pause,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import PromQlQueryBuilder from "./stats/PromQlQueryBuilder";
 import CpuCoreHeatmap from "./stats/CpuCoreHeatmap";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import NumberFlow from "@number-flow/react";
-import { cn } from "@/lib/utils";
 
 type TelemetryTab = "cluster" | "promql" | "llm" | "api" | "agents" | "security";
 

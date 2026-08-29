@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Timer, Play, Pause, RotateCcw, Volume2, VolumeX, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Timer, Play, Pause, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

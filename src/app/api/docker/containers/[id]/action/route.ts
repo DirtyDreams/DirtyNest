@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { db, initDb, insertAuditLog } from "@/lib/db";
+import { initDb, insertAuditLog } from "@/lib/db";
 import { getCurrentUserId } from "@/lib/auth/currentUser";
 import { getSidecarBaseUrl } from "@/lib/orchestrator/sidecar";
 

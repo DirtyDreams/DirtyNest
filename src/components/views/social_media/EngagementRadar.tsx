@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { TrendingUp, Users, Heart, Share2, BarChart3, Activity } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 
 interface ChannelStat {
   channel: string;

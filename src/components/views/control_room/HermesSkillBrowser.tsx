@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Search, Play, CheckCircle2, Star, Tag, Code, ShieldCheck } from "lucide-react";
+import { Sparkles, Search, Play } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface HermesSkill {

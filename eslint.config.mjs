@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import reactHooks from "eslint-plugin-react-hooks";
+import unusedImports from "eslint-plugin-unused-imports";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -13,15 +14,18 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "sidecar/**",
+    "scripts/**",
   ]),
   // Project-level rule overrides — must come AFTER the preset spreads
   {
     plugins: {
       "react-hooks": reactHooks,
+      "unused-imports": unusedImports,
     },
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "warn",
+      "unused-imports/no-unused-imports": "error",
+      "@typescript-eslint/no-unused-vars": "off",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/set-state-in-render": "off",
       "react-hooks/purity": "off",

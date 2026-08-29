@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mic, Play, Pause, Sparkles, Volume2, ShieldCheck, UserCheck } from "lucide-react";
+import { Mic, Play, Pause } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface VoiceModel {

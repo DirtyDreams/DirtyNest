@@ -5,8 +5,6 @@ import {
   Brain,
   ChevronDown,
   ChevronUp,
-  Sparkles,
-  Activity,
   Cpu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";

@@ -6,9 +6,6 @@ import {
   Copy,
   Check,
   RefreshCw,
-  Sparkles,
-  Sliders,
-  Layers,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

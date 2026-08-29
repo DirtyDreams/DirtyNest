@@ -6,9 +6,6 @@ import {
   Droplets,
   Flame,
   Plus,
-  Minus,
-  Check,
-  Sparkles,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

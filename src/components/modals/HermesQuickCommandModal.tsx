@@ -4,16 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Brain,
   Search,
-  Sparkles,
   Play,
-  CheckCircle2,
-  X,
-  Code2,
-  Database,
-  Shield,
-  Zap,
-  Terminal,
-  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";

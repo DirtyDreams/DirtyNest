@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, CheckCircle2, Zap, ArrowRight, ShieldCheck, Flame, RefreshCw, Layers } from "lucide-react";
+import { Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function AiInsightBrief() {

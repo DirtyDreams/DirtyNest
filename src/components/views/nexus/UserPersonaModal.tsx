@@ -6,11 +6,7 @@ import {
   User,
   Plus,
   Check,
-  Sparkles,
   Trash2,
-  Edit2,
-  Shield,
-  Zap,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

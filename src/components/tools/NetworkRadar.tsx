@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Radio, Activity, Search, Shield, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Wifi } from "lucide-react";
+import { useState } from "react";
+import { Radio, RefreshCw, Wifi } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface PortNode {

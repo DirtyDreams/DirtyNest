@@ -2,13 +2,10 @@
 
 import { useState, useEffect } from "react";
 import {
-  Wrench,
   Clock,
   Code,
   Copy,
   Check,
-  Zap,
-  Lock,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

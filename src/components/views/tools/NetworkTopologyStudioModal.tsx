@@ -1,24 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Network,
-  Server,
-  Database,
-  Shield,
-  Bot,
-  Activity,
   Zap,
-  Play,
-  RotateCcw,
-  Download,
   X,
-  Plus,
-  Radio,
-  FileCode,
-  Layers,
   AlertTriangle,
-  CheckCircle2,
   Copy,
   Check,
 } from "lucide-react";

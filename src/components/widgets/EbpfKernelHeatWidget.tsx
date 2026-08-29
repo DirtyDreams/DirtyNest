@@ -3,14 +3,7 @@
 import { useState } from "react";
 import {
   Activity,
-  Cpu,
-  Layers,
-  Zap,
-  Terminal,
-  Shield,
-  RotateCcw,
 } from "lucide-react";
-import { cyberAudio } from "@/lib/cyberAudio";
 
 interface SyscallStat {
   name: string;

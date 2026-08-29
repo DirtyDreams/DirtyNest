@@ -5,12 +5,7 @@ import { useState, useMemo } from "react";
 import {
   ChevronLeft,
   ChevronRight,
-  Calendar as CalendarIcon,
-  Clock,
   Plus,
-  Tag,
-  CheckCircle2,
-  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -237,7 +232,7 @@ export function EventCalendar({
                           key={ev.id}
                           onClick={(e) => {
                             e.stopPropagation();
-                            onSelectEvent && onSelectEvent(ev);
+                            if (onSelectEvent) onSelectEvent(ev);
                           }}
                           className="px-1.5 py-0.5 rounded text-[9px] font-bold truncate transition-transform hover:scale-102"
                           style={{

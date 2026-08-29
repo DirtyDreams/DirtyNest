@@ -7,16 +7,11 @@ import {
   Maximize2,
   Minimize2,
   RefreshCw,
-  Zap,
-  Play,
-  RotateCcw,
-  Sparkles,
 } from "lucide-react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { cyberAudio } from "@/lib/cyberAudio";
-import { hermesSocket } from "@/lib/hermes/hermesSocket";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 

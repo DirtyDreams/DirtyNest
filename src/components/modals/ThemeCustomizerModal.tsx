@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import {
   Palette,
-  Check,
   Plus,
   Trash2,
   Edit2,
@@ -11,7 +10,6 @@ import {
   Sliders,
   Copy,
   Upload,
-  Atom,
 } from "lucide-react";
 import {
   ThemePreset,

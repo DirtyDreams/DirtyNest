@@ -7,16 +7,11 @@ import {
   Plus,
   Trash2,
   Download,
-  Calendar,
   MessageSquare,
   Check,
-  Clock,
-  Sparkles,
   Star,
   Search,
   Edit2,
-  FileText,
-  Copy,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

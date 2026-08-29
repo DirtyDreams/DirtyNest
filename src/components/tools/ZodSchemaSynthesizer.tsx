@@ -5,9 +5,6 @@ import {
   FileCode,
   Copy,
   Check,
-  Sparkles,
-  RefreshCw,
-  Code2,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

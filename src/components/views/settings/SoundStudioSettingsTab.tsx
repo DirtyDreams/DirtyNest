@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mic, Sliders, Volume2, Save, RotateCcw, CheckCircle2, AudioLines } from "lucide-react";
+import { Mic, Save } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

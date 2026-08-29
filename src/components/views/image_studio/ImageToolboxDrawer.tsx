@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Wrench, Sparkles, Scissors, Layers, Maximize2, Wand2, CheckCircle2 } from "lucide-react";
+import { Wrench, Scissors, Layers, Maximize2, Wand2, CheckCircle2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface Props {

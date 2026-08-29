@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Zap, Activity, Cpu, Sparkles } from "lucide-react";
+import { Zap } from "lucide-react";
 
 interface SessionTokenMetric {
   id: string;

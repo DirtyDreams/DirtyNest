@@ -10,8 +10,6 @@ import {
   Check,
   Pause,
   Play,
-  RotateCcw,
-  ShieldAlert,
   ArrowDown,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

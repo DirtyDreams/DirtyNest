@@ -3,13 +3,9 @@
 import { useState } from "react";
 import {
   Container,
-  Activity,
   RotateCcw,
   Trash2,
-  Zap,
   Check,
-  Server,
-  Shield,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

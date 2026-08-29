@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import { zbRules } from "@/lib/schema";
 import { getRules, publishedToday } from "@/lib/zbiornik/ops";
-import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 

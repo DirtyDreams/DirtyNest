@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Pause, Download, Trash2, Volume2, Sparkles, FileCode, Check, AudioLines } from "lucide-react";
+import { Play, Pause, Download, FileCode, Check, AudioLines } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface AudioTake {

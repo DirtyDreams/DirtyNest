@@ -3,11 +3,7 @@
 import { useState } from "react";
 import {
   Star,
-  GitFork,
   TrendingUp,
-  ExternalLink,
-  Code2,
-  Sparkles,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

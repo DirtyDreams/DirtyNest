@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Database, Search, Pin, Trash2, Check, Clock, Brain, Tag, Sparkles } from "lucide-react";
+import { Search, Trash2, Brain } from "lucide-react";
 import { useHermesAcpStore } from "@/lib/hermes/hermesAcpStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -11,8 +11,8 @@ export default function HermesMemoryInspector() {
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
 
   useEffect(() => {
-    fetchMemories();
-  }, []);
+    void fetchMemories();
+  }, [fetchMemories]);
 
   const categories = ["ALL", "Fact", "Decision", "Preference", "Workflow"];
 

@@ -4,15 +4,8 @@ import { useState, useMemo } from "react";
 import {
   Search,
   Play,
-  CheckCircle2,
-  AlertCircle,
   Copy,
   Check,
-  Sparkles,
-  BarChart3,
-  Layers,
-  Cpu,
-  Server,
   Activity,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

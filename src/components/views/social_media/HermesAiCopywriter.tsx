@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Brain, Wand2, Copy, Check, Flame, MessageSquare, Tag } from "lucide-react";
+import { Sparkles, Brain, Copy, Check } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface CopyTemplate {

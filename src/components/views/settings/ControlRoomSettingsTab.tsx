@@ -4,13 +4,11 @@ import { useState, useEffect } from "react";
 import {
   Radio,
   Sparkles,
-  Sliders,
   Tv,
   Volume2,
   Layers,
   Activity,
   HardDrive,
-  Check,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";

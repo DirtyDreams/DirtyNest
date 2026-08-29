@@ -1,9 +1,8 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback} from "react";
 import {
   Cpu,
-  Play,
   Trash2,
   Search,
   CheckCircle2,
@@ -14,9 +13,6 @@ import {
   FileCheck,
   ShieldCheck,
   Send,
-  Sliders,
-  Terminal,
-  Activity,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -119,12 +115,9 @@ export default function AutomationsMatrix() {
   const [isCheckingCoverage, setIsCheckingCoverage] = useState(false);
   const [coverageReport, setCoverageReport] = useState<CoverageReport | null>(null);
 
-  // Poll status on mount
-  useEffect(() => {
-    checkSidecarStatus();
-  }, []);
 
-  const checkSidecarStatus = async () => {
+
+  const checkSidecarStatus = useCallback(async () => {
     setIsCheckingStatus(true);
     setStatusError(null);
     try {
@@ -138,7 +131,11 @@ export default function AutomationsMatrix() {
     } finally {
       setIsCheckingStatus(false);
     }
-  };
+  }, [sidecarUrl]);
+
+  useEffect(() => {
+    void checkSidecarStatus();
+  }, [checkSidecarStatus]);
 
   const handlePostComment = async () => {
     if (!targetPostId.trim() || !commentText.trim()) return;

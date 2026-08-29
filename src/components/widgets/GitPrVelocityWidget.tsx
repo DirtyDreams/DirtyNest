@@ -3,14 +3,9 @@
 import { useState } from "react";
 import {
   GitPullRequest,
-  GitBranch,
   CheckCircle2,
   Clock,
-  ExternalLink,
-  RotateCcw,
-  Sparkles,
 } from "lucide-react";
-import { cyberAudio } from "@/lib/cyberAudio";
 
 interface PullRequest {
   id: string;

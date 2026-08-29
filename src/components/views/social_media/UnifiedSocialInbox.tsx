@@ -3,24 +3,16 @@
 import { useState } from "react";
 import {
   Inbox,
-  MessageSquare,
-  Sparkles,
   Send,
   Star,
   Check,
   CheckCircle2,
-  Filter,
   Search,
   Bot,
-  User,
   ThumbsUp,
-  Flame,
   AlertTriangle,
   HelpCircle,
   Briefcase,
-  Trash2,
-  RefreshCw,
-  ExternalLink,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

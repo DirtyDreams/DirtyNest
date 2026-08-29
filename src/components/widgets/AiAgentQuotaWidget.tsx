@@ -2,14 +2,8 @@
 
 import { useState } from "react";
 import {
-  Cpu,
   Zap,
-  TrendingUp,
-  AlertTriangle,
   RotateCcw,
-  Sparkles,
-  DollarSign,
-  Layers,
 } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { Badge } from "@/components/ui/badge";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, Play, CheckCircle2, AlertCircle, RefreshCw, Cpu, HardDrive, ShieldCheck, Zap, Server } from "lucide-react";
+import { Activity, CheckCircle2, RefreshCw } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface DiagnosticTest {

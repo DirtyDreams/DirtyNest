@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import {
-  Bot,
   Zap,
-  DollarSign,
   Cpu,
   Layers,
   Sparkles,

@@ -2,20 +2,14 @@
 
 import { useState } from "react";
 import {
-  Sparkles,
   Plus,
   Trash2,
   Share2,
-  Copy,
-  Check,
   Flame,
   ArrowUp,
   ArrowDown,
-  Wand2,
   CheckCircle2,
-  MessageSquare,
   Repeat,
-  Heart,
   Send,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

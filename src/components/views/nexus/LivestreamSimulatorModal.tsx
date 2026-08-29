@@ -5,15 +5,10 @@ import {
   X,
   Radio,
   Users,
-  Heart,
   Send,
-  Sparkles,
   Gift,
-  Zap,
   Volume2,
   VolumeX,
-  MessageSquare,
-  DollarSign,
   Flame,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

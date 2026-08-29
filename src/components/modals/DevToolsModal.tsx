@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   Wrench,
-  X,
   Copy,
   Check,
   RefreshCw,

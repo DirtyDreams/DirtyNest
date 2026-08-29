@@ -9,7 +9,6 @@ import {
   HardDrive,
   Download,
   Trash2,
-  Check,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";

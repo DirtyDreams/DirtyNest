@@ -5,20 +5,9 @@ import {
   X,
   Radio,
   MessageSquare,
-  Sparkles,
   Heart,
-  DollarSign,
-  Share2,
-  TrendingUp,
-  Award,
   Plus,
-  Flame,
   Check,
-  Zap,
-  Globe,
-  Camera,
-  Video,
-  Layers,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { PersonaCharacter } from "./PersonaDetailModal";

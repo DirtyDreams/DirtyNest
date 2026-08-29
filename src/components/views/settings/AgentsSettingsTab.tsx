@@ -4,16 +4,12 @@ import { useState, useEffect } from "react";
 import {
   Cpu,
   Shield,
-  Sliders,
   Sparkles,
   AlertTriangle,
-  RotateCcw,
-  Check,
   Zap,
   Terminal,
   Database,
   Globe,
-  Lock,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";

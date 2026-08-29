@@ -4,9 +4,6 @@ import { useState, useEffect } from "react";
 import {
   Activity,
   Sparkles,
-  Sliders,
-  Cpu,
-  HardDrive,
   Clock,
   TrendingUp,
   AlertTriangle,

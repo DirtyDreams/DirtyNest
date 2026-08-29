@@ -5,15 +5,11 @@ import {
   Clock,
   Play,
   RotateCw,
-  CheckCircle2,
-  AlertCircle,
   ShieldAlert,
   Database,
   Brain,
   Wifi,
   Loader2,
-  Server,
-  Zap,
 } from "lucide-react";
 import { hermesSocket } from "@/lib/hermes/hermesSocket";
 import { cyberAudio } from "@/lib/cyberAudio";

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { Rocket, Clock, ShieldAlert, RefreshCw, CheckCircle2, TrendingUp } from "lucide-react";
+import { Rocket, Clock, ShieldAlert, RefreshCw, TrendingUp } from "lucide-react";
 
 function DoraMetricsBar() {
   const metrics = [

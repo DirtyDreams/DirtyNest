@@ -10,24 +10,10 @@ import {
   Terminal as TerminalIcon,
   FileText,
   Layers,
-  HardDrive,
-  Cpu,
-  Activity,
-  Plus,
   Search,
-  ExternalLink,
   ShieldCheck,
-  CheckCircle2,
-  AlertCircle,
-  Copy,
-  Check,
-  RefreshCw,
-  Server,
-  Zap,
   Boxes,
-  Database,
   ArrowDownToLine,
-  Filter,
   ShieldAlert,
   Network,
   Settings,
@@ -39,11 +25,9 @@ import DockerCveScannerModal from "./docker/DockerCveScannerModal";
 import DockerComposeDesignerModal from "./docker/DockerComposeDesignerModal";
 import DockerLogsStreamModal from "./docker/DockerLogsStreamModal";
 import NetworkTopologyStudioModal from "./tools/NetworkTopologyStudioModal";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import NumberFlow from "@number-flow/react";
-import { cn } from "@/lib/utils";
 
 interface DockerContainerItem {
   id: string;

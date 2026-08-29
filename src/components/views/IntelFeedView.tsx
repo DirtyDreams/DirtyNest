@@ -7,26 +7,16 @@ import {
   Bookmark,
   BookmarkCheck,
   Search,
-  Filter,
-  Sparkles,
-  Flame,
   ShieldAlert,
-  Cpu,
   RefreshCw,
-  Plus,
   Radio,
-  Tag,
-  Clock,
-  CheckCircle2,
   Settings,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useAppStore } from "@/stores/useAppStore";
 import MitreAttackMatrixModal from "./intel/MitreAttackMatrixModal";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import NumberFlow from "@number-flow/react";
 import { cn } from "@/lib/utils";
 
 interface IntelItem {

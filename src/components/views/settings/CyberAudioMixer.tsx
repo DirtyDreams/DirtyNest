@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Volume2, VolumeX, Play, Pause, Radio, Sliders, CheckCircle2, Sparkles, Activity } from "lucide-react";
+import { Volume2, Play, Pause, Activity } from "lucide-react";
 import { cyberAudio, type AmbientTrackType } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

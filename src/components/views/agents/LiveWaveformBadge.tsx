@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Volume2, VolumeX, Square, Play } from "lucide-react";
+import { Volume2, Square } from "lucide-react";
 import { cyberSpeech } from "@/lib/cyberSpeech";
 import { cyberAudio } from "@/lib/cyberAudio";
 

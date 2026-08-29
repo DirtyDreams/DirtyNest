@@ -3,10 +3,8 @@
 import { useState } from "react";
 import {
   Palette,
-  Copy,
   Check,
   RefreshCw,
-  Sparkles,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

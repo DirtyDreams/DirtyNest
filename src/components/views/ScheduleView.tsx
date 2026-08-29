@@ -6,24 +6,15 @@ import {
   Clock,
   Plus,
   CheckCircle2,
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  Radio,
-  Tag,
   Timer,
   Trash2,
-  Globe,
-  Sliders,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { EventCalendar, CalendarItem } from "@/components/ui/calendar/EventCalendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 
 interface ScheduleEvent {
   id: string;

@@ -8,12 +8,10 @@ import {
   Copy,
   Check,
   Download,
-  Code2,
   Database,
   Shield,
   Server,
   Zap,
-  CheckCircle2,
   FileCode,
   Layers,
 } from "lucide-react";

@@ -3,20 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   Keyboard,
-  Command,
-  Zap,
   RotateCcw,
   Download,
   X,
   Search,
   Check,
-  Sliders,
-  Sparkles,
-  Layers,
-  AlertTriangle,
-  FileCode,
-  Terminal,
-  Activity,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

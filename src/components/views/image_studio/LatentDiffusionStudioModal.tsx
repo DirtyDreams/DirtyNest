@@ -4,14 +4,8 @@ import { useState } from "react";
 import {
   X,
   Wand2,
-  Sparkles,
-  Layers,
-  Sliders,
   Copy,
   Check,
-  Zap,
-  Activity,
-  Image as ImageIcon,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

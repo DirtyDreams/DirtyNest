@@ -10,9 +10,6 @@ import {
   Check,
   Upload,
   Download,
-  Sparkles,
-  Zap,
-  Tag,
   Key,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

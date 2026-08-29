@@ -11,14 +11,8 @@ import {
   Cpu,
   Save,
   RotateCcw,
-  CheckCircle2,
-  Lock,
   Eye,
   EyeOff,
-  Server,
-  Zap,
-  Layers,
-  Terminal,
 } from "lucide-react";
 import { useHermesStore } from "@/lib/hermes/hermesStore";
 import { cyberAudio } from "@/lib/cyberAudio";

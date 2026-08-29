@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Key, Copy, Check, AlertCircle, Clock, ShieldCheck, RefreshCw, Lock, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { Key, Copy, Check, AlertCircle, Clock, RefreshCw, Lock } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 const SAMPLE_JWT =

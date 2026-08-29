@@ -7,17 +7,10 @@ import {
   Square,
   Volume2,
   VolumeX,
-  Sliders,
   Download,
-  RotateCcw,
   X,
-  Sparkles,
-  Zap,
-  Activity,
-  Radio,
   FileCode,
   Check,
-  Disc,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

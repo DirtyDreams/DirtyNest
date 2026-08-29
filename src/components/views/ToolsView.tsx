@@ -16,15 +16,10 @@ import {
   Sparkles,
   Search,
   Pin,
-  Check,
   Zap,
-  Layers,
   Settings,
-  ChevronRight,
-  Terminal,
   Activity,
   Calculator,
-  AlignLeft,
   FileText,
   Workflow,
   ArrowRightLeft,
@@ -52,11 +47,7 @@ import SnippetVault from "@/components/tools/SnippetVault";
 import CyberColorPaletteConverter from "@/components/tools/CyberColorPaletteConverter";
 import NetworkTopologyStudioModal from "./tools/NetworkTopologyStudioModal";
 import CyberpunkShaderFxStudioModal from "./tools/CyberpunkShaderFxStudioModal";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import NumberFlow from "@number-flow/react";
-import { cn } from "@/lib/utils";
 
 export interface DevToolItem {
   id: string;

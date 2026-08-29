@@ -4,18 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import {
   Mic,
   Volume2,
-  VolumeX,
-  Play,
   Square,
-  Sparkles,
-  Sliders,
   X,
-  Bot,
   Activity,
-  Zap,
-  Radio,
 } from "lucide-react";
-import { cyberSpeech, AGENT_VOICE_PROFILES, AgentVoiceProfile } from "@/lib/cyberSpeech";
+import { cyberSpeech, AGENT_VOICE_PROFILES } from "@/lib/cyberSpeech";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface Props {

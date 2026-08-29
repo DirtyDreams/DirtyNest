@@ -4,12 +4,9 @@ import { useState, useEffect } from "react";
 import {
   Container,
   Sparkles,
-  Sliders,
   Terminal,
   RefreshCw,
   Trash2,
-  Cpu,
-  Check,
   Zap,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

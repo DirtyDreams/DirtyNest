@@ -9,18 +9,12 @@ import {
   Heading1,
   Heading2,
   List,
-  ListOrdered,
   Quote,
-  Eye,
-  Edit3,
   Copy,
   Check,
   Sparkles,
-  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 export interface CyberMarkdownEditorProps {

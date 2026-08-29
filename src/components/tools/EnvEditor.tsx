@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Lock, Eye, EyeOff, Plus, Trash2, Copy, Check, Download, Upload, FileText, Code2 } from "lucide-react";
+import { Lock, Eye, EyeOff, Plus, Trash2, Check, Upload, FileText, Code2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface EnvVar {

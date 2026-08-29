@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Activity, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Zap } from "lucide-react";
+import { Activity, RefreshCw, Zap } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

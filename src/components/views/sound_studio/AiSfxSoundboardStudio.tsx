@@ -3,19 +3,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Zap,
-  Volume2,
   Sliders,
   Sparkles,
-  Play,
-  Square,
-  RefreshCw,
-  Download,
   Flame,
-  Radio,
-  AudioLines,
-  Activity,
-  Layers,
-  CheckCircle2,
   Disc,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

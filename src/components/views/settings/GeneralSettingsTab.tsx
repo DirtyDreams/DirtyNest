@@ -4,14 +4,10 @@ import { useState, useEffect } from "react";
 import {
   Sliders,
   Volume2,
-  VolumeX,
   Palette,
   Monitor,
   Activity,
-  Sparkles,
-  RotateCcw,
   Check,
-  Zap,
 } from "lucide-react";
 import { applyThemePreset, getAllThemes, type ThemePreset } from "@/lib/theme";
 import { cyberAudio } from "@/lib/cyberAudio";

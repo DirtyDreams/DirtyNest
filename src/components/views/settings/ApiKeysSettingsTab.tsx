@@ -6,12 +6,6 @@ import {
   Eye,
   EyeOff,
   Sparkles,
-  Check,
-  Shield,
-  Activity,
-  Zap,
-  Globe,
-  Radio,
   ExternalLink,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

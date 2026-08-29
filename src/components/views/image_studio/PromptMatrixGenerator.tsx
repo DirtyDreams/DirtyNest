@@ -6,16 +6,9 @@ import {
   Sliders,
   Wand2,
   RefreshCw,
-  Layers,
-  ShieldCheck,
   Flame,
   ChevronDown,
   Cpu,
-  Zap,
-  CheckCircle2,
-  Maximize2,
-  Activity,
-  Layers3,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

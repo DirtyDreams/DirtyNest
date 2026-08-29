@@ -3,15 +3,9 @@
 import { useState, useEffect } from "react";
 import {
   Wifi,
-  Key,
   Eye,
   EyeOff,
   Sparkles,
-  Check,
-  Shield,
-  Activity,
-  Zap,
-  Globe,
   ExternalLink,
   Clock,
 } from "lucide-react";

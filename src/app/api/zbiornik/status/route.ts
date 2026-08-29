@@ -1,5 +1,4 @@
 import { getRules, queueCounts, sidecarGet, publishedToday } from "@/lib/zbiornik/ops";
-import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 

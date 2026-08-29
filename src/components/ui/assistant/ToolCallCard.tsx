@@ -4,15 +4,11 @@ import * as React from "react";
 import { useState } from "react";
 import {
   Terminal,
-  CheckCircle2,
-  AlertTriangle,
   ChevronDown,
   ChevronUp,
   Cpu,
   Database,
   Search,
-  ExternalLink,
-  Code2,
   Copy,
   Check,
 } from "lucide-react";

@@ -3,13 +3,9 @@
 import { useState } from "react";
 import {
   DollarSign,
-  TrendingUp,
-  Cloud,
   AlertTriangle,
   Trash2,
   Check,
-  Server,
-  Zap,
 } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { Badge } from "@/components/ui/badge";

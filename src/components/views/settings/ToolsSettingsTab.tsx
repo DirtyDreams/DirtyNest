@@ -4,11 +4,8 @@ import { useState, useEffect } from "react";
 import {
   Wrench,
   Sparkles,
-  Sliders,
   Code,
   FileCode,
-  Zap,
-  Check,
   Star,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

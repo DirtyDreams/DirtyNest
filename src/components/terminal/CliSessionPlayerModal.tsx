@@ -5,20 +5,9 @@ import {
   Play,
   Pause,
   RotateCcw,
-  FastForward,
   Download,
-  Upload,
   X,
   Terminal,
-  Clock,
-  Sparkles,
-  Layers,
-  CheckCircle2,
-  Circle,
-  Copy,
-  Check,
-  Radio,
-  FileCode,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

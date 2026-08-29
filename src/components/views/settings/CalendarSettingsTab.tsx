@@ -4,11 +4,9 @@ import { useState, useEffect } from "react";
 import {
   Calendar,
   Sparkles,
-  Sliders,
   Clock,
   Volume2,
   Download,
-  Check,
   Globe,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

@@ -3,12 +3,8 @@
 import { useState, useMemo } from "react";
 import {
   Calculator,
-  Zap,
-  DollarSign,
   Copy,
   Check,
-  RotateCcw,
-  Sparkles,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

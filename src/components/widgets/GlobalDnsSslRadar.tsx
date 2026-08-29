@@ -6,8 +6,6 @@ import {
   ShieldCheck,
   RotateCcw,
   Clock,
-  CheckCircle2,
-  Wifi,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

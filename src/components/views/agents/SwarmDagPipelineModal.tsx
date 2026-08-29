@@ -4,20 +4,9 @@ import { useState } from "react";
 import {
   X,
   Play,
-  Pause,
   RotateCcw,
-  Plus,
   GitBranch,
-  Layers,
-  Sparkles,
-  Zap,
   CheckCircle2,
-  Sliders,
-  Share2,
-  Cpu,
-  Bot,
-  Activity,
-  DollarSign,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { SwarmAgent } from "./AgentDetailDrawer";

@@ -5,9 +5,6 @@ import {
   Database,
   Copy,
   Check,
-  Sparkles,
-  Sliders,
-  AlignLeft,
   Minimize2,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

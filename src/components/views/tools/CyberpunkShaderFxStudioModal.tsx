@@ -1,22 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback} from "react";
 import {
   Sparkles,
-  Sliders,
   Tv,
-  Zap,
   Image as ImageIcon,
   Copy,
   Check,
-  Download,
   RotateCcw,
   X,
   Play,
   Pause,
-  Palette,
-  FileCode,
-  Layers,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -199,7 +193,7 @@ export default function CyberpunkShaderFxStudioModal({ isOpen, onClose }: Props)
   }, [isOpen, activeTab, color, matrixSpeed, scanlineOpacity, glitchIntensity, bloomAmount, isPlaying]);
 
   // Real-time Image-to-ASCII Generator
-  const generateSampleAscii = () => {
+  const generateSampleAscii = useCallback(() => {
     setIsProcessingAscii(true);
     cyberAudio.play("warp");
 
@@ -226,13 +220,13 @@ export default function CyberpunkShaderFxStudioModal({ isOpen, onClose }: Props)
       setIsProcessingAscii(false);
       cyberAudio.play("chime");
     }, 400);
-  };
+  }, [asciiWidth]);
 
   useEffect(() => {
     if (activeTab === "ascii" && !asciiResult) {
       generateSampleAscii();
     }
-  }, [activeTab]);
+  }, [activeTab, asciiResult, generateSampleAscii]);
 
   const handleCopyCss = () => {
     cyberAudio.play("chime");

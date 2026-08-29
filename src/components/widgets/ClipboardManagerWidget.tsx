@@ -5,10 +5,8 @@ import {
   ClipboardList,
   Copy,
   Pin,
-  Trash2,
   Check,
   Plus,
-  Sparkles,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

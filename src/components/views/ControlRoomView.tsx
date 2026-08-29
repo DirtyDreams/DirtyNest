@@ -2,17 +2,10 @@ import { useState, useEffect } from "react";
 import { useHermesAcpStore } from "@/lib/hermes/hermesAcpStore";
 import {
   Radio,
-  Cpu,
   GitBranch,
   OctagonAlert,
   Activity,
-  ShieldAlert,
-  CheckCircle2,
-  XCircle,
-  Sparkles,
   Zap,
-  Clock,
-  Split,
   Brain,
   Layers,
 } from "lucide-react";
@@ -27,10 +20,8 @@ import HermesSkillBrowser from "./control_room/HermesSkillBrowser";
 import HermesMemoryInspector from "./control_room/HermesMemoryInspector";
 import HitlApprovalModal, { PendingApproval } from "./control_room/HitlApprovalModal";
 import MultiFeedCyberStreamGrid from "./control_room/MultiFeedCyberStreamGrid";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import NumberFlow from "@number-flow/react";
 import { cn } from "@/lib/utils";
 
 export type HarnessId = "hermes" | "pi" | "opencode";
@@ -200,7 +191,7 @@ export default function ControlRoomView() {
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [fetchSessions]);
 
   const activeHarness = HARNESSES.find((h) => h.id === selectedHarnessId) || HARNESSES[0];
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0] || {

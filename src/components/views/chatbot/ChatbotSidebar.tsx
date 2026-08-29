@@ -13,18 +13,12 @@ import {
   Star,
   Bot,
   Sliders,
-  Sparkles,
   ChevronDown,
   ChevronRight,
   Folder,
   FolderPlus,
-  FolderOpen,
-  ArrowUpDown,
-  MoveRight,
-  MoreVertical,
   X,
   Layers,
-  Filter,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { HermesChatSession } from "./ChatbotSessionsDrawer";

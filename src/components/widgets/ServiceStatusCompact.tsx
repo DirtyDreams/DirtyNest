@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState, useEffect } from "react";
-import { Server, ArrowRight, Activity, ShieldCheck, Zap, Network, Radio, Database, Cpu, Layers } from "lucide-react";
+import { Server, ArrowRight, Network } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface ServiceItem {

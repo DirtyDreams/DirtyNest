@@ -5,13 +5,7 @@ import {
   X,
   Upload,
   Sparkles,
-  Bot,
-  Check,
   ArrowRight,
-  Download,
-  FileCode,
-  Layers,
-  Zap,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { PersonaCharacter } from "./PersonaDetailModal";

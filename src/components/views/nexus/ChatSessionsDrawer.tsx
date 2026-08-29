@@ -1,17 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import {
   X,
   GitBranch,
   Plus,
   Trash2,
   Download,
-  Calendar,
   MessageSquare,
-  Check,
-  Clock,
-  Sparkles,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

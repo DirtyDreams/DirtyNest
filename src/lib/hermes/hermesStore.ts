@@ -5,7 +5,6 @@ import {
   HermesFullConfig,
   HermesMemoryItem,
   HermesSkillDefinition,
-  HermesToolDefinition,
   HermesAcpEvent,
 } from "./types";
 

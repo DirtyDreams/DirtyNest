@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Terminal as TerminalIcon, X, Maximize2, Minimize2, Play, Trash2, CornerDownLeft } from "lucide-react";
+import { X, CornerDownLeft } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface Props {

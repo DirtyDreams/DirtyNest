@@ -7,8 +7,6 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Clock,
-  Tag,
 } from "lucide-react";
 
 interface CalendarEvent {

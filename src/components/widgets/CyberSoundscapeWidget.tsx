@@ -1,15 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   Headphones,
-  Volume2,
-  VolumeX,
   Play,
   Pause,
-  Sliders,
-  Sparkles,
-  Zap,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

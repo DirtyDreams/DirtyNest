@@ -3,13 +3,10 @@
 import { useState, useEffect } from "react";
 import {
   Lock,
-  Key,
   Copy,
   Check,
   ShieldCheck,
   ShieldX,
-  RotateCcw,
-  Sparkles,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

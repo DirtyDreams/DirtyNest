@@ -4,13 +4,11 @@ import { useState, useEffect } from "react";
 import {
   Rss,
   Sparkles,
-  Sliders,
   Plus,
   Trash2,
   Globe,
   Clock,
   ShieldAlert,
-  Check,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";

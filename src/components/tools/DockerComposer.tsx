@@ -5,10 +5,6 @@ import {
   Container,
   Copy,
   Check,
-  Sparkles,
-  Server,
-  Layers,
-  FileCode,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

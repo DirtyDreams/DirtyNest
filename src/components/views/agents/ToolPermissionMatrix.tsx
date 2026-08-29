@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldCheck, ShieldAlert, Check, X, Sliders, Sparkles } from "lucide-react";
+import { ShieldCheck, Check, X } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface AgentPermissionRow {

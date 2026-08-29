@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db, initDb, insertLog } from "@/lib/db";
 import { socialAccounts } from "@/lib/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/auth/currentUser";
 import { encryptJson } from "@/lib/auth/encryption";
 

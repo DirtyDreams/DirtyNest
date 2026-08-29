@@ -4,12 +4,9 @@ import { useState, useEffect } from "react";
 import {
   Users,
   Sparkles,
-  Sliders,
   DollarSign,
   Image as ImageIcon,
   Clock,
-  RotateCcw,
-  Zap,
   TrendingUp,
   MessageSquare,
 } from "lucide-react";

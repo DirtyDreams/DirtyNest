@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Database, Trash2, Edit3, Check, X, Sparkles, Layers, Cpu, Clock, CheckCircle2 } from "lucide-react";
+import { Database, Trash2, X, Sparkles, CheckCircle2 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface MemoryItem {

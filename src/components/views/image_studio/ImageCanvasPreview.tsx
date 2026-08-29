@@ -2,16 +2,13 @@
 
 import { useState } from "react";
 import {
-  Maximize2,
   ZoomIn,
   ZoomOut,
   Download,
   Share2,
   Sparkles,
-  Layers,
   Split,
   Eye,
-  Sliders,
   Check,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";

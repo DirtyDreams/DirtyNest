@@ -4,9 +4,7 @@ import { useState, useEffect } from "react";
 import {
   Bot,
   Sparkles,
-  Sliders,
   Cpu,
-  Zap,
   RotateCcw,
   Check,
   BrainCircuit,

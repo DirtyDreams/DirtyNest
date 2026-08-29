@@ -3,13 +3,7 @@
 import { useState } from "react";
 import {
   Database,
-  Search,
-  Sliders,
-  Upload,
   Check,
-  Zap,
-  BookOpen,
-  FileText,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

@@ -4,14 +4,6 @@ import { useState } from "react";
 import {
   X,
   ShieldAlert,
-  ShieldCheck,
-  Search,
-  ExternalLink,
-  Zap,
-  Activity,
-  Layers,
-  Terminal,
-  AlertTriangle,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

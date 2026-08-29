@@ -5,12 +5,9 @@ import {
   Sparkles,
   Copy,
   Check,
-  RefreshCw,
-  Sliders,
   CheckCircle2,
   AlertTriangle,
   Download,
-  Layers,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

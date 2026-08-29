@@ -9,10 +9,6 @@ import {
   ArrowUp,
   ArrowDown,
   RotateCcw,
-  Sliders,
-  Check,
-  Zap,
-  Activity,
   Maximize2,
   Minimize2,
 } from "lucide-react";

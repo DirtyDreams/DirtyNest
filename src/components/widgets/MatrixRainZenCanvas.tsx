@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, Sparkles, Terminal } from "lucide-react";
+import { Play, Pause, Terminal } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export default function MatrixRainZenCanvas() {

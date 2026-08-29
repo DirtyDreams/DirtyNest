@@ -1,19 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Radio,
-  Video,
-  Layers,
-  Sparkles,
   Zap,
   Activity,
-  Maximize2,
   Tv,
-  Eye,
   ShieldAlert,
-  Globe,
-  Sliders,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 

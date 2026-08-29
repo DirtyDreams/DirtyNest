@@ -4,9 +4,6 @@ import { useState, useEffect } from "react";
 import {
   Clock,
   Globe,
-  Sun,
-  Moon,
-  Sparkles,
 } from "lucide-react";
 
 interface TimezoneNode {
