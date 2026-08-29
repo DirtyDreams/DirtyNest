@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Clock, CheckCircle2, AlertTriangle, Play, Trash2, Send, Calendar } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 
@@ -59,6 +59,12 @@ interface Props {
 
 export default function SocialScheduledQueue({ posts }: Props) {
   const [schedule, setSchedule] = useState<ScheduledPost[]>(posts.length > 0 ? posts : INITIAL_SCHEDULE);
+
+
+  // Sync when the parent refreshes posts from the real API (F5).
+  useEffect(() => {
+    if (posts.length > 0) setSchedule(posts);
+  }, [posts]);
 
   const handlePublishNow = (id: string) => {
     cyberAudio.play("chime");

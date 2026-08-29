@@ -87,6 +87,19 @@ class RedisCronManager:
                 "runs_count": 0,
                 "last_duration_ms": 0,
                 "last_result": "Pending initial execution cycle. Read-only: items land in the HITL queue, never published."
+            },
+            "social_publish_sweep": {
+                "id": "social_publish_sweep",
+                "name": "Social Media — publish due scheduled posts + collect metrics",
+                "schedule": "Every 1 min",
+                "interval_seconds": 60,
+                "category": "automation",
+                "last_run": None,
+                "next_run": time.time() + 30,
+                "status": "SCHEDULED",
+                "runs_count": 0,
+                "last_duration_ms": 0,
+                "last_result": "Pending initial execution cycle."
             }
         }
         self.broadcast_callback: Optional[Callable[[Dict[str, Any]], Any]] = None
@@ -126,6 +139,8 @@ class RedisCronManager:
                 result_str = await self._exec_mesh_heartbeat()
             elif job_id == "zbiornik_poll":
                 result_str = await self._exec_zbiornik_poll()
+            elif job_id == "social_publish_sweep":
+                result_str = await self._exec_social_publish_sweep()
             else:
                 result_str = f"Executed generic job {job_id}."
 
@@ -229,6 +244,18 @@ class RedisCronManager:
             return f"Zbiornik poll incomplete: session={session_code}, codes={snap.get('codes', {})}."
         except Exception as e:  # noqa: BLE001
             return f"Zbiornik poll failed: {str(e)}"
+    async def _exec_social_publish_sweep(self) -> str:
+        # Publish due scheduled posts + collect metrics. Scheduled posts were
+        # pre-approved at scheduling time, so no HITL gate is needed here.
+        try:
+            from social_scheduler import social_scheduler  # lazy import (no cycle)
+
+            pub = await social_scheduler.publish_due()
+            met = await social_scheduler.collect_metrics()
+            return f"Social sweep: {pub['due']} due published, {met['collected']} metric snapshots collected."
+        except Exception as e:  # noqa: BLE001
+            return f"Social sweep failed: {str(e)}"
+
 
     async def scheduler_loop(self):
         """Infinite loop checking scheduled cron jobs every 5 seconds."""

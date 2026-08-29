@@ -22,7 +22,6 @@ from memory_service import memory_engine
 from knowledge_service import COLLECTION_NAME, knowledge_service
 from cdp_service import cdp_engine
 from cron_service import cron_manager
-from docker_service import docker_engine
 from automations import (
     EngagementManager,
     TopicManager,
@@ -31,6 +30,7 @@ from automations import (
     zbiornik_manager,
     zbiornik_monitor,
 )
+from automations.adapters import get_adapter, list_adapters
 
 engagement_mgr = EngagementManager()
 topic_mgr = TopicManager()
@@ -747,7 +747,34 @@ async def crosscheck_coverage(req: CrosscheckCoverageRequest):
     return report
 
 
+# Social Media Command (F5) — platform adapters. The Next.js app owns PG
+# metadata (social_accounts/social_posts/social_metrics) and proxies the actual
+# publish here. HITL approval is enforced upstream before this is called.
 # ---------------------------------------------------------------------------
+
+class SocialPublishRequest(BaseModel):
+    platform: str
+    text: str
+    post_id: Optional[str] = None  # reddit target thread
+    subreddit: Optional[str] = None
+    account_name: Optional[str] = None
+
+@app.get("/api/social/adapters")
+async def social_adapters_status():
+    return {"platforms": list_adapters()}
+
+@app.post("/api/social/publish")
+async def social_publish(req: SocialPublishRequest):
+    adapter = get_adapter(req.platform)
+    if adapter is None:
+        return {"ok": False, "platform_post_id": None, "error": f"no adapter for platform '{req.platform}'"}
+    kwargs: Dict[str, Any] = {}
+    if req.post_id:
+        kwargs["post_id"] = req.post_id
+    if req.subreddit:
+        kwargs["subreddit"] = req.subreddit
+    result = adapter.publish(req.text, **kwargs)
+    return result
 # Zbiornik Ops — CDP runner wrapper (docs/zbiornik-ops.md)
 # Reads: direct. Writes: REQUIRE confirm_run=True (HITL queue approved upstream
 # in the Next.js dashboard + guarded by zb_rules limits). Single account only.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Send,
   Sparkles,
@@ -29,6 +29,43 @@ import SocialListeningIntel from "./social_media/SocialListeningIntel";
 import AutomationsMatrix from "./social_media/AutomationsMatrix";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Bot } from "lucide-react";
+interface ApiSocialPost {
+  id: number;
+  platform: string;
+  text: string;
+  media_urls: string[];
+  status: string;
+  scheduled_time: string | null;
+  published_time: string | null;
+  platform_post_id: string | null;
+  created_at: string | null;
+}
+
+const PLATFORM_COLORS: Record<string, string> = {
+  twitter: "#1DA1F2",
+  instagram: "#E1306C",
+  facebook: "#1877F2",
+  tiktok: "#00F0FF",
+  reddit: "#FF4500",
+  discord: "#5865F2",
+  telegram: "#0088CC",
+  linkedin: "#0A66C2",
+};
+
+function mapApiPostToScheduledPost(p: ApiSocialPost): ScheduledPost {
+  const status: ScheduledPost["status"] =
+    p.status === "published" ? "published" : p.status === "failed" ? "failed" : p.status === "draft" ? "draft" : "scheduled";
+  const when = p.scheduled_time ?? p.published_time ?? p.created_at;
+  return {
+    id: String(p.id),
+    platform: p.platform.toUpperCase(),
+    platformColor: PLATFORM_COLORS[p.platform] ?? "#00F0FF",
+    scheduledTime: when ? when.replace("T", " ").slice(0, 16) : "now",
+    copy: p.text,
+    status,
+    hasMedia: (p.media_urls ?? []).length > 0,
+  };
+}
 
 export default function SocialMediaView() {
   const [posts, setPosts] = useState<ScheduledPost[]>(INITIAL_SCHEDULE);
@@ -36,6 +73,25 @@ export default function SocialMediaView() {
     "composer" | "automations" | "calendar" | "thread" | "inbox" | "listening" | "copywriter" | "queue" | "radar"
   >("automations");
   const [injectedText, setInjectedText] = useState<string | null>(null);
+
+  const fetchPosts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/social/posts");
+      if (res.ok) {
+        const data = (await res.json()) as { posts?: ApiSocialPost[] };
+        if (data.posts && data.posts.length > 0) {
+          setPosts(data.posts.map(mapApiPostToScheduledPost));
+          return;
+        }
+      }
+    } catch {
+      // fall back to mock schedule
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   const handleSchedulePost = (newPost: { platform: SocialPlatform; text: string; hasMedia: boolean }) => {
     const postItem: ScheduledPost = {
@@ -66,6 +122,24 @@ export default function SocialMediaView() {
       hasMedia: newPost.hasMedia,
     };
     setPosts((prev) => [postItem, ...prev]);
+
+    // Best-effort persist to the real API (F5). On failure the post stays in
+    // the local queue so the UI never blocks on the backend.
+    const apiPlatform =
+      newPost.platform === "discord"
+        ? "twitter"
+        : newPost.platform === "telegram"
+        ? "facebook"
+        : newPost.platform === "linkedin"
+        ? "instagram"
+        : newPost.platform;
+    fetch("/api/social/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ platform: apiPlatform, text: newPost.text, status: "draft" }),
+    })
+      .then((res) => (res.ok ? fetchPosts() : undefined))
+      .catch(() => undefined);
   };
 
   return (

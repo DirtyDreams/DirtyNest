@@ -228,3 +228,51 @@ export const knowledgeGraphEdges = pgTable("knowledge_graph_edges", {
   relation: varchar("relation", { length: 50 }).notNull().default("wiki_link"),
   created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
 });
+// ---------------------------------------------------------------------------
+// Social Media Command (F5) — connected accounts, posts, engagement metrics.
+// access_token is AES-256-GCM encrypted (src/lib/auth/encryption.ts).
+// ---------------------------------------------------------------------------
+
+export const socialAccounts = pgTable("social_accounts", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
+  platform: varchar("platform", { length: 20 }).notNull(), // twitter|instagram|facebook|tiktok|reddit
+  account_name: varchar("account_name", { length: 255 }).notNull(),
+  access_token: text("access_token").notNull(), // AES-256-GCM encrypted
+  refresh_token: text("refresh_token"),
+  expires_at: timestamp("expires_at", { withTimezone: true, mode: "string" }),
+  is_active: integer("is_active").notNull().default(1),
+  created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
+  updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+});
+
+export const socialPosts = pgTable("social_posts", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
+  account_id: integer("account_id").references(() => socialAccounts.id, { onDelete: "set null" }),
+  platform: varchar("platform", { length: 20 }).notNull(),
+  text: text("text").notNull(),
+  media_urls: text("media_urls").notNull().default("[]"),
+  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft|scheduled|queued|awaiting_hitl|published|failed|cancelled
+  scheduled_time: timestamp("scheduled_time", { withTimezone: true, mode: "string" }),
+  cron_expression: text("cron_expression"),
+  repeat_until: timestamp("repeat_until", { withTimezone: true, mode: "string" }),
+  published_time: timestamp("published_time", { withTimezone: true, mode: "string" }),
+  platform_post_id: varchar("platform_post_id", { length: 255 }),
+  metrics: text("metrics").notNull().default("{}"),
+  error: text("error"),
+  created_at: timestamp("created_at", { withTimezone: true, mode: "string" }),
+  updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+});
+
+export const socialMetrics = pgTable("social_metrics", {
+  id: serial("id").primaryKey(),
+  post_id: integer("post_id").notNull().references(() => socialPosts.id, { onDelete: "cascade" }),
+  platform: varchar("platform", { length: 20 }).notNull(),
+  reach: integer("reach").notNull().default(0),
+  engagement: integer("engagement").notNull().default(0),
+  likes: integer("likes").notNull().default(0),
+  comments: integer("comments").notNull().default(0),
+  shares: integer("shares").notNull().default(0),
+  collected_at: timestamp("collected_at", { withTimezone: true, mode: "string" }),
+});
