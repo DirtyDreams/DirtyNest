@@ -76,6 +76,16 @@ class FakeCdpTransport:
             return self.href
         if expression.startswith("(() => { const t = document.title"):
             return self.login_wall  # _js_login_wall
+        if expression.startswith("(() => { const b = document.querySelector("):
+            # publish-button rect read: derive a fake position for a present button
+            import json as _json, re as _re
+            m = _re.search(r'document.querySelector\((".*?")\)', expression)
+            sel = _json.loads(m.group(1)) if m else ""
+            return None if not self._present(sel) else __import__("json").dumps({"x": 10, "y": 20})
+        if "?.innerText || '').length" in expression and "document.querySelector" in expression:
+            # post-fill retention check: report the intended text length so
+            # tests pass the sanity gate (fake DOM has no real text)
+            return 10 ** 6
         if expression.startswith("(() => { const out = {}; const sels = "):
             # _js_probe(JSON list) -> {selector: present?}
             payload = expression.split("const sels = ", 1)[1].split(";", 1)[0]
@@ -114,6 +124,22 @@ class FakeCdpTransport:
             return "TYPED"
 
         adapter._trusted_click_type = fake_trusted
+
+        def fake_btn_click(ws_url, pos):
+            return "CLICKED"
+
+        adapter._trusted_button_click = fake_btn_click
+
+        def fake_btn_pos(ws_url, sel):
+            return {"x": 10, "y": 20}
+
+        adapter._button_screen_pos = fake_btn_pos
+
+        # permalink fallback (profile read) can return the fixed id the tests assert
+        def fake_read_newest(ws_url):
+            return None
+
+        adapter._read_newest_own_post_id = fake_read_newest
         adapter._launch_browser = lambda: False  # tests never spawn Chrome
         return adapter
 

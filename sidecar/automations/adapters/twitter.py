@@ -39,11 +39,14 @@ class TwitterAdapter(CdpSocialAdapter):
                 '[data-testid="tweetTextarea_0_label"]',
                 'div[role="textbox"][contenteditable="true"]',
             ],
+            # /compose/post: the modal button wins. tweetButtonInline exists
+            # in the overlayed timeline below and shadows the modal via rect
+            # hits (trusted click hit the overlay — live-calibrated 2026-08-29).
             "publish_button_candidates": [
-                '[data-testid="tweetButtonInline"]',
                 '[data-testid="tweetButton"]',
+                '[data-testid="tweetButtonInline"]',
             ],
-            "post_url_pattern": "{base_url}/status/{id}",
+            "post_url_pattern": "{base_url}/{handle}/status/{id}",
             "metrics_selectors": {
                 "likes": [
                     '[data-testid="like"]',

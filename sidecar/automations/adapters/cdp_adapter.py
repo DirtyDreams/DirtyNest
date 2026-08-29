@@ -62,6 +62,10 @@ except Exception:  # noqa: BLE001
 # JS snippets executed inside the page via Runtime.evaluate
 # --------------------------------------------------------------------------
 
+def json_dumps(x: str) -> str:
+    return json.dumps(x)
+
+
 def _js_probe(selectors: List[str]) -> str:
     """Return a JS expression mapping each selector to whether it exists."""
     sels_json = json.dumps(selectors)
@@ -170,6 +174,7 @@ class CdpSocialAdapter(SocialAdapter):
             k: list(v) for k, v in (cfg.get("metrics_selectors") or {}).items()
         }
         self.base_url: str = cfg.get("base_url", "")
+        self.verify_profile_hint: str = cfg.get("verify_profile_hint", "")
         self.cdp_port: int = int(cfg.get("cdp_port") or os.environ.get("SOCIAL_CDP_PORT", "9333"))
         self.host: str = cfg.get("host", "127.0.0.1")
         self.user_data_dir: str = cfg.get("user_data_dir") or os.path.join(
@@ -219,6 +224,32 @@ class CdpSocialAdapter(SocialAdapter):
                     if msg.get("error"):
                         raise RuntimeError(f"CDP {method}: {msg['error']}")
                     return msg.get("result") or {}
+
+    async def _trusted_button_click(self, ws_url: str, pos: Dict[str, Any]) -> str:
+        """Real CDP mouse press+release over the button rect (trusted send)."""
+        await self._cdp_call(ws_url, "Input.dispatchMouseEvent",
+                             {"type": "mousePressed", "x": pos["x"], "y": pos["y"],
+                              "button": "left", "clickCount": 1})
+        await self._cdp_call(ws_url, "Input.dispatchMouseEvent",
+                             {"type": "mouseReleased", "x": pos["x"], "y": pos["y"],
+                              "button": "left", "clickCount": 1})
+        return "CLICKED"
+
+    def _button_screen_pos(self, ws_url: str, sel: str) -> Optional[Dict[str, Any]]:
+        """Rect center of a *clickable* (uncovered) button; None if covered."""
+        raw = self._eval(
+            ws_url,
+            "(() => { try { const b = document.querySelector(" + json_dumps(sel) + ");"
+            " if (!b) return null; const r = b.getBoundingClientRect();"
+            " const hit = document.elementFromPoint(r.x + r.width/2, r.y + r.height/2);"
+            " if (!hit || !b.contains(hit)) return null;"
+            " return JSON.stringify({x: r.x + r.width/2, y: r.y + r.height/2});"
+            " } catch (e) { return null; } })()",
+        )
+        try:
+            return json.loads(raw) if isinstance(raw, str) else None
+        except Exception:
+            return None
 
     async def _trusted_click_type(self, ws_url: str, selector: str, text: str) -> str:
         """Real-CDP caret placement + Input.insertText (trusted input path).
@@ -444,15 +475,21 @@ class CdpSocialAdapter(SocialAdapter):
             return self._err(CDP_OFFLINE, "cannot open composer tab via CDP")
 
         try:
-            time.sleep(2.0)  # let the composer page settle
-            flags = self._eval(ws_url, _js_probe(self.composer_selectors))
-            composer_sel = first_match(self.composer_selectors, flags)
-            if composer_sel is None:
+            time.sleep(4.5)  # let the composer page settle (X renders a skeleton; clicking too early misses the caret)
+
+            composer_sel = None
+            for attempt in range(3):
+                flags = self._eval(ws_url, _js_probe(self.composer_selectors))
+                composer_sel = first_match(self.composer_selectors, flags)
+                if composer_sel is not None:
+                    break
                 wall = self._eval(ws_url, _js_login_wall())
                 if wall:
                     return self._err(
                         LOGIN_REQUIRED, "compose page shows a login wall (log in manually in the CDP Chrome window)"
                     )
+                time.sleep(1.5)
+            if composer_sel is None:
                 return self._err(OP_FAILED, "composer box not found; selectors need calibration")
 
             typed_result = self._trusted_click_type(ws_url, composer_sel, text)
@@ -460,27 +497,100 @@ class CdpSocialAdapter(SocialAdapter):
             if typed != "TYPED":
                 return self._err(OP_FAILED, f"failed to type into composer ({composer_sel})")
 
+            # post-fill sanity: the composer must actually hold the text
+            # (Draft.js state may diverge from the DOM view — abort instead of
+            # clicking send on an empty post)
+            time.sleep(1.0)
+            filled = self._eval(
+                ws_url,
+                "(document.querySelector(" + json_dumps(composer_sel) + ")?.innerText || '').length",
+            )
+            if not isinstance(filled, int) or filled < max(1, len(text) // 2):
+                return self._err(
+                    OP_FAILED,
+                    f"composer did not retain the text (saw {filled!r} chars); aborting before send",
+                )
+
             btn_flags = self._eval(ws_url, _js_probe(self.publish_button_candidates))
             button_sel = first_match(self.publish_button_candidates, btn_flags)
             if button_sel is None:
                 return self._err(OP_FAILED, "publish button not found; selectors need calibration")
 
-            clicked = self._eval(ws_url, _js_click(button_sel))
-            if clicked not in ("CLICKED", True):
+            # Trusted click: el.click() is untrusted and X ignores it (live-
+            # calibrated 2026-08-29 — the post never went out). Also guard the
+            # rect target: elementFromPoint must resolve INSIDE the button
+            # (a covered/overlay button must be skipped, not clicked blind).
+            btn_pos = None
+            for cand_sel in [button_sel] + [s for s in self.publish_button_candidates if s != button_sel]:
+                btn_pos = self._button_screen_pos(ws_url, cand_sel)
+                if btn_pos:
+                    button_sel = cand_sel
+                    break
+            if not btn_pos:
+                return self._err(OP_FAILED, "publish button covered or not clickable; selectors need calibration")
+            clicked = self._trusted_button_click(ws_url, btn_pos)
+            clicked = asyncio.run(clicked) if hasattr(clicked, "__await__") else clicked
+            if clicked != "CLICKED":
                 return self._err(OP_FAILED, f"failed to click publish button ({button_sel})")
 
+            # Confirm the send: wait for a permalink; X may land on /home (no
+            # redirect on this path — live-calibrated), so fall back to reading
+            # the newest post permalink from own profile.
             pid = None
             if self.post_url_pattern:
-                time.sleep(1.5)  # redirect to the post permalink
-                pid = self._extract_post_id(ws_url)
+                for _ in range(6):
+                    time.sleep(1.5)
+                    href = self._eval(ws_url, "window.location.href")
+                    pid = self._extract_post_id(href) if isinstance(href, str) else None
+                    if pid:
+                        break
                 if pid is None:
-                    return self._err(
-                        OP_FAILED, "publish submitted but post id could not be confirmed from URL"
-                    )
+                    time.sleep(2.5)
+                    # do not trust "newest on profile" blindly: pass the fill
+                    # text so the fallback matches the post we actually sent
+                    # (avoids stale false-positives under parallel activity)
+                    pid = self._read_newest_own_post_id(ws_url, text)
             self._mark_action()
-            return normalize_result(True, pid, None)
+            if pid:
+                return normalize_result(True, pid, None)
+            return self._err(OP_FAILED, "publish submitted but post id could not be confirmed (check the profile)")
         finally:
             self._close_tab(tab_id)
+
+    def _read_newest_own_post_id(self, ws_url: str, expected_text: str = "") -> Optional[str]:
+        """Read own profile and return the permalink of the newest post whose
+        text matches `expected_text` (prefix). No blind 'newest wins'."""
+        hint = getattr(self, "verify_profile_hint", "")
+        if not hint:
+            return None
+        base = (getattr(self, "base_url", "") or "").rstrip("/")
+        if not base:
+            return None
+        profile_tab_ws, profile_tab_id = self._new_tab(f"{base}/{hint}")
+        if not profile_tab_ws:
+            return None
+        try:
+            probe = json.dumps(expected_text[:40])
+            for _ in range(4):
+                time.sleep(3.5)
+                raw = self._eval(profile_tab_ws, f"""
+                JSON.stringify((function(){{
+                  const probe = {probe};
+                  const arts = Array.from(document.querySelectorAll('article[data-testid="tweet"]'));
+                  for (const art of arts) {{
+                    const txt = (art.querySelector('[data-testid="tweetText"]')?.innerText || '');
+                    if (!probe || art.innerText.includes(probe)) {{
+                      return art.querySelector('a[href*="/status/"]')?.getAttribute('href') || null;
+                    }}
+                  }}
+                  return null;
+                }})())
+                """)
+                if isinstance(raw, str) and raw:
+                    return self._extract_id_from_url(raw if raw.startswith("http") else f"{base}{raw}")
+            return None
+        finally:
+            self._close_tab(profile_tab_id)
 
     def _extract_post_id(self, ws_url: str) -> Optional[str]:
         """Read location.href inside the tab and extract the post id."""
@@ -596,6 +706,7 @@ class CdpSocialAdapter(SocialAdapter):
 
     def _post_url(self, platform_post_id: str) -> str:
         url = (self.post_url_pattern or "").replace("{base_url}", self.base_url)
+        url = url.replace("{handle}", getattr(self, "verify_profile_hint", "") or "")
         return url.replace("{id}", str(platform_post_id)).replace("{post_id}", str(platform_post_id))
 
     # ------------------------------------------------------------- metrics
