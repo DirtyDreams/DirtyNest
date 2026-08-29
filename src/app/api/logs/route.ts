@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, queryAll, SystemLog, insertLog, LogLevel, LogCategory } from "@/db";
+import { db, initDb, insertLog, LogLevel, LogCategory } from "@/db";
+import * as schema from "@/lib/schema";
+import { and, desc, eq, ilike, or, gte, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
-    const db = await getDb();
+    await initDb();
     const { searchParams } = new URL(request.url);
 
     const search = searchParams.get("search") || "";
@@ -13,23 +15,26 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "100", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
-    const conditions: string[] = [];
-    const params: unknown[] = [];
+    const conditions = [];
 
     if (search) {
-      conditions.push("(action LIKE ? OR actor LIKE ? OR details LIKE ? OR hash_sig LIKE ?)");
       const term = `%${search}%`;
-      params.push(term, term, term, term);
+      conditions.push(
+        or(
+          ilike(schema.systemLogs.action, term),
+          ilike(schema.systemLogs.actor, term),
+          ilike(schema.systemLogs.details, term),
+          ilike(schema.systemLogs.hash_sig, term)
+        )
+      );
     }
 
     if (level && level !== "ALL") {
-      conditions.push("level = ?");
-      params.push(level);
+      conditions.push(eq(schema.systemLogs.level, level));
     }
 
     if (category && category !== "ALL") {
-      conditions.push("category = ?");
-      params.push(category);
+      conditions.push(eq(schema.systemLogs.category, category));
     }
 
     if (timeRange && timeRange !== "all") {
@@ -42,27 +47,37 @@ export async function GET(request: NextRequest) {
 
       if (minutes > 0) {
         const threshold = new Date(Date.now() - minutes * 60 * 1000).toISOString();
-        conditions.push("timestamp >= ?");
-        params.push(threshold);
+        conditions.push(gte(schema.systemLogs.timestamp, threshold));
       }
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     // Total filtered count
-    const countSql = `SELECT COUNT(*) as count FROM system_logs ${whereClause}`;
-    const countRes = queryAll<{ count: number }>(db, countSql, params);
-    const total = countRes.length > 0 ? countRes[0].count : 0;
+    const countRes = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(schema.systemLogs)
+      .where(whereClause);
+    const total = countRes[0]?.count || 0;
 
     // Fetch logs ordered newest first
-    const dataSql = `SELECT * FROM system_logs ${whereClause} ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?`;
-    const logs = queryAll<SystemLog>(db, dataSql, [...params, limit, offset]);
+    const logs = await db
+      .select()
+      .from(schema.systemLogs)
+      .where(whereClause)
+      .orderBy(desc(schema.systemLogs.timestamp), desc(schema.systemLogs.id))
+      .limit(limit)
+      .offset(offset);
 
-    // Quick level counters across all logs in table
-    const allStatsRes = queryAll<{ level: string; count: number }>(
-      db,
-      `SELECT level, COUNT(*) as count FROM system_logs GROUP BY level`
-    );
+    // Quick level counters across all logs
+    const allStatsRes = await db
+      .select({
+        level: schema.systemLogs.level,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schema.systemLogs)
+      .groupBy(schema.systemLogs.level);
+
     const levelCounts: Record<string, number> = {
       INFO: 0,
       SUCCESS: 0,
@@ -75,10 +90,14 @@ export async function GET(request: NextRequest) {
       levelCounts[r.level] = r.count;
     });
 
-    const categoryStatsRes = queryAll<{ category: string; count: number }>(
-      db,
-      `SELECT category, COUNT(*) as count FROM system_logs GROUP BY category ORDER BY count DESC`
-    );
+    const categoryStatsRes = await db
+      .select({
+        category: schema.systemLogs.category,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schema.systemLogs)
+      .groupBy(schema.systemLogs.category)
+      .orderBy(desc(sql`count(*)`));
 
     return NextResponse.json({
       logs,
@@ -135,16 +154,16 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const db = await getDb();
+    await initDb();
     const { searchParams } = new URL(request.url);
     const purgeAll = searchParams.get("all") === "true";
     const level = searchParams.get("level");
 
     if (purgeAll) {
-      db.run("DELETE FROM system_logs");
+      await db.delete(schema.systemLogs);
       await insertLog("AUDIT", "SYSTEM", "LOGS_PURGED_ALL", "Admin-Operator", { reason: "Manual system purge" });
     } else if (level) {
-      db.run("DELETE FROM system_logs WHERE level = ?", [level]);
+      await db.delete(schema.systemLogs).where(eq(schema.systemLogs.level, level));
       await insertLog("AUDIT", "SYSTEM", `LOGS_PURGED_LEVEL_${level}`, "Admin-Operator", { level });
     } else {
       return NextResponse.json({ error: "Specify ?all=true or ?level=LEVEL to purge" }, { status: 400 });
@@ -156,3 +175,4 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Failed to purge logs" }, { status: 500 });
   }
 }
+

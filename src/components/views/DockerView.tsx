@@ -207,6 +207,43 @@ export default function DockerView() {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
 
+  useEffect(() => {
+    let active = true;
+    const fetchContainers = async () => {
+      try {
+        const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
+        const res = await fetch(`${sidecarUrl}/api/docker/containers`);
+        if (res.ok) {
+          const data = await res.json();
+          if (active && data.containers && data.containers.length > 0) {
+            const mapped = data.containers.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              image: c.image,
+              status: c.status,
+              ports: c.ports || "",
+              cpuPercent: c.cpu_percent || 0.0,
+              memoryUsage: c.memory_usage || "0 MB",
+              netIO: c.net_io || "0 B",
+              uptime: c.uptime || "unknown",
+              stack: c.stack || "default",
+            }));
+            setContainers(mapped);
+          }
+        }
+      } catch (err) {
+        // graceful demo fallback
+      }
+    };
+
+    fetchContainers();
+    const interval = setInterval(fetchContainers, 4000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
@@ -214,26 +251,26 @@ export default function DockerView() {
     setTimeout(() => setCopiedId(null), 1500);
   };
 
-  const handleContainerAction = (id: string, action: "start" | "stop" | "restart") => {
+  const handleContainerAction = async (id: string, action: "start" | "stop" | "restart") => {
     cyberAudio.play("click");
     setContainers((prev) =>
-      prev.map((c) => {
-        if (c.id === id) {
-          if (action === "start") return { ...c, status: "running", uptime: "Just started" };
-          if (action === "stop") return { ...c, status: "stopped", cpuPercent: 0, uptime: "Stopped just now" };
-          if (action === "restart") return { ...c, status: "restarting", uptime: "Restarting..." };
-        }
-        return c;
-      })
+      prev.map((c) => (c.id === id ? { ...c, status: action === "stop" ? "stopped" : action === "restart" ? "restarting" : "running" } : c))
     );
 
-    if (action === "restart") {
-      setTimeout(() => {
-        setContainers((prev) =>
-          prev.map((c) => (c.id === id ? { ...c, status: "running", uptime: "Just started" } : c))
-        );
+    try {
+      const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
+      const res = await fetch(`${sidecarUrl}/api/docker/containers/${id}/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
         cyberAudio.play("chime");
-      }, 1500);
+      } else {
+        cyberAudio.play("error");
+      }
+    } catch {
+      cyberAudio.play("error");
     }
   };
 

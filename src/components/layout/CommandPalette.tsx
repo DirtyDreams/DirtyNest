@@ -40,6 +40,7 @@ import {
   Network,
   Keyboard,
   Music,
+  Waves,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -160,6 +161,14 @@ export default function CommandPalette() {
         action: () => navigateToDeck("social_media"),
         shortcut: "G M",
         icon: <Share2 size={14} className="text-[#00F0FF]" />,
+      },
+      {
+        id: "deck_zbiornik_ops",
+        label: "Zbiornik Ops — HITL Gatekeeper (zbiornik.com)",
+        category: "DECKS",
+        sublabel: "Kolejka zatwierdzeń, monitor tematów, skrzynka — jedno konto, pełny nadzór",
+        action: () => navigateToDeck("zbiornik_ops"),
+        icon: <Waves size={14} className="text-[#BF40FF]" />,
       },
       {
         id: "deck_nexus",

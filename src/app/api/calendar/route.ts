@@ -1,14 +1,19 @@
-import { getDb, persistDb, queryAll, type CalendarEvent } from "@/db";
+import { db, initDb } from "@/db";
+import * as schema from "@/lib/schema";
+import { asc } from "drizzle-orm";
 
 export async function GET() {
-  const db = await getDb();
-  const events = queryAll<CalendarEvent>(db, "SELECT * FROM calendar_events ORDER BY date ASC, time ASC");
+  await initDb();
+  const events = await db
+    .select()
+    .from(schema.calendarEvents)
+    .orderBy(asc(schema.calendarEvents.date), asc(schema.calendarEvents.time));
   return Response.json(events);
 }
 
 export async function POST(request: Request) {
   try {
-    const db = await getDb();
+    await initDb();
     const body = await request.json();
     const { title, description, date, time, color } = body || {};
 
@@ -25,21 +30,23 @@ export async function POST(request: Request) {
       return Response.json({ error: "Description must not exceed 2000 characters" }, { status: 400 });
     }
 
-    db.run(
-      "INSERT INTO calendar_events (title, description, date, time, color) VALUES (?, ?, ?, ?, ?)",
-      [
-        title.trim().slice(0, 200),
-        typeof description === "string" ? description.trim().slice(0, 2000) : null,
-        date.trim().slice(0, 30),
-        typeof time === "string" ? time.trim().slice(0, 30) : null,
-        typeof color === "string" ? color.trim().slice(0, 30) : "#00FF41"
-      ]
-    );
-    persistDb();
-    const events = queryAll<CalendarEvent>(db, "SELECT * FROM calendar_events ORDER BY date ASC, time ASC");
+    await db.insert(schema.calendarEvents).values({
+      title: title.trim().slice(0, 200),
+      description: typeof description === "string" ? description.trim().slice(0, 2000) : null,
+      date: date.trim().slice(0, 30),
+      time: typeof time === "string" ? time.trim().slice(0, 30) : null,
+      color: typeof color === "string" ? color.trim().slice(0, 30) : "#00FF41",
+      created_at: new Date().toISOString(),
+    });
+
+    const events = await db
+      .select()
+      .from(schema.calendarEvents)
+      .orderBy(asc(schema.calendarEvents.date), asc(schema.calendarEvents.time));
     return Response.json(events, { status: 201 });
   } catch (err) {
     console.error("Error creating calendar event:", err);
     return Response.json({ error: "Invalid JSON or request data" }, { status: 400 });
   }
 }
+

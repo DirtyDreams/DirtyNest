@@ -1,27 +1,22 @@
 import { NextResponse } from "next/server";
-import { getDb, queryAll } from "@/db";
+import { db, initDb } from "@/db";
+import * as schema from "@/lib/schema";
+import { desc, sql } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const db = await getDb();
+    await initDb();
 
-    // Single consolidated aggregation for totals, error counts, warn counts, and latency
-    const summaryRes = queryAll<{
-      total: number;
-      errorCount: number;
-      warnCount: number;
-      avgLat: number;
-      maxLat: number;
-    }>(
-      db,
-      `SELECT 
-        COUNT(*) as total,
-        SUM(CASE WHEN level = 'ERROR' THEN 1 ELSE 0 END) as errorCount,
-        SUM(CASE WHEN level = 'WARN' THEN 1 ELSE 0 END) as warnCount,
-        AVG(latency_ms) as avgLat,
-        MAX(latency_ms) as maxLat
-      FROM system_logs`
-    );
+    // Summary stats
+    const summaryRes = await db
+      .select({
+        total: sql<number>`count(*)::int`,
+        errorCount: sql<number>`sum(case when ${schema.systemLogs.level} = 'ERROR' then 1 else 0 end)::int`,
+        warnCount: sql<number>`sum(case when ${schema.systemLogs.level} = 'WARN' then 1 else 0 end)::int`,
+        avgLat: sql<number>`avg(${schema.systemLogs.latency_ms})::float`,
+        maxLat: sql<number>`max(${schema.systemLogs.latency_ms})::int`,
+      })
+      .from(schema.systemLogs);
 
     const summary = summaryRes[0] || { total: 0, errorCount: 0, warnCount: 0, avgLat: 0, maxLat: 0 };
     const total = summary.total || 0;
@@ -31,34 +26,56 @@ export async function GET() {
     const maxLatency = summary.maxLat || 0;
 
     // Levels breakdown
-    const levelCountsRes = queryAll<{ level: string; count: number }>(
-      db,
-      "SELECT level, COUNT(*) as count FROM system_logs GROUP BY level ORDER BY count DESC"
-    );
+    const levelCountsRes = await db
+      .select({
+        level: schema.systemLogs.level,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schema.systemLogs)
+      .groupBy(schema.systemLogs.level)
+      .orderBy(desc(sql`count(*)`));
 
     // Categories breakdown
-    const catCountsRes = queryAll<{ category: string; count: number }>(
-      db,
-      "SELECT category, COUNT(*) as count FROM system_logs GROUP BY category ORDER BY count DESC"
-    );
+    const catCountsRes = await db
+      .select({
+        category: schema.systemLogs.category,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schema.systemLogs)
+      .groupBy(schema.systemLogs.category)
+      .orderBy(desc(sql`count(*)`));
 
     // Top Actors
-    const actorCountsRes = queryAll<{ actor: string; count: number }>(
-      db,
-      "SELECT actor, COUNT(*) as count FROM system_logs GROUP BY actor ORDER BY count DESC LIMIT 8"
-    );
+    const actorCountsRes = await db
+      .select({
+        actor: schema.systemLogs.actor,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schema.systemLogs)
+      .groupBy(schema.systemLogs.actor)
+      .orderBy(desc(sql`count(*)`))
+      .limit(8);
 
     // Top Actions
-    const actionCountsRes = queryAll<{ action: string; count: number }>(
-      db,
-      "SELECT action, COUNT(*) as count FROM system_logs GROUP BY action ORDER BY count DESC LIMIT 8"
-    );
+    const actionCountsRes = await db
+      .select({
+        action: schema.systemLogs.action,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schema.systemLogs)
+      .groupBy(schema.systemLogs.action)
+      .orderBy(desc(sql`count(*)`))
+      .limit(8);
 
     // Recent logs timeline
-    const recentLogs = queryAll<{ timestamp: string; level: string }>(
-      db,
-      "SELECT timestamp, level FROM system_logs ORDER BY timestamp DESC LIMIT 60"
-    );
+    const recentLogs = await db
+      .select({
+        timestamp: schema.systemLogs.timestamp,
+        level: schema.systemLogs.level,
+      })
+      .from(schema.systemLogs)
+      .orderBy(desc(schema.systemLogs.timestamp))
+      .limit(60);
 
     const successRate = total > 0 ? Math.round(((total - errorCount) / total) * 1000) / 10 : 100;
 
@@ -80,3 +97,4 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to compute log statistics" }, { status: 500 });
   }
 }
+

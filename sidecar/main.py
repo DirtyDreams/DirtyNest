@@ -18,6 +18,20 @@ from memory_service import memory_engine
 from cdp_service import cdp_engine
 from cron_service import cron_manager
 from docker_service import docker_engine
+from automations import (
+    EngagementManager,
+    TopicManager,
+    DeduplicationService,
+    VerificationService,
+    zbiornik_manager,
+    zbiornik_monitor,
+)
+
+engagement_mgr = EngagementManager()
+topic_mgr = TopicManager()
+dedup_service = DeduplicationService()
+verification_service = VerificationService()
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -537,9 +551,142 @@ async def websocket_unified_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
-        manager.disconnect(websocket)
+# -------------------------------------------------------------
+# AUTOMATIONS & SOCIAL ENGAGEMENT ROUTES
+# -------------------------------------------------------------
+class PostCommentRequest(BaseModel):
+    post_id: str
+    subreddit: str
+    text: str
+
+class ReplyNotificationRequest(BaseModel):
+    notification_id: str
+    text: str
+
+class BatchCleanupRequest(BaseModel):
+    comment_ids: List[str]
+    delay_seconds: Optional[float] = 12.0
+
+class CrosscheckCoverageRequest(BaseModel):
+    comments_list: List[Dict[str, Any]]
+    targets: Dict[str, str]
+
+@app.get("/api/automations/status")
+async def get_automations_status():
+    return {
+        "status": "ONLINE",
+        "modules": ["engagement", "topics", "deduplication", "verification", "zbiornik"],
+        "timestamp": time.time()
+    }
+
+@app.post("/api/automations/engagement/post")
+async def post_engagement_comment(req: PostCommentRequest):
+    ok, msg = engagement_mgr.post_comment(req.post_id, req.subreddit, req.text)
+    return {"success": ok, "post_id": req.post_id, "subreddit": req.subreddit, "message": msg}
+
+@app.post("/api/automations/engagement/reply")
+async def reply_engagement_notification(req: ReplyNotificationRequest):
+    ok, msg = engagement_mgr.reply_to_notification(req.notification_id, req.text)
+    return {"success": ok, "notification_id": req.notification_id, "message": msg}
+
+@app.post("/api/automations/dedup/clean")
+async def clean_duplicate_comments(req: BatchCleanupRequest):
+    result = dedup_service.batch_cleanup(req.comment_ids, delay_seconds=req.delay_seconds)
+    return result
+
+@app.get("/api/automations/topics/{subreddit}")
+async def pull_topics(subreddit: str, limit: int = 10):
+    posts = topic_mgr.pull_subreddit_posts(subreddit, limit=limit)
+    return {"subreddit": subreddit, "count": len(posts), "posts": posts}
+
+@app.post("/api/automations/verification/crosscheck")
+async def crosscheck_coverage(req: CrosscheckCoverageRequest):
+    report = verification_service.crosscheck_coverage(req.comments_list, req.targets)
+    return report
+
+
+# ---------------------------------------------------------------------------
+# Zbiornik Ops — CDP runner wrapper (docs/zbiornik-ops.md)
+# Reads: direct. Writes: REQUIRE confirm_run=True (HITL queue approved upstream
+# in the Next.js dashboard + guarded by zb_rules limits). Single account only.
+# ---------------------------------------------------------------------------
+
+class ZbiornikReadRequest(BaseModel):
+    op: str  # list-topics | topic | inbox | notif | me | status
+    args: List[str] = []
+
+class ZbiornikExecRequest(BaseModel):
+    op: str                                   # post-topic | comment | send-priv
+    args: List[str]
+    dry: bool = False
+    confirm_run: bool = False                 # HITL: publish path sets True after approval
+
+class ZbiornikPollRequest(BaseModel):
+    topic_limit: int = 30
+    inbox_limit: int = 20
+    notif_limit: int = 20
+
+@app.get("/api/automations/zbiornik/status")
+async def zbiornik_status():
+    session = zbiornik_manager.session_status()
+    runner_present = session.get("runner_present")
+    snapshot = zbiornik_monitor.public_snapshot() if zbiornik_monitor._last_poll else None
+    return {
+        "runner": {"present": runner_present, "cwd": zbiornik_manager.runner_cwd},
+        "session": session,
+        "lastPoll": snapshot,
+        "timestamp": time.time(),
+    }
+
+@app.post("/api/automations/zbiornik/read")
+async def zbiornik_read(req: ZbiornikReadRequest):
+    if req.op not in ("me", "status", "list-topics", "topic", "inbox", "notif", "top-list"):
+        raise HTTPException(status_code=400, detail=f"Read op not allowed: {req.op}")
+    ok, data = zbiornik_manager.run_op(req.op, req.args)
+    return {"ok": ok, "result": data}
+
+@app.post("/api/automations/zbiornik/exec")
+async def zbiornik_exec(req: ZbiornikExecRequest):
+    """Write-op executor. The HITL guard (queue status + tempo limits) lives in
+    Next.js; this endpoint still refuses unconfirmed runs (dry=True or
+    confirm_run=True required)."""
+    if req.op not in ("post-topic", "comment", "send-priv"):
+        raise HTTPException(status_code=400, detail=f"Write op not allowed: {req.op}")
+    ok, data = zbiornik_manager.publish(req.op, req.args, dry=req.dry, confirm_run=req.confirm_run)
+    logger.info("zbiornik_exec %s dry=%s confirm=%s -> ok=%s code=%s", req.op, req.dry, req.confirm_run, ok, data.get("code"))
+    return {"ok": ok, "result": data}
+
+@app.post("/api/automations/zbiornik/poll")
+async def zbiornik_poll(req: ZbiornikPollRequest):
+    result = await zbiornik_monitor.poll()
+    await manager.broadcast({"type": "ZBIORNIK_POLL_COMPLETED", "at": result.get("at"), "counts": result.get("counts"), "ok": result.get("ok")})
+    return result
+
+@app.get("/api/automations/zbiornik/poll-latest")
+async def zbiornik_poll_latest():
+    snap = zbiornik_monitor.public_snapshot()
+    if not snap.get("at"):
+        path = zbiornik_monitor.snapshot_path
+        if os.path.isfile(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    raw = json.load(f)
+                snap = zbiornik_monitor.public_snapshot() if not raw else {
+                    "at": raw.get("at"),
+                    "ok": raw.get("ok", False),
+                    "codes": raw.get("codes", {}),
+                    "counts": {"topics": len(raw.get("topics", [])), "inbox": len(raw.get("inbox", [])), "notif": len(raw.get("notif", []))},
+                    "session": (raw.get("session") or {}),
+                    "topics": raw.get("topics", []),
+                    "inbox": raw.get("inbox", []),
+                    "notif": raw.get("notif", []),
+                }
+            except Exception as e:  # noqa: BLE001
+                logger.error("zbiornik poll-latest read failed: %s", e)
+    return snap
 
 @app.websocket("/ws/terminal")
+
 async def websocket_terminal_endpoint(websocket: WebSocket):
     await websocket.accept()
     logger.info("Terminal client connected.")

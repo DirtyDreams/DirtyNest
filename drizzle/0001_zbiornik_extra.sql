@@ -1,0 +1,1 @@
+ALTER TABLE "zb_queue" ADD COLUMN "extra_json" text;

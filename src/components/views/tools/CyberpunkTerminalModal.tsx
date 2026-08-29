@@ -103,11 +103,12 @@ export default function CyberpunkTerminalModal({ isOpen, onClose }: Props) {
     };
 
     // Forward terminal input to WebSocket
-    term.onData((data) => {
+    term.onData((data: string) => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(data);
       }
     });
+
 
     const handleResize = () => {
       fitAddon.fit();

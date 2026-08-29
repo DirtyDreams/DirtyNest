@@ -1,92 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Database, Search, Pin, Trash2, Check, Clock, Brain, Tag, Sparkles } from "lucide-react";
+import { useHermesAcpStore } from "@/lib/hermes/hermesAcpStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 
-interface MemoryEntry {
-  id: string;
-  category: "Decisions" | "Preferences" | "Facts" | "Workflows";
-  title: string;
-  content: string;
-  timestamp: string;
-  recalls: number;
-  isPinned: boolean;
-}
-
-const INITIAL_MEMORIES: MemoryEntry[] = [
-  {
-    id: "mem-01",
-    category: "Preferences",
-    title: "Cyberpunk Terminal Aesthetic Preference",
-    content: "Operator prefers obsidian backgrounds (#07070B), luminous green accents (#00FF41), and CRT scanline styling.",
-    timestamp: "2026-08-20 18:22",
-    recalls: 48,
-    isPinned: true,
-  },
-  {
-    id: "mem-02",
-    category: "Decisions",
-    title: "Single Write-Mutex Persistence Architecture",
-    content: "All SQLite mutations must execute through @/db persistDb() mutex to prevent multi-process database locks.",
-    timestamp: "2026-08-22 14:05",
-    recalls: 32,
-    isPinned: true,
-  },
-  {
-    id: "mem-03",
-    category: "Facts",
-    title: "AirGap Isolation Boundary on Port 8080",
-    content: "Container dirtynest-auth-proxy enforces Ed25519 signatures and disallows unauthenticated ingress requests.",
-    timestamp: "2026-08-23 09:15",
-    recalls: 19,
-    isPinned: false,
-  },
-  {
-    id: "mem-04",
-    category: "Workflows",
-    title: "1-Click DORA Metric Audit Pipeline",
-    content: "Automated aggregation of lead time for changes, deployment frequency, MTTR, and change failure rate.",
-    timestamp: "2026-08-24 16:40",
-    recalls: 67,
-    isPinned: false,
-  },
-  {
-    id: "mem-05",
-    category: "Decisions",
-    title: "Bento Grid Dense Auto-Packing Rules",
-    content: "Dashboard layout uses [grid-auto-flow:dense] with 2-col full-width spans for wide tactical feeds (RSS, Calendar).",
-    timestamp: "2026-08-26 23:35",
-    recalls: 12,
-    isPinned: true,
-  },
-];
-
 export default function HermesMemoryInspector() {
-  const [memories, setMemories] = useState<MemoryEntry[]>(INITIAL_MEMORIES);
+  const { allMemories, fetchMemories, deleteMemory, isMemoryLoading } = useHermesAcpStore();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
 
-  const categories = ["ALL", "Decisions", "Preferences", "Facts", "Workflows"];
+  useEffect(() => {
+    fetchMemories();
+  }, []);
 
-  const filteredMemories = memories.filter((m) => {
-    const matchesCat = activeCategory === "ALL" || m.category === activeCategory;
+  const categories = ["ALL", "Fact", "Decision", "Preference", "Workflow"];
+
+  const filteredMemories = allMemories.filter((m) => {
+    const matchesCat = activeCategory === "ALL" || m.category?.toLowerCase() === activeCategory.toLowerCase();
     const matchesSearch =
       m.title.toLowerCase().includes(search.toLowerCase()) ||
       m.content.toLowerCase().includes(search.toLowerCase());
     return matchesCat && matchesSearch;
   });
 
-  const togglePin = (id: string) => {
-    cyberAudio.play("click");
-    setMemories((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, isPinned: !m.isPinned } : m))
-    );
-  };
-
-  const deleteMemory = (id: string) => {
+  const handleDelete = async (id: string) => {
     cyberAudio.play("error");
-    setMemories((prev) => prev.filter((m) => m.id !== id));
+    await deleteMemory(id);
   };
 
   return (
@@ -99,7 +39,7 @@ export default function HermesMemoryInspector() {
           </div>
           <div>
             <h3 className="text-xs font-black text-[#F1F3F9] tracking-wider uppercase">
-              HERMES PERSISTENT MEMORY // <span className="text-[#00F0FF]">FTS5 RECALL VAULT</span>
+              HERMES PERSISTENT MEMORY // <span className="text-[#00F0FF]">POSTGRESQL RECALL VAULT</span>
             </h3>
             <p className="text-[10px] text-[#4F536E]">
               Cross-session recall: user preferences, architectural decisions & learned knowledge
@@ -112,9 +52,12 @@ export default function HermesMemoryInspector() {
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4F536E]" />
           <input
             type="text"
-            placeholder="Search memory graph..."
+            placeholder="Search memory..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              fetchMemories(e.target.value);
+            }}
             className="pl-8 pr-3 py-1.5 bg-black/60 border border-white/10 focus:border-[#00F0FF] rounded-xl text-xs text-[#F1F3F9] outline-none"
           />
         </div>
@@ -143,7 +86,11 @@ export default function HermesMemoryInspector() {
 
       {/* Memory Cards Stream */}
       <div className="space-y-3 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
-        {filteredMemories.length === 0 ? (
+        {isMemoryLoading ? (
+          <div className="py-12 text-center text-xs text-[#00F0FF] animate-pulse">
+            Accessing database core...
+          </div>
+        ) : filteredMemories.length === 0 ? (
           <div className="p-8 text-center text-xs text-[#4F536E]">
             No persistent memories match your query.
           </div>
@@ -151,11 +98,7 @@ export default function HermesMemoryInspector() {
           filteredMemories.map((mem) => (
             <div
               key={mem.id}
-              className={`p-4 rounded-xl border transition-all flex flex-col gap-2 ${
-                mem.isPinned
-                  ? "bg-[#00F0FF]/5 border-[#00F0FF]/30"
-                  : "bg-black/40 border-white/5 hover:border-white/15"
-              }`}
+              className="p-4 rounded-xl border border-white/5 bg-black/40 hover:border-white/15 transition-all flex flex-col gap-2"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
@@ -168,22 +111,14 @@ export default function HermesMemoryInspector() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[9px] text-[#4F536E]">
-                    Recalled {mem.recalls}x
-                  </span>
+                  {mem.recall_count !== undefined && (
+                    <span className="text-[9px] text-[#4F536E]">
+                      Recalls: {mem.recall_count}
+                    </span>
+                  )}
                   <button
                     type="button"
-                    onClick={() => togglePin(mem.id)}
-                    className={`p-1 rounded cursor-pointer ${
-                      mem.isPinned ? "text-[#00F0FF]" : "text-[#4F536E] hover:text-white"
-                    }`}
-                    title={mem.isPinned ? "Unpin Memory" : "Pin Memory"}
-                  >
-                    <Pin size={13} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => deleteMemory(mem.id)}
+                    onClick={() => handleDelete(mem.id)}
                     className="p-1 rounded text-[#4F536E] hover:text-[#FF2A6D] cursor-pointer"
                     title="Prune Memory"
                   >
@@ -196,9 +131,19 @@ export default function HermesMemoryInspector() {
                 {mem.content}
               </p>
 
+              {mem.tags && mem.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {mem.tags.map((t) => (
+                    <span key={t} className="text-[9px] text-[#00FF41] bg-[#00FF41]/10 px-1.5 py-0.2 rounded border border-[#00FF41]/20">
+                      #{t}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="flex items-center justify-between text-[9px] text-[#4F536E] pt-2 border-t border-white/5">
-                <span>Timestamp: {mem.timestamp}</span>
-                <span className="text-[#00FF41]">STORED IN SQLITE_FTS5</span>
+                <span>Timestamp: {mem.created_at ? new Date(mem.created_at).toLocaleString() : "just now"}</span>
+                <span className="text-[#00FF41]">STORED IN POSTGRESQL</span>
               </div>
             </div>
           ))

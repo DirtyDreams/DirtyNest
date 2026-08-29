@@ -45,43 +45,50 @@ export default function DockerLogsStreamModal({
   // Generate initial logs
   useEffect(() => {
     if (!isOpen) return;
-
     const initial: LogLine[] = [
-      { id: "1", timestamp: "08:50:01", level: "INFO", message: `[${containerName}] Container daemon initialized. Attached to bridge dirtynest_mesh.` },
-      { id: "2", timestamp: "08:50:03", level: "INFO", message: `[${containerName}] Listening on 0.0.0.0:3000 (tcp). Health probes active.` },
-      { id: "3", timestamp: "08:50:05", level: "DEBUG", message: `[${containerName}] WAL checkpoint executed. PRAGMA synchronous=NORMAL.` },
-      { id: "4", timestamp: "08:50:12", level: "INFO", message: `[${containerName}] Ingested 14 telemetry events from /api/logs stream.` },
-      { id: "5", timestamp: "08:50:18", level: "WARN", message: `[${containerName}] Client request latency spike: 142ms on /api/stats (p99).` },
+      { id: "1", timestamp: "08:50:01", level: "INFO", message: `[${containerName}] Container logs pipeline initializing...` },
     ];
     setLogs(initial);
   }, [isOpen, containerName]);
 
-  // Live streaming simulator
+  // Live logs fetching from Sidecar API
   useEffect(() => {
     if (!isOpen || !isStreaming) return;
 
-    const interval = setInterval(() => {
-      const now = new Date().toLocaleTimeString("en-US", { hour12: false });
-      const samples = [
-        { level: "INFO" as const, text: `HTTP GET /api/health HTTP/1.1 200 OK (1.2ms)` },
-        { level: "DEBUG" as const, text: `Garbage collector freed 14.8MB heap memory` },
-        { level: "INFO" as const, text: `Dispatched RPC payload to local agent daemon socket` },
-        { level: "WARN" as const, text: `High query volume detected on vec_knowledge index` },
-        { level: "INFO" as const, text: `Heartbeat ping ACK from upstream mesh proxy` },
-      ];
-      const randomSample = samples[Math.floor(Math.random() * samples.length)];
+    const fetchLogs = async () => {
+      try {
+        const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
+        const res = await fetch(`${sidecarUrl}/api/docker/containers/${containerName}/logs?tail=150`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.logs && data.logs.trim()) {
+            const rawLines = data.logs.split("\n");
+            const parsedLines: LogLine[] = rawLines.map((line: string, index: number) => {
+              let level: "INFO" | "WARN" | "ERROR" | "DEBUG" = "INFO";
+              if (line.toLowerCase().includes("warn")) level = "WARN";
+              else if (line.toLowerCase().includes("err")) level = "ERROR";
+              else if (line.toLowerCase().includes("debug")) level = "DEBUG";
 
-      setLogs((prev) => [
-        ...prev.slice(-100),
-        {
-          id: `log-${Date.now()}-${Math.random()}`,
-          timestamp: now,
-          level: randomSample.level,
-          message: `[${containerName}] ${randomSample.text}`,
-        },
-      ]);
-    }, 2000);
+              const timeMatch = line.match(/\d{2}:\d{2}:\d{2}/) || line.match(/\d{4}-\d{2}-\d{2}/);
+              const timestamp = timeMatch ? timeMatch[0] : new Date().toLocaleTimeString("en-US", { hour12: false });
 
+              return {
+                id: `line-${index}-${Date.now()}`,
+                timestamp,
+                level,
+                message: line,
+              };
+            });
+            setLogs(parsedLines);
+          }
+        }
+      } catch (err) {
+        // Fallback or ignore
+      }
+    };
+
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 2000);
     return () => clearInterval(interval);
   }, [isOpen, isStreaming, containerName]);
 

@@ -172,6 +172,9 @@ interface HermesState {
   isAcpConnected: boolean;
   totalTokensProcessed: number;
   activeReasoningStep: number;
+  servicesStatus: Record<string, any> | null;
+  minionsList: any[];
+  hostTelemetry: any | null;
   
   // Actions
   updateConfig: <K extends keyof HermesFullConfig>(section: K, values: Partial<HermesFullConfig[K]>) => void;
@@ -210,6 +213,9 @@ export const useHermesStore = create<HermesState>((set, get) => {
     isAcpConnected: true,
     totalTokensProcessed: 142850,
     activeReasoningStep: 3,
+    servicesStatus: null,
+    minionsList: [],
+    hostTelemetry: null,
 
     updateConfig: (section, values) => {
       set((state) => {
@@ -287,14 +293,14 @@ export const useHermesStore = create<HermesState>((set, get) => {
     },
 
     // Socket telemetry handlers (data from hermesSocket.ts)
-    updateServicesStatus: (_services) => {
-      // Reserved for future real-time services status binding
+    updateServicesStatus: (servicesStatus) => {
+      set({ servicesStatus });
     },
-    updateMinionsList: (_minions) => {
-      // Reserved for future real-time minions list binding
+    updateMinionsList: (minionsList) => {
+      set({ minionsList });
     },
-    updateHostTelemetry: (_host) => {
-      // Reserved for future real-time host telemetry binding
+    updateHostTelemetry: (hostTelemetry) => {
+      set({ hostTelemetry });
     },
   };
 });

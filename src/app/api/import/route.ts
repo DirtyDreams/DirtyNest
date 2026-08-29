@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, persistDb } from "@/db";
+import { db, initDb } from "@/db";
+import * as schema from "@/lib/schema";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,63 +12,69 @@ export async function POST(req: NextRequest) {
 
     const { todos, notes, links, events } = data.data;
 
-    const db = await getDb();
+    await initDb();
 
-    // Begin a transaction of sorts
-    db.exec("BEGIN TRANSACTION;");
-
-    // 1. Restore Todos
-    if (Array.isArray(todos)) {
-      db.exec("DELETE FROM todos;");
-      for (const todo of todos) {
-        db.run("INSERT INTO todos (id, text, completed, sort_order, priority, due_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)", [
-          todo.id,
-          todo.text,
-          todo.completed,
-          todo.sort_order,
-          todo.priority || "normal",
-          todo.due_date || null,
-          todo.created_at || new Date().toISOString()
-        ]);
+    await db.transaction(async (tx) => {
+      // 1. Restore Todos
+      if (Array.isArray(todos)) {
+        await tx.delete(schema.todos);
+        for (const todo of todos) {
+          await tx.insert(schema.todos).values({
+            text: todo.text,
+            completed: todo.completed ? 1 : 0,
+            sort_order: todo.sort_order || 0,
+            priority: todo.priority || "normal",
+            due_date: todo.due_date || null,
+            created_at: todo.created_at || new Date().toISOString(),
+          });
+        }
       }
-    }
 
-    // 2. Restore Notes
-    if (Array.isArray(notes)) {
-      db.exec("DELETE FROM notes;");
-      for (const note of notes) {
-        db.run("INSERT INTO notes (id, content, updated_at) VALUES (?, ?, ?)", [note.id, note.content, note.updated_at || new Date().toISOString()]);
+      // 2. Restore Notes
+      if (Array.isArray(notes)) {
+        await tx.delete(schema.notes);
+        for (const note of notes) {
+          await tx.insert(schema.notes).values({
+            content: note.content || "",
+            updated_at: note.updated_at || new Date().toISOString(),
+          });
+        }
       }
-    }
 
-    // 3. Restore Links
-    if (Array.isArray(links)) {
-      db.exec("DELETE FROM quick_links;");
-      for (const link of links) {
-        db.run("INSERT INTO quick_links (id, label, url, icon, category, sort_order) VALUES (?, ?, ?, ?, ?, ?)", [link.id, link.label, link.url, link.icon, link.category, link.sort_order]);
+      // 3. Restore Links
+      if (Array.isArray(links)) {
+        await tx.delete(schema.quickLinks);
+        for (const link of links) {
+          await tx.insert(schema.quickLinks).values({
+            name: link.name || link.label || "Link",
+            url: link.url,
+            icon: link.icon || null,
+            sort_order: link.sort_order || 0,
+            created_at: new Date().toISOString(),
+          });
+        }
       }
-    }
 
-    // 4. Restore Events
-    if (Array.isArray(events)) {
-      db.exec("DELETE FROM events;");
-      for (const event of events) {
-        db.run("INSERT INTO events (id, title, date, time, type) VALUES (?, ?, ?, ?, ?)", [event.id, event.title, event.date, event.time, event.type]);
+      // 4. Restore Events
+      if (Array.isArray(events)) {
+        await tx.delete(schema.calendarEvents);
+        for (const event of events) {
+          await tx.insert(schema.calendarEvents).values({
+            title: event.title,
+            description: event.description || null,
+            date: event.date,
+            time: event.time || null,
+            color: event.color || "#00FF41",
+            created_at: new Date().toISOString(),
+          });
+        }
       }
-    }
-
-    db.exec("COMMIT;");
-    persistDb();
+    });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Import failed:", error);
-    try {
-      const db = await getDb();
-      db.exec("ROLLBACK;");
-    } catch (_e) {
-      // ignore
-    }
     return NextResponse.json({ error: "Import failed" }, { status: 500 });
   }
 }
+

@@ -1,5 +1,7 @@
 # DirtyNest Command Center // System Documentation & Architecture Guide
 
+> ⚠️ **Dokument legacy (frontend guide, EN).** Opisuje warstwę frontendową w wersji 0.02 i częściowo wyprzedza stan backendu. Aktualne źródło prawdy: **[docs/](./docs/)** — zacznij od [docs/current-state.md](./docs/current-state.md) i [docs/overview.md](./docs/overview.md); plan rozwoju: [docs/implementation-plan.md](./docs/implementation-plan.md).
+
 **Version**: 0.02  
 **Stack**: Next.js 16 (App Router + Turbopack), React 19, TypeScript, Tailwind CSS v4, SQLite (`sql.js`), Web Audio API, Web Speech API  
 **Design System**: Cyberpunk HUD // Matrix Green (`#00FF41`), Cyber Purple (`#BF40FF`), Neon Cyan (`#00F0FF`), Deep Abyss (`#07070B`), Amber Alert (`#FFB000`)
