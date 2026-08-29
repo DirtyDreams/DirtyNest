@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 import time
 from typing import Dict, List, Optional, Any, Callable
 import httpx
@@ -9,8 +10,8 @@ import redis
 logger = logging.getLogger("dirtynest-cron-hub")
 
 class RedisCronManager:
-    def __init__(self, redis_url: str = "redis://localhost:6379/0"):
-        self.redis_url = redis_url
+    def __init__(self, redis_url: Optional[str] = None):
+        self.redis_url = redis_url or os.environ.get("REDIS_URL", "redis://localhost:6379/0")
         self.r: Optional[redis.Redis] = None
         self._init_redis()
         
@@ -67,6 +68,19 @@ class RedisCronManager:
                 "runs_count": 0,
                 "last_duration_ms": 0,
                 "last_result": "Pending initial execution cycle."
+            },
+            "zbiornik_poll": {
+                "id": "zbiornik_poll",
+                "name": "Zbiornik Ops — read-only poll (topics, inbox, notif)",
+                "schedule": "Every 30 min",
+                "interval_seconds": 1800,
+                "category": "automation",
+                "last_run": None,
+                "next_run": time.time() + 120,
+                "status": "SCHEDULED",
+                "runs_count": 0,
+                "last_duration_ms": 0,
+                "last_result": "Pending initial execution cycle. Read-only: items land in the HITL queue, never published."
             }
         }
         self.broadcast_callback: Optional[Callable[[Dict[str, Any]], Any]] = None
@@ -104,6 +118,8 @@ class RedisCronManager:
                 result_str = await self._exec_qdrant_optimizer()
             elif job_id == "swarm_mesh_heartbeat":
                 result_str = await self._exec_mesh_heartbeat()
+            elif job_id == "zbiornik_poll":
+                result_str = await self._exec_zbiornik_poll()
             else:
                 result_str = f"Executed generic job {job_id}."
 
@@ -192,6 +208,21 @@ class RedisCronManager:
                 return f"SkillClaw (:30000) response: {latency}ms. Swarm routing healthy."
         except Exception:
             return "SkillClaw (:30000) standby. Mesh pulse logged."
+
+    async def _exec_zbiornik_poll(self) -> str:
+        # Read-only zbiornik poll: topics + inbox + notif -> snapshot + HITL queue ingest.
+        # NEVER publishes; publishing requires operator approval in the dashboard.
+        try:
+            from automations.zbiornik import zbiornik_monitor  # lazy import (no cycle)
+
+            snap = await zbiornik_monitor.poll()
+            counts = snap.get("counts", {})
+            session_code = (snap.get("session") or {}).get("loginCode")
+            if snap.get("ok"):
+                return f"Zbiornik poll OK: topics={counts.get('topics', 0)}, inbox={counts.get('inbox', 0)}, notif={counts.get('notif', 0)} (ingest pushed/snapshot written)."
+            return f"Zbiornik poll incomplete: session={session_code}, codes={snap.get('codes', {})}."
+        except Exception as e:  # noqa: BLE001
+            return f"Zbiornik poll failed: {str(e)}"
 
     async def scheduler_loop(self):
         """Infinite loop checking scheduled cron jobs every 5 seconds."""
