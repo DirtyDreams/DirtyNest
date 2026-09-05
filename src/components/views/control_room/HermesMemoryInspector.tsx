@@ -11,13 +11,8 @@ export default function HermesMemoryInspector() {
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
 
   useEffect(() => {
-<<<<<<< HEAD
     void fetchMemories();
   }, [fetchMemories]);
-=======
-    fetchMemories();
-  }, []);
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
   const categories = ["ALL", "Fact", "Decision", "Preference", "Workflow"];
 

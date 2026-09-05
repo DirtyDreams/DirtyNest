@@ -53,19 +53,5 @@ __pycache__/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-<<<<<<< HEAD
 test-results/
 playwright-report/
-=======
-
-# python
-__pycache__/
-*.pyc
-.venv/
-.pytest_cache/
-pytest-cache-files-*/
-
-# transient / runtime artifacts
-.tmp-*.ps1
-sidecar/data/
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24

@@ -1,6 +1,5 @@
 "use client";
 
-<<<<<<< HEAD
 import {
   X,
   GitBranch,
@@ -9,10 +8,6 @@ import {
   Download,
   MessageSquare,
 } from "lucide-react";
-=======
-import {  } from "react";
-import { X, GitBranch, Plus, Trash2, Download, MessageSquare } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface ChatSession {

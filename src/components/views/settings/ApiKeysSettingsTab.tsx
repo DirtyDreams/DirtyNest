@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-<<<<<<< HEAD
 import {
   Key,
   Eye,
@@ -9,9 +8,6 @@ import {
   Sparkles,
   ExternalLink,
 } from "lucide-react";
-=======
-import { Key, Eye, EyeOff, Sparkles, ExternalLink } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 import { fetchApiKeys, saveApiKeys } from "@/lib/auth/apiKeys";

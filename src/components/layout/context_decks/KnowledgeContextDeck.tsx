@@ -1,15 +1,11 @@
 "use client";
 
-<<<<<<< HEAD
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Database,
   Check,
+  TriangleAlert,
 } from "lucide-react";
-=======
-import { useCallback, useEffect, useState } from "react";
-import { Database, Check, TriangleAlert } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 const SIDECAR_URL = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";

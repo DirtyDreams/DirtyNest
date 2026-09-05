@@ -1,16 +1,12 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-<<<<<<< HEAD
 import {
   Puzzle,
   Search,
   Plus,
   Code,
 } from "lucide-react";
-=======
-import { Puzzle, Search, Plus, Code } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-<<<<<<< HEAD
 import {
   Shield,
   Fingerprint,
@@ -13,9 +12,6 @@ import {
   AlertTriangle,
   ArrowRight,
 } from "lucide-react";
-=======
-import { Shield, Fingerprint, Key, Users, Lock, Radio, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { AUTH_PERSONAS, type AuthPresetPersona } from "@/types/auth";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { cyberAudio } from "@/lib/cyberAudio";

@@ -1,6 +1,5 @@
 "use client";
 
-<<<<<<< HEAD
 import { useState, useEffect, useRef, useCallback} from "react";
 import {
   Sparkles,
@@ -13,10 +12,6 @@ import {
   Play,
   Pause,
 } from "lucide-react";
-=======
-import { useState, useEffect, useRef } from "react";
-import { Sparkles, Tv, Image as ImageIcon, Copy, Check, RotateCcw, X, Play, Pause } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface ShaderPreset {

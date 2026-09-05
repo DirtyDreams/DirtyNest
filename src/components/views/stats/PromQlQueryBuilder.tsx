@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-<<<<<<< HEAD
 import {
   Search,
   Play,
@@ -9,9 +8,6 @@ import {
   Check,
   Activity,
 } from "lucide-react";
-=======
-import { Search, Play, Copy, Check, Activity } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface MetricSample {

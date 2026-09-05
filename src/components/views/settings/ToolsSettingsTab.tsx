@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-<<<<<<< HEAD
 import {
   Wrench,
   Sparkles,
@@ -9,9 +8,6 @@ import {
   FileCode,
   Star,
 } from "lucide-react";
-=======
-import { Wrench, Sparkles, Code, FileCode, Star } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

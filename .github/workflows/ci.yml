@@ -1,5 +1,4 @@
 name: CI
-<<<<<<< HEAD
 
 on:
   push:
@@ -32,33 +31,3 @@ jobs:
 
       - name: Build
         run: npm run build
-=======
-on: [push, pull_request]
-
-jobs:
-  web:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-
-  sidecar:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: sidecar
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-      - run: pip install -r requirements-dev.txt
-      - run: pytest tests/ -q
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24

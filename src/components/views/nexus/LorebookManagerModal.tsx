@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-<<<<<<< HEAD
 import {
   X,
   BookOpen,
@@ -13,9 +12,6 @@ import {
   Download,
   Key,
 } from "lucide-react";
-=======
-import { X, BookOpen, Plus, Trash2, Edit2, Check, Upload, Download, Key } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface LorebookEntry {

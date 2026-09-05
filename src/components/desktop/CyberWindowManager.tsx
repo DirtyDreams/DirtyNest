@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-<<<<<<< HEAD
 import {
   Minus,
   X,
@@ -10,9 +9,6 @@ import {
   Minimize2,
   Plus,
 } from "lucide-react";
-=======
-import { Minus, X, Activity, Maximize2, Minimize2, Plus } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

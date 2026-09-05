@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, memo } from "react";
-<<<<<<< HEAD
 import {
   Users,
   Zap,
@@ -31,12 +30,6 @@ import type {
   PipelineStage,
   ControlPlaneSubTab,
 } from "@/types/paperclip";
-=======
-import { Users, Zap, DollarSign, Play, Pause, CheckCircle2, AlertTriangle, Activity, Sparkles, ShieldAlert, Sliders, Download, Upload, FileCode, Target, AlertCircle, Radio } from "lucide-react";
-import { cyberAudio } from "@/lib/cyberAudio";
-import { cyberSpeech } from "@/lib/cyberSpeech";
-import type { AgentRuntimeAdapter, AgentTeam, GoalNode, PaperclipIssue, PipelineStage, ControlPlaneSubTab } from "@/types/paperclip";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
 const INITIAL_TEAMS: AgentTeam[] = [
   {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-<<<<<<< HEAD
 import {
   Search,
   ArrowRight,
@@ -31,9 +30,6 @@ import {
   Music,
   Waves,
 } from "lucide-react";
-=======
-import { Search, ArrowRight, Command, Terminal, Activity, Calendar, Sparkles, Layers, Wrench, Bot, Cpu, Database, ScrollText, FileText, Wifi, Rss, Users, Image as ImageIcon, Mic, Share2, Radio, ShieldAlert, Server, Network, Keyboard, Music, Waves } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";

@@ -1,6 +1,5 @@
 ﻿"use client";
 
-<<<<<<< HEAD
 import { useState, useEffect, useCallback} from "react";
 import {
   Cpu,
@@ -15,10 +14,6 @@ import {
   ShieldCheck,
   Send,
 } from "lucide-react";
-=======
-import { useState, useEffect } from "react";
-import { Cpu, Trash2, Search, CheckCircle2, AlertTriangle, RefreshCw, Zap, Radio, FileCheck, ShieldCheck, Send } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface AutomationStatus {
@@ -120,7 +115,6 @@ export default function AutomationsMatrix() {
   const [isCheckingCoverage, setIsCheckingCoverage] = useState(false);
   const [coverageReport, setCoverageReport] = useState<CoverageReport | null>(null);
 
-<<<<<<< HEAD
 
 
   const checkSidecarStatus = useCallback(async () => {
@@ -138,28 +132,6 @@ export default function AutomationsMatrix() {
   useEffect(() => {
     void checkSidecarStatus();
   }, [checkSidecarStatus]);
-=======
-  // Poll status on mount
-  useEffect(() => {
-    checkSidecarStatus();
-  }, []);
-
-  const checkSidecarStatus = async () => {
-    setIsCheckingStatus(true);
-    setStatusError(null);
-    try {
-      const res = await fetch(`${sidecarUrl}/api/automations/status`, { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setSidecarStatus(data);
-    } catch (err: any) {
-      setSidecarStatus(null);
-      setStatusError(err.message || "Sidecar unavailable");
-    } finally {
-      setIsCheckingStatus(false);
-    }
-  };
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
   const handlePostComment = async () => {
     if (!targetPostId.trim() || !commentText.trim()) return;
@@ -168,7 +140,6 @@ export default function AutomationsMatrix() {
     cyberAudio.play("click");
 
     try {
-<<<<<<< HEAD
       await new Promise((resolve) => setTimeout(resolve, 350));
       const data = {
         success: true,
@@ -179,22 +150,6 @@ export default function AutomationsMatrix() {
       cyberAudio.play("chime");
     } catch (err: unknown) {
       setPostResponse({ success: false, message: err instanceof Error ? err.message : "Local simulation failed" });
-=======
-      const res = await fetch(`${sidecarUrl}/api/automations/engagement/post`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          post_id: targetPostId.trim(),
-          subreddit: targetSubreddit.trim(),
-          text: commentText.trim(),
-        }),
-      });
-      const data = await res.json();
-      setPostResponse(data);
-      cyberAudio.play(data.success ? "chime" : "alarm");
-    } catch (err: any) {
-      setPostResponse({ success: false, message: err.message });
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
       cyberAudio.play("alarm");
     } finally {
       setIsPosting(false);
@@ -205,7 +160,6 @@ export default function AutomationsMatrix() {
     setIsFetchingTopics(true);
     cyberAudio.play("click");
     try {
-<<<<<<< HEAD
       await new Promise((resolve) => setTimeout(resolve, 350));
       setFetchedPosts(
         Array.from({ length: exploreLimit }, (_, index) => ({
@@ -218,16 +172,6 @@ export default function AutomationsMatrix() {
       );
     } catch (err: unknown) {
       console.error("Error generating local topics:", err);
-=======
-      const res = await fetch(
-        `${sidecarUrl}/api/automations/topics/${exploreSubreddit}?limit=${exploreLimit}`,
-        { cache: "no-store" }
-      );
-      const data = await res.json();
-      setFetchedPosts(Array.isArray(data.posts) ? data.posts : []);
-    } catch (err: any) {
-      console.error("Error fetching topics:", err);
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
       setFetchedPosts([]);
     } finally {
       setIsFetchingTopics(false);
@@ -246,24 +190,11 @@ export default function AutomationsMatrix() {
     cyberAudio.play("click");
 
     try {
-<<<<<<< HEAD
       await new Promise((resolve) => setTimeout(resolve, 350));
       setCleanupResult({ total: ids.length, deleted: ids.length, failed: 0, simulated: true });
       cyberAudio.play("chime");
     } catch (err: unknown) {
       setCleanupResult({ total: ids.length, deleted: 0, failed: ids.length, error: err instanceof Error ? err.message : "Local simulation failed" });
-=======
-      const res = await fetch(`${sidecarUrl}/api/automations/dedup/clean`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comment_ids: ids, delay_seconds: 12.0 }),
-      });
-      const data = await res.json();
-      setCleanupResult(data);
-      cyberAudio.play("chime");
-    } catch (err: any) {
-      setCleanupResult({ total: ids.length, deleted: 0, failed: ids.length, error: err.message });
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
       cyberAudio.play("alarm");
     } finally {
       setIsDeleting(false);
@@ -279,7 +210,6 @@ export default function AutomationsMatrix() {
         link: `t3_${pid}`,
       }));
 
-<<<<<<< HEAD
       await new Promise((resolve) => setTimeout(resolve, 350));
       setCoverageReport({
         total_comments_in_listing: mockComments.length,
@@ -289,18 +219,6 @@ export default function AutomationsMatrix() {
         missing_targets: [],
         is_complete: true,
       });
-=======
-      const res = await fetch(`${sidecarUrl}/api/automations/verification/crosscheck`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          comments_list: mockComments,
-          targets: TARGET_POSTS_SAMPLE,
-        }),
-      });
-      const data = await res.json();
-      setCoverageReport(data);
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
       cyberAudio.play("chime");
     } catch (err: any) {
       console.error("Coverage audit error:", err);

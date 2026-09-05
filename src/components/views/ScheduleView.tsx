@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-<<<<<<< HEAD
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -10,22 +9,12 @@ import {
   Timer,
   Trash2,
 } from "lucide-react";
-=======
-import { Calendar as CalendarIcon, Clock, Plus, CheckCircle2, Timer, Trash2 } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { EventCalendar, CalendarItem } from "@/components/ui/calendar/EventCalendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-<<<<<<< HEAD
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-=======
-import {  } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {  } from "@/lib/utils";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
 interface ScheduleEvent {
   id: string;

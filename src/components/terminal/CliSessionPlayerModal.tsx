@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-<<<<<<< HEAD
 import {
   Play,
   Pause,
@@ -10,9 +9,6 @@ import {
   X,
   Terminal,
 } from "lucide-react";
-=======
-import { Play, Pause, RotateCcw, Download, X, Terminal } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 // Asciinema v2 Frame: [timeOffsetInSeconds, "o", "text\n"]

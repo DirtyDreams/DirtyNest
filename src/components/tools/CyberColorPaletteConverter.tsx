@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-<<<<<<< HEAD
 import {
   Sparkles,
   Copy,
@@ -10,9 +9,6 @@ import {
   AlertTriangle,
   Download,
 } from "lucide-react";
-=======
-import { Sparkles, Copy, Check, CheckCircle2, AlertTriangle, Download } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface CyberColor {

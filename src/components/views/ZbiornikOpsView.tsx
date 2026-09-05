@@ -15,7 +15,6 @@ import TopProfiles from "./zbiornik_ops/TopProfiles";
 import ActivityLog from "./zbiornik_ops/ActivityLog";
 import { apiJson, formatQuietHours, type ZbStatus } from "./zbiornik_ops/types";
 
-<<<<<<< HEAD
 const DEFAULT_STATUS: ZbStatus = {
   session: {
     connected: true,
@@ -33,10 +32,6 @@ const DEFAULT_STATUS: ZbStatus = {
 
 export default function ZbiornikOpsView() {
   const [status, setStatus] = useState<ZbStatus | null>(DEFAULT_STATUS);
-=======
-export default function ZbiornikOpsView() {
-  const [status, setStatus] = useState<ZbStatus | null>(null);
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
   const [refreshKey, setRefreshKey] = useState(0);
 
   const loadStatus = useCallback(async () => {
@@ -44,12 +39,8 @@ export default function ZbiornikOpsView() {
       const data = await apiJson<ZbStatus>("/api/zbiornik/status");
       setStatus(data ?? null);
     } catch {
-<<<<<<< HEAD
       // frontend-only mode: keep the local fallback status in place
       setStatus((current) => current ?? DEFAULT_STATUS);
-=======
-      // brak kontaktu z backendem → fail-closed: akcje wyjściowe zostają zablokowane
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
     }
   }, []);
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-<<<<<<< HEAD
 import {
   X,
   Terminal,
@@ -13,9 +12,6 @@ import {
   Play,
   ArrowDown,
 } from "lucide-react";
-=======
-import { X, Terminal, Search, Download, Copy, Check, Pause, Play, ArrowDown } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface DockerLogsStreamModalProps {

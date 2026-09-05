@@ -1,16 +1,12 @@
 "use client";
 
 import { create } from "zustand";
-<<<<<<< HEAD
 import {
   HermesFullConfig,
   HermesMemoryItem,
   HermesSkillDefinition,
   HermesAcpEvent,
 } from "./types";
-=======
-import { HermesFullConfig, HermesMemoryItem, HermesSkillDefinition, HermesAcpEvent } from "./types";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
 const DEFAULT_HERMES_CONFIG: HermesFullConfig = {
   model: {

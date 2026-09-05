@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-<<<<<<< HEAD
 import {
   Bot,
   Sparkles,
@@ -13,9 +12,6 @@ import {
   Volume2,
   LayoutTemplate,
 } from "lucide-react";
-=======
-import { Bot, Sparkles, Cpu, RotateCcw, Check, BrainCircuit, FileCode, Volume2, LayoutTemplate } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { AI_MODELS_REGISTRY } from "@/lib/aiModels";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";

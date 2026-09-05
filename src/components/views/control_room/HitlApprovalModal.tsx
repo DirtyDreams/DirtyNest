@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-<<<<<<< HEAD
 import {
   X,
   ShieldAlert,
@@ -10,9 +9,6 @@ import {
   Code2,
   RotateCcw,
 } from "lucide-react";
-=======
-import { X, ShieldAlert, Check, Edit3, Code2, RotateCcw } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface PendingApproval {

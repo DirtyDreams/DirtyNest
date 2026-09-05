@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-<<<<<<< HEAD
 import {
   Wrench,
   Copy,
@@ -13,9 +12,6 @@ import {
   Code2,
   Key,
 } from "lucide-react";
-=======
-import { Wrench, Copy, Check, RefreshCw, Hash, Binary, Clock, Code2, Key } from "lucide-react";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
