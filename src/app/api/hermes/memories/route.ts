@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
+import { db } from "@/lib/db";
 import { hermesMemories } from "@/lib/schema";
 import { desc, like, or } from "drizzle-orm";
 

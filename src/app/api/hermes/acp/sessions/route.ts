@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { db } from "@/lib/db";
 import { hermesSessions, hermesMessages } from "@/lib/schema";
 import { desc, eq } from "drizzle-orm";
 
