@@ -27,21 +27,22 @@ export default function StorageSettingsTab() {
   const exportData = async () => {
     cyberAudio.play("chime");
     try {
-      const [todosRes, notesRes, linksRes, calRes] = await Promise.all([
-        fetch("/api/todos").then((r) => r.json()).catch(() => []),
-        fetch("/api/notes").then((r) => r.json()).catch(() => []),
-        fetch("/api/quick-links").then((r) => r.json()).catch(() => []),
-        fetch("/api/calendar").then((r) => r.json()).catch(() => []),
-      ]);
-
+      const readLocal = (key: string, fallback: unknown) => {
+        try {
+          const value = localStorage.getItem(key);
+          return value ? JSON.parse(value) : fallback;
+        } catch {
+          return fallback;
+        }
+      };
       const payload = {
         exportedAt: new Date().toISOString(),
         version: "2.4.0",
         data: {
-          todos: todosRes,
-          notes: notesRes,
-          quickLinks: linksRes,
-          calendar: calRes,
+          todos: readLocal("dirtynest_todos", []),
+          notes: readLocal("dirtynest_notes", { content: "" }),
+          quickLinks: readLocal("dirtynest_quick_links", []),
+          calendar: readLocal("dirtynest_calendar_events", []),
         },
       };
 
@@ -52,9 +53,9 @@ export default function StorageSettingsTab() {
       a.download = `dirtynest_backup_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("Snapshot Exported", "Complete JSON snapshot saved to disk.");
+      toast.success("Snapshot Exported", "Complete local snapshot saved to disk.");
     } catch {
-      toast.error("Export Failed", "Could not fetch database records.");
+      toast.error("Export Failed", "Could not create the local snapshot.");
     }
   };
 
@@ -63,18 +64,19 @@ export default function StorageSettingsTab() {
     if (!file) return;
     try {
       const text = await file.text();
-      const parsed = JSON.parse(text);
-      const res = await fetch("/api/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed),
+      const parsed = JSON.parse(text) as { data?: Record<string, unknown> };
+      const data = parsed.data ?? {};
+      const keyMap: Record<string, string> = {
+        todos: "dirtynest_todos",
+        notes: "dirtynest_notes",
+        quickLinks: "dirtynest_quick_links",
+        calendar: "dirtynest_calendar_events",
+      };
+      Object.entries(keyMap).forEach(([field, key]) => {
+        if (field in data) localStorage.setItem(key, JSON.stringify(data[field]));
       });
-      if (res.ok) {
-        cyberAudio.play("chime");
-        toast.success("Snapshot Restored", "Database records successfully updated.");
-      } else {
-        toast.error("Import Failed", "Server returned invalid payload status.");
-      }
+      cyberAudio.play("chime");
+      toast.success("Snapshot Restored", "Local browser data successfully updated.");
     } catch {
       toast.error("Invalid JSON", "Selected file is corrupted.");
     }

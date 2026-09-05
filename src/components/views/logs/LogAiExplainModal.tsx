@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Sparkles, X, Check, Copy, CheckCircle2, Wrench } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
-import { SystemLog } from "@/db";
+import type { SystemLog } from "@/types/logs";
 
 interface Props {
   log: SystemLog;

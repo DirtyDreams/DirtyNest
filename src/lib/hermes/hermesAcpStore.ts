@@ -1,7 +1,6 @@
 "use client";
 
 import { create } from "zustand";
-import { hermesSocket } from "./hermesSocket";
 
 export interface AcpSessionItem {
   id: string;
@@ -67,6 +66,7 @@ interface HermesAcpStoreState {
   activeSessionId: string | null;
   sessions: AcpSessionItem[];
   messages: AcpMessageItem[];
+  messagesBySession: Record<string, AcpMessageItem[]>;
   currentReasoningTrace: string;
   activeToolExecutions: AcpToolExecutionItem[];
   pendingGate: AcpGateItem | null;
@@ -77,7 +77,6 @@ interface HermesAcpStoreState {
   isLoading: boolean;
   isMemoryLoading: boolean;
 
-  // Actions
   fetchSessions: () => Promise<void>;
   createSession: (name?: string, profile?: string, model?: string) => Promise<AcpSessionItem | null>;
   selectSession: (sessionId: string) => Promise<void>;
@@ -87,35 +86,136 @@ interface HermesAcpStoreState {
   cancelSession: (sessionId: string) => Promise<void>;
   handleIncomingAcpEvent: (event: Record<string, unknown>) => void;
   clearReasoningTrace: () => void;
-
-  // Memory Actions
   fetchMemories: (searchQuery?: string) => Promise<void>;
   createMemory: (title: string, content: string, category?: string, tags?: string[]) => Promise<boolean>;
   deleteMemory: (id: string) => Promise<boolean>;
-
-  // CDP Browser Actions
   fetchBrowserStatus: () => Promise<void>;
   navigateBrowser: (url: string) => Promise<void>;
   captureBrowserScreenshot: () => Promise<void>;
   extractBrowserDom: (selector?: string) => Promise<string>;
 }
 
+const nowIso = () => new Date().toISOString();
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const DEFAULT_MEMORIES: AcpMemoryItem[] = [
+  {
+    id: "mem-frontend-1",
+    title: "Frontend-only mode",
+    content: "DirtyNest is running without Next API routes or the Python sidecar. Interactive panels use local in-memory state and built-in demo data.",
+    category: "decision",
+    tags: ["frontend", "local", "demo"],
+    recall_count: 12,
+    score: 0.98,
+    created_at: "2026-09-05T10:00:00.000Z",
+  },
+  {
+    id: "mem-frontend-2",
+    title: "Operator theme preference",
+    content: "Primary palette prefers obsidian backgrounds with neon green, cyan, and violet accents.",
+    category: "preference",
+    tags: ["theme", "ui"],
+    recall_count: 8,
+    score: 0.91,
+    created_at: "2026-09-05T10:05:00.000Z",
+  },
+  {
+    id: "mem-frontend-3",
+    title: "Knowledge deck fallback",
+    content: "Knowledge, social, intel, and Docker decks ship with local mock datasets so the shell remains usable offline.",
+    category: "fact",
+    tags: ["knowledge", "social", "docker"],
+    recall_count: 5,
+    score: 0.87,
+    created_at: "2026-09-05T10:10:00.000Z",
+  },
+];
+
+const INITIAL_SESSION: AcpSessionItem = {
+  id: "acp-local-1",
+  name: "Frontend Sandbox Session",
+  profile: "frontend-only",
+  model: "DirtyNest Local Mock",
+  cwd: "/ui-only",
+  status: "IDLE",
+  created_at: "2026-09-05T10:00:00.000Z",
+  updated_at: "2026-09-05T10:00:00.000Z",
+};
+
+const INITIAL_MESSAGES: Record<string, AcpMessageItem[]> = {
+  [INITIAL_SESSION.id]: [
+    {
+      id: "msg-local-system-1",
+      session_id: INITIAL_SESSION.id,
+      role: "system",
+      content: "Frontend-only mode active. Hermes ACP is simulated locally for UI exploration.",
+      created_at: "2026-09-05T10:00:00.000Z",
+    },
+    {
+      id: "msg-local-agent-1",
+      session_id: INITIAL_SESSION.id,
+      role: "agent",
+      content: "Ready. I can simulate local sessions, tool calls, memories, and HITL approvals without any backend services.",
+      reasoning_trace: "Bootstrapped local ACP state.",
+      created_at: "2026-09-05T10:00:10.000Z",
+    },
+  ],
+};
+
+function appendMessage(state: HermesAcpStoreState, sessionId: string, message: AcpMessageItem) {
+  const current = state.messagesBySession[sessionId] ?? [];
+  const nextBySession = {
+    ...state.messagesBySession,
+    [sessionId]: [...current, message],
+  };
+  return {
+    messagesBySession: nextBySession,
+    messages: state.activeSessionId === sessionId ? nextBySession[sessionId] : state.messages,
+  };
+}
+
+function buildAgentReply(prompt: string): { reasoning: string; reply: string; gateTool?: string } {
+  const normalized = prompt.trim();
+  const lower = normalized.toLowerCase();
+
+  if (lower.includes("deploy") || lower.includes("publish") || lower.includes("delete") || lower.includes("docker")) {
+    return {
+      reasoning: "Detected an operator command that would normally require confirmation. Preparing a local HITL gate preview.",
+      reply: "This frontend-only workspace simulated a guarded action. Approve the local HITL request to continue the mock execution.",
+      gateTool: lower.includes("publish") ? "social_publish" : lower.includes("docker") ? "docker_action" : "filesystem_write",
+    };
+  }
+
+  if (lower.includes("memory") || lower.includes("knowledge") || lower.includes("vault")) {
+    return {
+      reasoning: "Matched a memory-oriented request. Returning a local summary from the in-memory demo vault.",
+      reply: "Local memory mode is active. The Knowledge and Control Room decks are using bundled sample data and in-browser state instead of server persistence.",
+    };
+  }
+
+  return {
+    reasoning: "Handled prompt in frontend-only simulation mode. No remote tools were contacted.",
+    reply: `Local agent response: ${normalized || "No prompt provided."}`,
+  };
+}
+
 export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
-  activeSessionId: null,
-  sessions: [],
-  messages: [],
+  activeSessionId: INITIAL_SESSION.id,
+  sessions: [INITIAL_SESSION],
+  messages: INITIAL_MESSAGES[INITIAL_SESSION.id],
+  messagesBySession: INITIAL_MESSAGES,
   currentReasoningTrace: "",
   activeToolExecutions: [],
   pendingGate: null,
   recalledMemories: [],
-  allMemories: [],
+  allMemories: DEFAULT_MEMORIES,
   browserState: {
-    isConnected: false,
-    port: 9333,
-    url: "about:blank",
-    title: "No Active Tab",
+    isConnected: true,
+    port: 0,
+    url: "https://dirtynest.local/frontend-only",
+    title: "DirtyNest Frontend Sandbox",
     screenshotB64: null,
-    extractedText: "",
+    extractedText: "Frontend-only browser sandbox active.",
     isLoading: false,
   },
   isStreaming: false,
@@ -123,383 +223,334 @@ export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
   isMemoryLoading: false,
 
   fetchSessions: async () => {
-    try {
-      set({ isLoading: true });
-      const res = await fetch("/api/hermes/acp/sessions");
-      if (res.ok) {
-        const data = await res.json();
-        const sessions: AcpSessionItem[] = data.sessions || [];
-        set({ sessions, isLoading: false });
-        if (!get().activeSessionId && sessions.length > 0) {
-          get().selectSession(sessions[0].id);
-        }
-      } else {
-        set({ isLoading: false });
-      }
-    } catch {
-      set({ isLoading: false });
-    }
+    set((state) => {
+      const sessions = state.sessions.length ? state.sessions : [INITIAL_SESSION];
+      const activeSessionId = state.activeSessionId ?? sessions[0]?.id ?? INITIAL_SESSION.id;
+      return {
+        sessions,
+        activeSessionId,
+        messages: state.messagesBySession[activeSessionId] ?? [],
+        isLoading: false,
+      };
+    });
   },
 
-  createSession: async (name, profile = "dirtydaily", model = "Nous-Hermes-3-Llama-3.1-8B") => {
-    try {
-      const res = await fetch("/api/hermes/acp/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, profile, model }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const newSession: AcpSessionItem = data.session;
-        set((state) => ({
-          sessions: [newSession, ...state.sessions],
-          activeSessionId: newSession.id,
-          messages: [],
-          currentReasoningTrace: "",
-          activeToolExecutions: [],
-          pendingGate: null,
-          recalledMemories: [],
-        }));
-        return newSession;
-      }
-    } catch (err) {
-      console.error("Failed to create ACP session:", err);
-    }
-    return null;
+  createSession: async (name, profile = "frontend-only", model = "DirtyNest Local Mock") => {
+    const session: AcpSessionItem = {
+      id: `acp-local-${Date.now()}`,
+      name: (name || "Local Sandbox Session").trim(),
+      profile,
+      model,
+      cwd: "/ui-only",
+      status: "IDLE",
+      created_at: nowIso(),
+      updated_at: nowIso(),
+    };
+
+    const initialMessages: AcpMessageItem[] = [
+      {
+        id: `msg-local-system-${Date.now()}`,
+        session_id: session.id,
+        role: "system",
+        content: `Session ${session.name} initialized in frontend-only mode.`,
+        created_at: nowIso(),
+      },
+    ];
+
+    set((state) => ({
+      sessions: [session, ...state.sessions],
+      activeSessionId: session.id,
+      messages: initialMessages,
+      messagesBySession: {
+        ...state.messagesBySession,
+        [session.id]: initialMessages,
+      },
+      currentReasoningTrace: "",
+      pendingGate: null,
+      activeToolExecutions: [],
+    }));
+
+    return session;
   },
 
   selectSession: async (sessionId: string) => {
-    try {
-      set({ activeSessionId: sessionId, isLoading: true, currentReasoningTrace: "", pendingGate: null, recalledMemories: [] });
-      const res = await fetch(`/api/hermes/acp/sessions/${sessionId}`);
-      if (res.ok) {
-        const data = await res.json();
-        set({
-          messages: data.messages || [],
-          isLoading: false,
-        });
-      } else {
-        set({ isLoading: false });
-      }
-    } catch {
-      set({ isLoading: false });
-    }
+    set((state) => ({
+      activeSessionId: sessionId,
+      messages: state.messagesBySession[sessionId] ?? [],
+      isLoading: false,
+      currentReasoningTrace: "",
+      pendingGate: null,
+      recalledMemories: [],
+    }));
   },
 
   deleteSession: async (sessionId: string) => {
-    try {
-      await fetch(`/api/hermes/acp/sessions/${sessionId}`, { method: "DELETE" });
-      set((state) => {
-        const remaining = state.sessions.filter((s) => s.id !== sessionId);
-        const nextActive = state.activeSessionId === sessionId ? (remaining[0]?.id || null) : state.activeSessionId;
-        return {
-          sessions: remaining,
-          activeSessionId: nextActive,
-        };
-      });
-      if (get().activeSessionId) {
-        get().selectSession(get().activeSessionId!);
+    set((state) => {
+      const sessions = state.sessions.filter((s) => s.id !== sessionId);
+      const nextSessions = sessions.length ? sessions : [INITIAL_SESSION];
+      const nextActive = state.activeSessionId === sessionId ? nextSessions[0].id : state.activeSessionId ?? nextSessions[0].id;
+      const nextMessagesBySession = { ...state.messagesBySession };
+      delete nextMessagesBySession[sessionId];
+      if (!nextMessagesBySession[nextSessions[0].id]) {
+        nextMessagesBySession[nextSessions[0].id] = INITIAL_MESSAGES[nextSessions[0].id] ?? [];
       }
-    } catch (err) {
-      console.error("Failed to delete ACP session:", err);
-    }
+      return {
+        sessions: nextSessions,
+        activeSessionId: nextActive,
+        messagesBySession: nextMessagesBySession,
+        messages: nextMessagesBySession[nextActive] ?? [],
+        currentReasoningTrace: "",
+        pendingGate: null,
+      };
+    });
   },
 
   sendPromptDirective: async (promptText: string) => {
-    const { activeSessionId } = get();
-    let sesId = activeSessionId;
+    if (!promptText.trim()) return;
 
-    if (!sesId) {
-      const newSes = await get().createSession();
-      if (newSes) sesId = newSes.id;
+    let sessionId = get().activeSessionId;
+    if (!sessionId) {
+      const created = await get().createSession();
+      sessionId = created?.id ?? null;
     }
-    if (!sesId || !promptText.trim()) return;
+    if (!sessionId) return;
 
     const userMsg: AcpMessageItem = {
-      id: `msg-usr-${Date.now()}`,
-      session_id: sesId,
+      id: `msg-user-${Date.now()}`,
+      session_id: sessionId,
       role: "user",
       content: promptText.trim(),
-      created_at: new Date().toISOString(),
+      created_at: nowIso(),
     };
 
-    set((state) => ({
-      messages: [...state.messages, userMsg],
-      isStreaming: true,
-      currentReasoningTrace: `[ACP ENGINE INITIALIZING // SESSION ${sesId}]`,
-    }));
-
-    // Send command via WebSocket
-    const sentViaWs = hermesSocket.send("ACP_PROMPT", {
-      session_id: sesId,
-      prompt: promptText.trim(),
+    set((state) => {
+      const appended = appendMessage(state, sessionId!, userMsg);
+      return {
+        ...appended,
+        isStreaming: true,
+        currentReasoningTrace: "Analyzing local prompt...",
+        sessions: state.sessions.map((s) =>
+          s.id === sessionId ? { ...s, status: "RUNNING", updated_at: nowIso() } : s
+        ),
+      };
     });
 
-    if (!sentViaWs) {
-      // Fallback via Sidecar REST
-      try {
-        const sidecarUrl = hermesSocket.getSidecarBaseUrl();
-        await fetch(`${sidecarUrl}/api/hermes/acp/prompt`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            session_id: sesId,
-            prompt: promptText.trim(),
-          }),
-        });
-      } catch (err) {
-        console.error("Failed to post prompt to Sidecar REST:", err);
-      }
-    }
-  },
+    const response = buildAgentReply(promptText);
+    await sleep(350);
 
-  resolveGateClearance: async (requestId: string, decision: "ALLOW_ONCE" | "ALLOW_SESSION" | "DENY") => {
-    // Send via socket first
-    hermesSocket.send("RESOLVE_GATE", {
-      request_id: requestId,
-      decision,
+    if (response.gateTool) {
+      const gate: AcpGateItem = {
+        request_id: `gate-${Date.now()}`,
+        session_id: sessionId,
+        tool_name: response.gateTool,
+        parameters: { prompt: promptText.trim(), mode: "frontend-only" },
+        risk_level: "critical",
+        created_at: Date.now(),
+      };
+
+      set((state) => ({
+        currentReasoningTrace: response.reasoning,
+        pendingGate: gate,
+        isStreaming: false,
+        sessions: state.sessions.map((s) =>
+          s.id === sessionId ? { ...s, status: "WAITING_CLEARANCE", updated_at: nowIso() } : s
+        ),
+      }));
+      return;
+    }
+
+    const toolExecution: AcpToolExecutionItem = {
+      id: `exec-${Date.now()}`,
+      session_id: sessionId,
+      tool_name: "local_simulation",
+      status: "success",
+      result: "Rendered simulated frontend-only result.",
+      timestamp: Date.now(),
+    };
+
+    const agentMsg: AcpMessageItem = {
+      id: `msg-agent-${Date.now()}`,
+      session_id: sessionId,
+      role: "agent",
+      content: response.reply,
+      reasoning_trace: response.reasoning,
+      created_at: nowIso(),
+    };
+
+    set((state) => {
+      const appended = appendMessage(state, sessionId!, agentMsg);
+      return {
+        ...appended,
+        isStreaming: false,
+        currentReasoningTrace: response.reasoning,
+        activeToolExecutions: [toolExecution, ...state.activeToolExecutions.slice(0, 15)],
+        recalledMemories: state.allMemories.slice(0, 2),
+        sessions: state.sessions.map((s) =>
+          s.id === sessionId ? { ...s, status: "COMPLETED", updated_at: nowIso() } : s
+        ),
+      };
     });
+  },
 
-    // Also call the auth-gated Next.js route, which proxies to the sidecar.
-    try {
-      await fetch("/api/hermes/acp/gate/resolve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ request_id: requestId, decision }),
-      });
-    } catch {
-      // socket handled
+  resolveGateClearance: async (requestId, decision) => {
+    const gate = get().pendingGate;
+    if (!gate || gate.request_id !== requestId) {
+      set({ pendingGate: null });
+      return;
     }
 
-    set({ pendingGate: null });
+    const allowed = decision !== "DENY";
+    const message: AcpMessageItem = {
+      id: `msg-gate-${Date.now()}`,
+      session_id: gate.session_id,
+      role: "agent",
+      content: allowed
+        ? `Local HITL approved for ${gate.tool_name}. Mock execution completed successfully.`
+        : `Local HITL denied for ${gate.tool_name}. Mock execution stopped by the operator.`,
+      reasoning_trace: allowed
+        ? "Operator granted local clearance in frontend-only mode."
+        : "Operator denied local clearance in frontend-only mode.",
+      created_at: nowIso(),
+    };
+
+    const exec: AcpToolExecutionItem = {
+      id: `exec-gate-${Date.now()}`,
+      session_id: gate.session_id,
+      tool_name: gate.tool_name,
+      status: allowed ? "success" : "error",
+      result: allowed ? "Mock action approved." : "Mock action denied.",
+      timestamp: Date.now(),
+    };
+
+    set((state) => {
+      const appended = appendMessage(state, gate.session_id, message);
+      return {
+        ...appended,
+        pendingGate: null,
+        isStreaming: false,
+        currentReasoningTrace: message.reasoning_trace ?? "",
+        activeToolExecutions: [exec, ...state.activeToolExecutions.slice(0, 15)],
+        sessions: state.sessions.map((s) =>
+          s.id === gate.session_id ? { ...s, status: allowed ? "COMPLETED" : "ERROR", updated_at: nowIso() } : s
+        ),
+      };
+    });
   },
+
   cancelSession: async (sessionId: string) => {
-    // Best-effort: cancel via the auth-gated Next.js route (proxies to sidecar).
-    try {
-      await fetch("/api/hermes/acp/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId }),
-      });
-    } catch {
-      // ignore — the sidecar will time out on its own
-    }
-    set({ isStreaming: false, pendingGate: null });
+    const message: AcpMessageItem = {
+      id: `msg-cancel-${Date.now()}`,
+      session_id: sessionId,
+      role: "system",
+      content: "Local execution cancelled.",
+      created_at: nowIso(),
+    };
+
+    set((state) => {
+      const appended = appendMessage(state, sessionId, message);
+      return {
+        ...appended,
+        isStreaming: false,
+        pendingGate: null,
+        sessions: state.sessions.map((s) =>
+          s.id === sessionId ? { ...s, status: "ERROR", updated_at: nowIso() } : s
+        ),
+      };
+    });
   },
 
   fetchMemories: async (searchQuery?: string) => {
-    try {
-      set({ isMemoryLoading: true });
-      const endpoint = searchQuery
-        ? `/api/hermes/memories?q=${encodeURIComponent(searchQuery)}`
-        : "/api/hermes/memories";
-      const res = await fetch(endpoint);
-      if (res.ok) {
-        const data = await res.json();
-        set({ allMemories: data.memories || [], isMemoryLoading: false });
-      } else {
-        set({ isMemoryLoading: false });
-      }
-    } catch {
-      set({ isMemoryLoading: false });
-    }
+    set({ isMemoryLoading: true });
+    const query = searchQuery?.trim().toLowerCase();
+    const filtered = query
+      ? get().allMemories.filter(
+          (memory) =>
+            memory.title.toLowerCase().includes(query) ||
+            memory.content.toLowerCase().includes(query) ||
+            (memory.tags ?? []).some((tag) => tag.toLowerCase().includes(query))
+        )
+      : get().allMemories;
+    set({ allMemories: filtered, isMemoryLoading: false });
   },
 
   createMemory: async (title, content, category = "fact", tags = []) => {
-    try {
-      const res = await fetch("/api/hermes/memories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, category, tags }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.memory) {
-          set((state) => ({
-            allMemories: [data.memory, ...state.allMemories],
-          }));
-          return true;
-        }
-      }
-    } catch (err) {
-      console.error("Failed to create memory:", err);
-    }
-    return false;
+    const memory: AcpMemoryItem = {
+      id: `mem-${Date.now()}`,
+      title: title.trim(),
+      content: content.trim(),
+      category,
+      tags,
+      recall_count: 0,
+      score: 1,
+      created_at: nowIso(),
+    };
+    set((state) => ({
+      allMemories: [memory, ...state.allMemories],
+      recalledMemories: [memory, ...state.recalledMemories.slice(0, 4)],
+    }));
+    return true;
   },
 
-  deleteMemory: async (id: string) => {
-    try {
-      const res = await fetch(`/api/hermes/memories/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        set((state) => ({
-          allMemories: state.allMemories.filter((m) => m.id !== id),
-          recalledMemories: state.recalledMemories.filter((m) => m.id !== id),
-        }));
-        return true;
-      }
-    } catch (err) {
-      console.error("Failed to delete memory:", err);
-    }
-    return false;
+  deleteMemory: async (id) => {
+    set((state) => ({
+      allMemories: state.allMemories.filter((m) => m.id !== id),
+      recalledMemories: state.recalledMemories.filter((m) => m.id !== id),
+    }));
+    return true;
   },
 
   fetchBrowserStatus: async () => {
-    try {
-      set((state) => ({ browserState: { ...state.browserState, isLoading: true } }));
-      const sidecarUrl = hermesSocket.getSidecarBaseUrl();
-      const res = await fetch(`${sidecarUrl}/api/hermes/cdp/status`);
-      if (res.ok) {
-        const data = await res.json();
-        const cdp = data.cdp || {};
-        set((state) => ({
-          browserState: {
-            ...state.browserState,
-            isConnected: !!cdp.is_connected,
-            port: cdp.port || 9333,
-            url: cdp.current_url || "about:blank",
-            title: cdp.current_title || "No Active Tab",
-            isLoading: false,
-          },
-        }));
-      } else {
-        set((state) => ({ browserState: { ...state.browserState, isLoading: false } }));
-      }
-    } catch {
-      set((state) => ({ browserState: { ...state.browserState, isLoading: false } }));
-    }
+    set((state) => ({
+      browserState: {
+        ...state.browserState,
+        isConnected: true,
+        isLoading: false,
+        title: "DirtyNest Frontend Sandbox",
+      },
+    }));
   },
 
   navigateBrowser: async (url: string) => {
-    try {
-      set((state) => ({ browserState: { ...state.browserState, isLoading: true } }));
-      const sidecarUrl = hermesSocket.getSidecarBaseUrl();
-      await fetch(`${sidecarUrl}/api/hermes/cdp/navigate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      await get().captureBrowserScreenshot();
-    } catch {
-      set((state) => ({ browserState: { ...state.browserState, isLoading: false } }));
-    }
+    set((state) => ({
+      browserState: {
+        ...state.browserState,
+        isConnected: true,
+        isLoading: false,
+        url,
+        title: "Mock Browser Navigation",
+      },
+    }));
   },
 
   captureBrowserScreenshot: async () => {
-    try {
-      const sidecarUrl = hermesSocket.getSidecarBaseUrl();
-      const res = await fetch(`${sidecarUrl}/api/hermes/cdp/screenshot`, { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        const shot = data.screenshot || {};
-        set((state) => ({
-          browserState: {
-            ...state.browserState,
-            screenshotB64: shot.data || state.browserState.screenshotB64,
-            url: shot.url || state.browserState.url,
-            isLoading: false,
-          },
-        }));
-      }
-    } catch {
-      set((state) => ({ browserState: { ...state.browserState, isLoading: false } }));
-    }
+    set((state) => ({
+      browserState: {
+        ...state.browserState,
+        isConnected: true,
+        isLoading: false,
+        screenshotB64: null,
+      },
+    }));
   },
 
   extractBrowserDom: async (selector?: string) => {
-    try {
-      const sidecarUrl = hermesSocket.getSidecarBaseUrl();
-      const endpoint = selector
-        ? `${sidecarUrl}/api/hermes/cdp/extract?selector=${encodeURIComponent(selector)}`
-        : `${sidecarUrl}/api/hermes/cdp/extract`;
-      const res = await fetch(endpoint, { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.dom?.text || "";
-        set((state) => ({
-          browserState: { ...state.browserState, extractedText: text },
-        }));
-        return text;
-      }
-    } catch {
-      // ignore
-    }
-    return "";
+    const text = selector
+      ? `Mock DOM extract for selector: ${selector}`
+      : "Mock DOM extract for the current frontend-only browser sandbox.";
+    set((state) => ({
+      browserState: {
+        ...state.browserState,
+        extractedText: text,
+      },
+    }));
+    return text;
   },
 
-  handleIncomingAcpEvent: (event: Record<string, unknown>) => {
-    const type = event.type as string;
-
-    if (type === "ACP_BROWSER_UPDATED") {
-      set((state) => ({
-        browserState: {
-          ...state.browserState,
-          url: (event.url as string) || state.browserState.url,
-          title: (event.title as string) || state.browserState.title,
-          screenshotB64: (event.screenshot_b64 as string) || state.browserState.screenshotB64,
-          extractedText: (event.extracted_text as string) || state.browserState.extractedText,
-          port: (event.port as number) || state.browserState.port,
-          isConnected: true,
-        },
-      }));
-    } else if (type === "ACP_MEMORY_RECALLED") {
-      const memories = (event.recalled_memories as AcpMemoryItem[]) || [];
-      set({ recalledMemories: memories });
-    } else if (type === "ACP_REASONING_DELTA") {
-      const delta = (event.delta as string) || "";
-      set((state) => ({
-        currentReasoningTrace: state.currentReasoningTrace + delta,
-      }));
-    } else if (type === "ACP_GATE_REQUESTED") {
-      const gate = event.gate as AcpGateItem;
-      if (gate) {
-        set({ pendingGate: gate });
-      }
-    } else if (type === "ACP_GATE_RESOLVED") {
-      set({ pendingGate: null });
-    } else if (type === "ACP_TOOL_EXECUTED") {
-      const toolName = (event.tool_name as string) || "unknown_tool";
-      const result = (event.result as string) || "Executed";
-      const executionItem: AcpToolExecutionItem = {
-        id: `exec-${Date.now()}`,
-        session_id: (event.session_id as string) || "",
-        tool_name: toolName,
-        status: "success",
-        result,
-        timestamp: Date.now(),
-      };
-      set((state) => ({
-        activeToolExecutions: [executionItem, ...state.activeToolExecutions.slice(0, 15)],
-      }));
-    } else if (type === "ACP_EXECUTION_FINISHED") {
-      const finalMsg = (event.final_message as string) || (event.result as string) || "Completed.";
-      const { activeSessionId } = get();
-      if (activeSessionId) {
-        const agentMsg: AcpMessageItem = {
-          id: `msg-agy-${Date.now()}`,
-          session_id: activeSessionId,
-          role: "agent",
-          content: finalMsg,
-          reasoning_trace: get().currentReasoningTrace,
-          created_at: new Date().toISOString(),
-        };
-        set((state) => ({
-          messages: [...state.messages, agentMsg],
-          isStreaming: false,
-        }));
-      } else {
-        set({ isStreaming: false });
-      }
-    }
+  handleIncomingAcpEvent: () => {
+    // No-op in frontend-only mode.
   },
 
   clearReasoningTrace: () => {
     set({ currentReasoningTrace: "" });
   },
 }));
-
-if (typeof window !== "undefined") {
-  hermesSocket.onAcpEvent((event) => {
-    useHermesAcpStore.getState().handleIncomingAcpEvent(event);
-  });
-}
-

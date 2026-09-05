@@ -25,7 +25,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
-import { SystemLog, LogLevel, LogCategory } from "@/db";
+import type { SystemLog, LogLevel, LogCategory } from "@/types/logs";
 import LogAiExplainModal from "./logs/LogAiExplainModal";
 import LogHistogramBarChart from "./logs/LogHistogramBarChart";
 import { DataTable, ColumnDef } from "@/components/ui/data-table/DataTable";
@@ -35,6 +35,68 @@ import { cn } from "@/lib/utils";
 
 type SubTab = "stream" | "analytics" | "traces" | "security" | "audit";
 type ViewMode = "table" | "raw";
+
+const LOCAL_LOGS_KEY = "dirtynest_local_logs";
+
+const DEFAULT_LOGS: SystemLog[] = [
+  {
+    id: 1,
+    timestamp: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
+    level: "INFO",
+    category: "SYSTEM",
+    action: "FRONTEND_ONLY_MODE_ENABLED",
+    actor: "DirtyNest",
+    details: "Server routes and sidecar removed; UI is running from local state.",
+    latency_ms: 4,
+    status_code: "200",
+  },
+  {
+    id: 2,
+    timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+    level: "SUCCESS",
+    category: "UI",
+    action: "LOCAL_STATE_BOOTSTRAPPED",
+    actor: "DirtyNest",
+    details: "Deck defaults loaded from bundled frontend fixtures.",
+    latency_ms: 6,
+    status_code: "200",
+  },
+  {
+    id: 3,
+    timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
+    level: "AUDIT",
+    category: "AUTH",
+    action: "PERSONA_SESSION_ACTIVE",
+    actor: "CIPHER_ZERO",
+    details: "Frontend persona gate is active without server auth.",
+    latency_ms: 2,
+    status_code: "200",
+  },
+];
+
+function loadLocalLogs(): SystemLog[] {
+  if (typeof window === "undefined") return DEFAULT_LOGS;
+  try {
+    const raw = localStorage.getItem(LOCAL_LOGS_KEY);
+    if (!raw) {
+      localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(DEFAULT_LOGS));
+      return DEFAULT_LOGS;
+    }
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) && parsed.length > 0 ? (parsed as SystemLog[]) : DEFAULT_LOGS;
+  } catch {
+    return DEFAULT_LOGS;
+  }
+}
+
+function saveLocalLogs(logs: SystemLog[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(logs));
+  } catch {
+    // ignore
+  }
+}
 
 export default function LogsView() {
   const [subTab, setSubTab] = useState<SubTab>("stream");
@@ -69,27 +131,36 @@ export default function LogsView() {
   const fetchLogs = useCallback(async (showLoadingSpinner = false) => {
     if (showLoadingSpinner) setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (searchQuery) params.set("search", searchQuery);
-      if (selectedLevel !== "ALL") params.set("level", selectedLevel);
-      if (selectedCategory !== "ALL") params.set("category", selectedCategory);
-      if (timeRange !== "all") params.set("timeRange", timeRange);
-      params.set("limit", "150");
+      const localLogs = loadLocalLogs();
+      const filtered = localLogs.filter((log) => {
+        const matchesSearch = !searchQuery || JSON.stringify(log).toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesLevel = selectedLevel === "ALL" || log.level === selectedLevel;
+        const matchesCategory = selectedCategory === "ALL" || log.category === selectedCategory;
+        return matchesSearch && matchesLevel && matchesCategory;
+      }).slice(0, 150);
 
-      const res = await fetch(`/api/logs?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setLogs(data.logs || []);
-        if (data.stats) {
-          setStats(data.stats);
-        }
-      }
+      const levelCounts = localLogs.reduce<Record<string, number>>((acc, log) => {
+        acc[log.level] = (acc[log.level] || 0) + 1;
+        return acc;
+      }, { INFO: 0, SUCCESS: 0, WARN: 0, ERROR: 0, AUDIT: 0, DEBUG: 0 });
+
+      const categoryMap = localLogs.reduce<Record<string, number>>((acc, log) => {
+        acc[log.category] = (acc[log.category] || 0) + 1;
+        return acc;
+      }, {});
+
+      setLogs(filtered);
+      setStats({
+        totalLogs: localLogs.length,
+        levelCounts,
+        categoryCounts: Object.entries(categoryMap).map(([category, count]) => ({ category, count })),
+      });
     } catch (err) {
       console.error("Failed to fetch logs:", err);
     } finally {
       if (showLoadingSpinner) setLoading(false);
     }
-  }, [searchQuery, selectedLevel, selectedCategory, timeRange]);
+  }, [searchQuery, selectedLevel, selectedCategory]);
 
   // Initial load
   useEffect(() => {
@@ -100,11 +171,8 @@ export default function LogsView() {
   const fetchAuditLogs = useCallback(async () => {
     setAuditLoading(true);
     try {
-      const res = await fetch("/api/audit/logs?limit=200");
-      if (res.ok) {
-        const data = (await res.json()) as { logs?: Array<Record<string, unknown>> };
-        setAuditLogs(data.logs ?? []);
-      }
+      const localLogs = loadLocalLogs();
+      setAuditLogs(localLogs.filter((log) => log.level === "AUDIT" || log.category === "AUTH") as unknown as Array<Record<string, unknown>>);
     } catch {
       // ignore
     } finally {
@@ -208,11 +276,18 @@ export default function LogsView() {
 
     const randomEvent = simulatedEvents[Math.floor(Math.random() * simulatedEvents.length)];
     try {
-      await fetch("/api/logs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(randomEvent),
-      });
+      const nextLog: SystemLog = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        level: randomEvent.level,
+        category: randomEvent.category,
+        action: randomEvent.action,
+        actor: randomEvent.actor,
+        details: JSON.stringify(randomEvent.details),
+        latency_ms: randomEvent.latency_ms,
+        status_code: "200",
+      };
+      saveLocalLogs([nextLog, ...loadLocalLogs()].slice(0, 300));
       fetchLogs(false);
     } catch {
       // ignore
@@ -224,7 +299,13 @@ export default function LogsView() {
     if (!confirm("Are you sure you want to purge all system logs? This action is irreversible.")) return;
     cyberAudio.play("click");
     try {
-      await fetch("/api/logs?all=true", { method: "DELETE" });
+      saveLocalLogs([]);
+      setLogs([]);
+      setStats({
+        totalLogs: 0,
+        levelCounts: { INFO: 0, SUCCESS: 0, WARN: 0, ERROR: 0, AUDIT: 0, DEBUG: 0 },
+        categoryCounts: [],
+      });
       fetchLogs(true);
     } catch {
       // ignore

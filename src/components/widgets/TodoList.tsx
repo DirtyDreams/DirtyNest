@@ -24,12 +24,12 @@ export default function TodoList() {
   const [newDueDate, setNewDueDate] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "done">("all");
 
-  const fetchTodos = useCallback(async () => {
+  const fetchTodos = useCallback(() => {
     try {
-      const res = await fetch("/api/todos");
-      if (res.ok) setTodos(await res.json());
+      const saved = localStorage.getItem("dirtynest_todos");
+      setTodos(saved ? JSON.parse(saved) : []);
     } catch {
-      /* ignore */
+      setTodos([]);
     }
   }, []);
 
@@ -39,35 +39,36 @@ export default function TodoList() {
 
   const addTodo = async () => {
     if (!newTodo.trim()) return;
-    const res = await fetch("/api/todos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
+    const nextTodos = [
+      ...todos,
+      {
+        id: Date.now(),
         text: newTodo.trim(),
+        completed: 0,
+        sort_order: todos.length,
         priority: newPriority,
         due_date: newDueDate || null,
-      }),
-    });
-    if (res.ok) {
-      setTodos(await res.json());
+      },
+    ];
+    setTodos(nextTodos);
+    localStorage.setItem("dirtynest_todos", JSON.stringify(nextTodos));
+    {
       setNewTodo("");
       setNewPriority("normal");
       setNewDueDate("");
     }
   };
 
-  const toggleTodo = async (id: number, completed: boolean) => {
-    const res = await fetch(`/api/todos/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completed: !completed }),
-    });
-    if (res.ok) setTodos(await res.json());
+  const toggleTodo = (id: number, completed: boolean) => {
+    const nextTodos = todos.map((todo) => (todo.id === id ? { ...todo, completed: completed ? 0 : 1 } : todo));
+    setTodos(nextTodos);
+    localStorage.setItem("dirtynest_todos", JSON.stringify(nextTodos));
   };
 
-  const deleteTodo = async (id: number) => {
-    const res = await fetch(`/api/todos/${id}`, { method: "DELETE" });
-    if (res.ok) setTodos(await res.json());
+  const deleteTodo = (id: number) => {
+    const nextTodos = todos.filter((todo) => todo.id !== id);
+    setTodos(nextTodos);
+    localStorage.setItem("dirtynest_todos", JSON.stringify(nextTodos));
   };
 
   const filtered = todos.filter((t) => {

@@ -46,8 +46,10 @@ export default function CalendarSettingsTab() {
   const handleExportIcs = async () => {
     cyberAudio.play("chime");
     try {
-      const res = await fetch("/api/calendar");
-      const events = await res.json();
+      const events = [
+        { title: "Frontend-only planning session", description: "Local demo event", start_time: Date.now() },
+        { title: "DirtyNest UI review", description: "Local demo event", start_time: Date.now() + 86400000 },
+      ];
       const icsLines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",

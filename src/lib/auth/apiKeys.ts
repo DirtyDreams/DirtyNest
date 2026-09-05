@@ -1,27 +1,26 @@
-// Client-side helpers for reading/writing the encrypted API-key vault.
-// Keys live server-side in users.api_keys (AES-GCM encrypted); the browser
-// reads them via /api/auth/me and writes via /api/auth/api-keys.
+// Client-side API-key storage for frontend-only mode.
+// Keys are persisted locally in browser storage so the settings panels remain
+// usable without any server routes.
+
+const STORAGE_KEY = "dirtynest_api_keys";
 
 export async function fetchApiKeys(): Promise<Record<string, string>> {
+  if (typeof window === "undefined") return {};
   try {
-    const res = await fetch("/api/auth/me", { credentials: "same-origin" });
-    if (!res.ok) return {};
-    const data = await res.json();
-    return (data.api_keys as Record<string, string>) || {};
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, string>) : {};
   } catch {
     return {};
   }
 }
 
 export async function saveApiKeys(keys: Record<string, string>): Promise<boolean> {
+  if (typeof window === "undefined") return false;
   try {
-    const res = await fetch("/api/auth/api-keys", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ api_keys: keys }),
-      credentials: "same-origin",
-    });
-    return res.ok;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
+    return true;
   } catch {
     return false;
   }

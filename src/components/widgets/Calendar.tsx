@@ -38,12 +38,12 @@ export default function CalendarWidget() {
   });
   const [mounted, setMounted] = useState(false);
 
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = useCallback(() => {
     try {
-      const res = await fetch("/api/calendar");
-      if (res.ok) setEvents(await res.json());
+      const saved = localStorage.getItem("dirtynest_calendar_events");
+      setEvents(saved ? JSON.parse(saved) : []);
     } catch {
-      /* ignore */
+      setEvents([]);
     }
   }, []);
 
@@ -54,19 +54,24 @@ export default function CalendarWidget() {
 
   const addEvent = async () => {
     if (!newEvent.title || !newEvent.date) return;
-    await fetch("/api/calendar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newEvent),
-    });
+    const event: CalendarEvent = {
+      ...newEvent,
+      id: Date.now(),
+      description: null,
+      time: newEvent.time || null,
+    };
+    const nextEvents = [...events, event];
+    setEvents(nextEvents);
+    localStorage.setItem("dirtynest_calendar_events", JSON.stringify(nextEvents));
     setNewEvent({ title: "", date: "", time: "", color: "#00FF41" });
     setShowAdd(false);
     fetchEvents();
   };
 
-  const deleteEvent = async (id: number) => {
-    await fetch(`/api/calendar/${id}`, { method: "DELETE" });
-    fetchEvents();
+  const deleteEvent = (id: number) => {
+    const nextEvents = events.filter((event) => event.id !== id);
+    setEvents(nextEvents);
+    localStorage.setItem("dirtynest_calendar_events", JSON.stringify(nextEvents));
   };
 
   // Calendar calculations

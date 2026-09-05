@@ -20,12 +20,12 @@ export default function QuickLinks() {
   const [showAdd, setShowAdd] = useState(false);
   const [newLink, setNewLink] = useState({ name: "", url: "" });
 
-  const fetchLinks = useCallback(async () => {
+  const fetchLinks = useCallback(() => {
     try {
-      const res = await fetch("/api/quick-links");
-      if (res.ok) setLinks(await res.json());
+      const saved = localStorage.getItem("dirtynest_quick_links");
+      setLinks(saved ? JSON.parse(saved) : []);
     } catch {
-      /* ignore */
+      setLinks([]);
     }
   }, []);
 
@@ -40,19 +40,21 @@ export default function QuickLinks() {
       finalUrl = `https://${finalUrl}`;
     }
 
-    await fetch("/api/quick-links", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newLink.name, url: finalUrl }),
-    });
+    const nextLinks = [
+      ...links,
+      { id: Date.now(), name: newLink.name, url: finalUrl, icon: null, sort_order: links.length },
+    ];
+    setLinks(nextLinks);
+    localStorage.setItem("dirtynest_quick_links", JSON.stringify(nextLinks));
     setNewLink({ name: "", url: "" });
     setShowAdd(false);
     fetchLinks();
   };
 
-  const deleteLink = async (id: number) => {
-    await fetch(`/api/quick-links/${id}`, { method: "DELETE" });
-    fetchLinks();
+  const deleteLink = (id: number) => {
+    const nextLinks = links.filter((link) => link.id !== id);
+    setLinks(nextLinks);
+    localStorage.setItem("dirtynest_quick_links", JSON.stringify(nextLinks));
   };
 
   return (

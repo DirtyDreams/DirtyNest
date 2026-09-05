@@ -635,7 +635,7 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
               </div>
 
               {/* Right: Quick Action HUD Controls (Strictly Non-Wrapping, Locked Height) */}
-              <div className="flex flex-nowrap items-center gap-1 sm:gap-1.5 shrink-0 h-9">
+              <div className="flex flex-nowrap items-center gap-0.5 sm:gap-1 shrink-0 h-7">
                 {/* Customize Dashboard Button */}
                 {activeView === "dashboard" && (
                   <button
@@ -643,12 +643,12 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                       cyberAudio.play("click");
                       setCustomizeOpen(true);
                     }}
-                    className="h-9 px-2.5 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/20 transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5"
+                    className="group h-7 w-7 rounded-lg bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#00FF41] hover:bg-[#00FF41]/20 hover:scale-110 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex items-center justify-center"
                     title="Customize Overview Widgets"
                     aria-label="Customize Overview Widgets"
                   >
-                    <Sliders size={14} />
-                    <span className="hidden 2xl:inline">CUSTOMIZE</span>
+                    <Sliders size={12} />
+
                   </button>
                 )}
 
@@ -658,7 +658,7 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                     cyberAudio.play("warp");
                     setIsFloatingOsOpen((prev) => !prev);
                   }}
-                  className={`h-9 px-2.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
+                  className={`group h-7 w-7 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-center hover:scale-110 hover:-translate-y-0.5 ${
                     isFloatingOsOpen
                       ? "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/50 shadow-[0_0_12px_rgba(0,255,65,0.3)] animate-pulse"
                       : "bg-[#00FF41]/10 text-[#00FF41] border-[#00FF41]/30 hover:bg-[#00FF41]/20 shadow-[0_0_8px_rgba(0,255,65,0.15)]"
@@ -666,11 +666,9 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                   title="Toggle Cyberpunk Floating Multi-Window Desktop OS (Hotkey: Alt+W)"
                   aria-label="Toggle Floating Multi-Window Desktop OS"
                 >
-                  <Layers size={14} className="text-[#00FF41]" />
-                  <span className="hidden sm:inline">CYBER OS</span>
-                  <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] hidden 2xl:inline">
-                    Alt+W
-                  </kbd>
+                  <Layers size={12} className="text-[#00FF41] transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
+
+
                 </button>
 
                 {/* Tactical Deck Toggle Button (Desktop & Mobile) */}
@@ -683,7 +681,7 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                       setMobileDeckSheetOpen(true);
                     }
                   }}
-                  className={`h-9 px-2.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
+                  className={`group h-7 w-7 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-center hover:scale-110 hover:-translate-y-0.5 ${
                     isRightPanelOpen
                       ? "bg-[#00F0FF]/15 text-[#00F0FF] border-[#00F0FF]/40 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
                       : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00F0FF] hover:border-[#00F0FF]/40"
@@ -691,22 +689,20 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                   title="Toggle Tactical Deck Panel (Hotkey: Ctrl + \)"
                   aria-label="Toggle Tactical Deck"
                 >
-                  <Layers size={14} />
-                  <span className="hidden 2xl:inline">DECK</span>
+                  <Layers size={12} className="transition-transform duration-300 group-hover:rotate-180" />
+                  
                 </button>
 
                 {/* Command palette search trigger */}
                 <button
                   onClick={triggerCmdPalette}
-                  className="h-9 flex items-center gap-1.5 px-2.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
+                  className="group h-7 w-7 flex items-center justify-center rounded-lg bg-white/[0.03] hover:scale-110 hover:-translate-y-0.5 transition-all duration-200 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
                   title="Open Command Palette (Ctrl+P)"
                   aria-label="Open Command Palette"
                 >
-                  <Search size={14} className="group-hover:text-[#00FF41]" />
-                  <span className="text-xs font-mono hidden 2xl:inline">Palette</span>
-                  <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] group-hover:text-[#00FF41] hidden sm:inline">
-                    ^P
-                  </kbd>
+                  <Search size={12} className="group-hover:text-[#00FF41] group-hover:scale-125 transition-transform duration-300" />
+
+
                 </button>
 
                 {/* DevTools Matrix modal button */}
@@ -714,29 +710,27 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                   onClick={() => setDevToolsOpen(true)}
                   title="Developer Tools Matrix"
                   aria-label="Open Developer Tools"
-                  className="h-9 px-2.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] transition-all cursor-pointer flex items-center gap-1.5"
+                  className="group h-7 w-7 rounded-lg bg-white/[0.03] border border-white/10 hover:border-[#00F0FF]/40 text-[#9499B3] hover:text-[#00F0FF] hover:scale-110 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex items-center justify-center"
                 >
-                  <Wrench size={14} />
-                  <span className="text-xs font-mono hidden 2xl:inline">DevTools</span>
+                  <Wrench size={12} className="transition-transform duration-300 group-hover:rotate-45" />
+
                 </button>
 
-                {/* Terminal CLI Toggle */}
-                <button
+                {/* Terminal CLI Toggle (hidden while the Tactical Deck is open) */}
+                {!isRightPanelOpen && <button
                   onClick={toggleTerminal}
                   title="Toggle Cyber Terminal CLI (Hotkey: ~ or `)"
                   aria-label="Toggle Terminal"
-                  className={`h-9 px-2.5 rounded-xl border transition-all text-xs font-mono font-bold cursor-pointer flex items-center gap-1.5 ${
+                  className={`group h-7 w-7 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-center hover:scale-110 hover:-translate-y-0.5 ${
                     isTerminalOpen
                       ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 shadow-[0_0_8px_rgba(0,255,65,0.2)]"
                       : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#00FF41] hover:border-[#00FF41]/40"
                   }`}
                 >
-                  <Terminal size={14} />
-                  <span className="hidden 2xl:inline">Terminal</span>
-                  <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#4F536E] hidden sm:inline">
-                    `
-                  </kbd>
-                </button>
+                  <Terminal size={12} className="transition-transform duration-300 group-hover:-translate-y-0.5" />
+
+
+                </button>}
 
                 {/* Ambient Focus Audio Soundboard */}
                 <button
@@ -746,13 +740,13 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                   }}
                   title="Open Cyber Audio Matrix & Ambient Soundboard"
                   aria-label="Toggle Ambient Audio Matrix"
-                  className={`h-9 w-9 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
+                  className={`group h-7 w-7 rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
                     isDronePlaying
                       ? "bg-[#BF40FF]/20 text-[#BF40FF] border-[#BF40FF]/40 shadow-[0_0_10px_rgba(191,64,255,0.3)] animate-pulse"
                       : "bg-white/[0.03] border-white/10 text-[#9499B3] hover:text-[#BF40FF] hover:border-[#BF40FF]/40"
                   }`}
                 >
-                  <Headphones size={15} />
+                  <Headphones size={12} className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" />
                 </button>
 
                 {/* Theme Palette Switcher */}
@@ -763,9 +757,9 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                   onClick={toggleFullscreen}
                   title="Toggle Fullscreen Deck"
                   aria-label="Toggle Fullscreen"
-                  className="h-9 w-9 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer flex items-center justify-center"
+                  className="group h-7 w-7 rounded-lg bg-white/[0.03] hover:scale-110 hover:-translate-y-0.5 transition-all duration-200 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer flex items-center justify-center"
                 >
-                  {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                  {isFullscreen ? <Minimize2 size={12} className="transition-transform duration-300 group-hover:scale-110" /> : <Maximize2 size={12} className="transition-transform duration-300 group-hover:scale-110" />}
                 </button>
               </div>
             </div>

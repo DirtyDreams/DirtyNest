@@ -1,4 +1,4 @@
-import { LogLevel, LogCategory } from "@/db";
+import type { LogLevel, LogCategory } from "@/types/logs";
 
 export interface LogPayload {
   level: LogLevel;
@@ -10,29 +10,39 @@ export interface LogPayload {
   status_code?: string;
 }
 
+const STORAGE_KEY = "dirtynest_local_logs";
+
 export async function emitLog(payload: LogPayload): Promise<boolean> {
   try {
-    const res = await fetch("/api/logs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        level: payload.level,
-        category: payload.category,
-        action: payload.action,
-        actor: payload.actor || "User-Interface",
-        details: payload.details,
-        latency_ms: payload.latency_ms || 0,
-        status_code: payload.status_code || "200",
-      }),
-    });
+    if (typeof window !== "undefined") {
+      const current = (() => {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? (JSON.parse(raw) as unknown[]) : [];
+        } catch {
+          return [];
+        }
+      })();
 
-    if (res.ok) {
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("dirtynest-log-emitted", { detail: payload }));
-      }
-      return true;
+      const next = [
+        {
+          id: Date.now(),
+          timestamp: new Date().toISOString(),
+          level: payload.level,
+          category: payload.category,
+          action: payload.action,
+          actor: payload.actor || "User-Interface",
+          details: payload.details,
+          latency_ms: payload.latency_ms || 0,
+          status_code: payload.status_code || "200",
+        },
+        ...current,
+      ].slice(0, 300);
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      window.dispatchEvent(new CustomEvent("dirtynest-log-emitted", { detail: payload }));
     }
-    return false;
+    return true;
   } catch {
     return false;
   }

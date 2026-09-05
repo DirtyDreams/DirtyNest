@@ -14,15 +14,13 @@ export default function Notes() {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchNote = useCallback(async () => {
+  const fetchNote = useCallback(() => {
     try {
-      const res = await fetch("/api/notes");
-      if (res.ok) {
-        const note = await res.json();
-        setContent(note.content || "");
-      }
+      const saved = localStorage.getItem("dirtynest_notes");
+      const note = saved ? JSON.parse(saved) : null;
+      setContent(note?.content || "");
     } catch {
-      /* ignore */
+      setContent("");
     }
   }, []);
 
@@ -30,16 +28,11 @@ export default function Notes() {
     fetchNote();
   }, [fetchNote]);
 
-  const saveNote = useCallback(async (text: string) => {
+  const saveNote = useCallback((text: string) => {
     try {
-      await fetch("/api/notes", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: text }),
-      });
+      localStorage.setItem("dirtynest_notes", JSON.stringify({ content: text }));
+    } finally {
       setSaved(true);
-    } catch {
-      /* ignore */
     }
   }, []);
 

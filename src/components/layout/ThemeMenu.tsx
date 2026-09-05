@@ -73,13 +73,13 @@ export default function ThemeMenu({ onOpenCustomizer }: ThemeMenuProps) {
           type="button"
           onClick={() => cyberAudio.play("click")}
           title="Palette Profile Customizer"
-          className={`h-9 w-9 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
+          className={`group h-7 w-7 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-center hover:scale-110 hover:-translate-y-0.5 ${
             open
               ? "bg-[#00FF41]/15 text-[#00FF41] border-[#00FF41]/40 shadow-[0_0_10px_rgba(0,255,65,0.25)]"
               : "bg-white/[0.03] border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41]"
           }`}
         >
-          <Palette size={15} />
+          <Palette size={12} className="transition-transform duration-300 group-hover:rotate-90" />
         </button>
       </DropdownMenuTrigger>
 

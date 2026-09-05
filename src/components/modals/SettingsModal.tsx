@@ -99,18 +99,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const exportData = async () => {
     cyberAudio.play("click");
     try {
-      const [todos, notes, links, events] = await Promise.all([
-        fetch("/api/todos").then((r) => r.json()),
-        fetch("/api/notes").then((r) => r.json()),
-        fetch("/api/quick-links").then((r) => r.json()),
-        fetch("/api/calendar").then((r) => r.json()),
-      ]);
-
       const backup = {
         app: "DirtyNest",
+        mode: "frontend-only",
         version: "2.4.0",
         exportDate: new Date().toISOString(),
-        data: { todos, notes, links, events },
+        localStorage: typeof window !== "undefined" ? { ...localStorage } : {},
       };
 
       const blob = new Blob([JSON.stringify(backup, null, 2)], {
@@ -119,12 +113,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `dirtynest-backup-${new Date().toISOString().split("T")[0]}.json`;
+      a.download = `dirtynest-frontend-backup-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("SNAPSHOT CREATED", { description: "Export downloaded." });
+      toast.success("SNAPSHOT CREATED", { description: "Frontend state export downloaded." });
     } catch {
-      toast.error("EXPORT FAILED", { description: "Failed to export database." });
+      toast.error("EXPORT FAILED", { description: "Failed to export local frontend state." });
     }
   };
 

@@ -105,9 +105,9 @@ export default function ApiHealthSettingsTab() {
     } catch {}
     const ok = await saveApiKeys(keys);
     if (ok) {
-      toast.success("API Mesh Credentials Saved", "Encrypted endpoint vault updated.");
+      toast.success("API Mesh Credentials Saved", "Frontend-only local key store updated.");
     } else {
-      toast.error("Save Failed", "Could not persist API keys to the encrypted vault.");
+      toast.error("Save Failed", "Could not persist API keys in local browser storage.");
     }
   };
 
@@ -141,7 +141,7 @@ export default function ApiHealthSettingsTab() {
             <span>API Health, Mesh Probes & Key Vault Settings</span>
           </h3>
           <p className="text-[11px] text-[#4F536E] mt-0.5">
-            Configure encrypted API keys for Gemini, HuggingFace, Supabase, and real-time connection test probes
+            Configure locally stored API keys for Gemini, HuggingFace, Supabase, and connection test probes
           </p>
         </div>
 

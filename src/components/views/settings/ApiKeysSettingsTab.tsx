@@ -96,9 +96,9 @@ export default function ApiKeysSettingsTab() {
     cyberAudio.play("chime");
     const ok = await saveApiKeys(keys);
     if (ok) {
-      toast.success("API Credentials Saved", "Encrypted mesh keys stored in the server vault.");
+      toast.success("API Credentials Saved", "Keys stored locally in this browser for frontend-only mode.");
     } else {
-      toast.error("Save Failed", "Could not persist API keys to the encrypted vault.");
+      toast.error("Save Failed", "Could not persist API keys in local browser storage.");
     }
   };
 
@@ -133,7 +133,7 @@ export default function ApiKeysSettingsTab() {
             <span>API Keys & Mesh Credentials</span>
           </h3>
           <p className="text-[11px] text-[#4F536E] mt-0.5">
-            Configure encrypted API keys for Gemini, HuggingFace, Supabase, and Discord
+            Configure locally stored API keys for Gemini, HuggingFace, Supabase, and Discord
           </p>
         </div>
 

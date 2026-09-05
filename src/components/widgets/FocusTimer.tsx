@@ -24,19 +24,17 @@ export default function FocusTimer() {
   const [totalFocusMinutes, setTotalFocusMinutes] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  const fetchTotalTime = () => {
-    fetch("/api/focus/total")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.total_minutes) {
-          setTotalFocusMinutes(data.total_minutes);
-        }
-      })
-      .catch(console.error);
+  const loadTotalTime = () => {
+    try {
+      const saved = localStorage.getItem("dirtynest_focus_minutes");
+      setTotalFocusMinutes(saved ? Number(saved) || 0 : 0);
+    } catch {
+      setTotalFocusMinutes(0);
+    }
   };
 
   useEffect(() => {
-    fetchTotalTime();
+    loadTotalTime();
   }, []);
 
   useEffect(() => {
@@ -51,19 +49,16 @@ export default function FocusTimer() {
         cyberAudio.play("chime");
       }
       
-      // Save session to DB
-      fetch("/api/focus", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          duration_minutes: MODE_DURATIONS[mode] / 60,
-          type: mode,
-        }),
-      }).then(() => {
-        if (mode === "work") fetchTotalTime();
-      }).catch(console.error);
-
       if (mode === "work") {
+        setTotalFocusMinutes((previous) => {
+          const next = previous + MODE_DURATIONS[mode] / 60;
+          try {
+            localStorage.setItem("dirtynest_focus_minutes", String(next));
+          } catch {
+            // Local persistence is optional.
+          }
+          return next;
+        });
         setCompletedSessions((prev) => prev + 1);
         setMode("shortBreak");
         setTimeLeft(MODE_DURATIONS.shortBreak);
