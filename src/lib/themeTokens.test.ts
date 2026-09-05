@@ -20,5 +20,6 @@ describe("Design System Tokens in globals.css", () => {
     const globalsCss = fs.readFileSync(path.resolve(process.cwd(), "src/app/globals.css"), "utf-8");
     expect(globalsCss).toContain("inset 0 1px 0 0 rgba(255, 255, 255,");
     expect(globalsCss).toContain("background: rgba(19, 21, 34,");
+    expect(globalsCss).toContain("var(--hairline-top)");
   });
 });
