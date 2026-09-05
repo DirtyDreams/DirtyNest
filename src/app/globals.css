@@ -232,6 +232,135 @@ body {
 .hud-corner-br { bottom: 5px; right: 5px; border-bottom: 1.5px solid; border-right: 1.5px solid; }
 
 /* ============================================================
+   Luminous Cyber-Industrial Elevation Layers & Utilities
+   ============================================================ */
+
+/* L1: Structural Panels (Sidebar, Top HUD bar, Bottom dock) */
+.luminous-surface-l1 {
+  background: rgba(8, 9, 15, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* L2: Bento Cards (Dashboard widgets, Deck sub-panels) */
+.luminous-surface-l2 {
+  background: rgba(13, 14, 24, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.luminous-surface-l2:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* L3: Floating Elements (Modals, Popovers, Tooltips, Command Palette) */
+.luminous-surface-l3 {
+  background: rgba(18, 20, 34, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.8);
+}
+
+/* Luminous Glass (Generic frosted glass utility) */
+.luminous-glass {
+  background: rgba(12, 13, 24, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Cyber Spotlight Card Utility */
+.cyber-spotlight-card {
+  background: rgba(13, 14, 24, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cyber-spotlight-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Dynamic Spotlight Hover Effect */
+.spotlight-radial-glow {
+  background: radial-gradient(
+    400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    var(--spotlight-color, rgba(0, 255, 65, 0.08)),
+    transparent 60%
+  );
+}
+
+/* Tactical HUD Corner Brackets */
+.hud-corner-bracket {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  pointer-events: none;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+.hud-corner-bracket.tl {
+  top: 0;
+  left: 0;
+  border-top: 1.5px solid var(--color-neon-green);
+  border-left: 1.5px solid var(--color-neon-green);
+  opacity: 0.4;
+}
+.hud-corner-bracket.br {
+  bottom: 0;
+  right: 0;
+  border-bottom: 1.5px solid var(--color-neon-green);
+  border-right: 1.5px solid var(--color-neon-green);
+  opacity: 0.4;
+}
+.hud-corner-bracket.tr {
+  top: 0;
+  right: 0;
+  border-top: 1.5px solid var(--color-neon-green);
+  border-right: 1.5px solid var(--color-neon-green);
+  opacity: 0.4;
+}
+.hud-corner-bracket.bl {
+  bottom: 0;
+  left: 0;
+  border-bottom: 1.5px solid var(--color-neon-green);
+  border-left: 1.5px solid var(--color-neon-green);
+  opacity: 0.4;
+}
+
+/* Tactical Micro-Typography Badge */
+.tactical-badge {
+  font-family: var(--font-jetbrains, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+}
+
+/* Restrained Neon Rim Glow */
+.neon-rim-glow {
+  box-shadow: 0 0 1px 1px rgba(0, 255, 65, 0.15), 0 0 12px rgba(0, 255, 65, 0.1);
+  box-shadow: 0 0 1px 1px rgba(var(--color-primary-rgb, 0, 255, 65), 0.15), 0 0 12px rgba(var(--color-primary-rgb, 0, 255, 65), 0.1);
+}
+
+/* ============================================================
    Neon Glows & Badges
    ============================================================ */
 .neon-glow-green {

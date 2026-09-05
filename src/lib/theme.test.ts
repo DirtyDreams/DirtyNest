@@ -1,19 +1,35 @@
-<<<<<<< HEAD
 import { describe, expect, it } from "vitest";
-import { generateThemeCss, isValidHex, sanitizeColor } from "./theme";
+import { DEFAULT_THEMES, generateThemeCss, isValidHex, sanitizeColor } from "./theme";
 
 describe("theme helpers", () => {
   it("validates hex values", () => {
     expect(isValidHex("#00FF41")).toBe(true);
     expect(isValidHex("#abc")).toBe(true);
+    expect(isValidHex("#123456")).toBe(true);
+    expect(isValidHex("#12345678")).toBe(true);
     expect(isValidHex("rgb(0,0,0)")).toBe(false);
+    expect(isValidHex("not-hex")).toBe(false);
+    expect(isValidHex("")).toBe(false);
   });
 
   it("falls back when the color is invalid", () => {
     expect(sanitizeColor("not-a-color", "#00FF41")).toBe("#00FF41");
+    expect(sanitizeColor("#00F0FF", "#00FF41")).toBe("#00F0FF");
   });
 
-  it("generates css using sanitized values", () => {
+  it("validates that all DEFAULT_THEMES contain valid color definitions", () => {
+    expect(DEFAULT_THEMES.length).toBeGreaterThan(0);
+    for (const preset of DEFAULT_THEMES) {
+      expect(preset.id).toBeTruthy();
+      expect(preset.name).toBeTruthy();
+      expect(isValidHex(preset.primary)).toBe(true);
+      expect(isValidHex(preset.secondary)).toBe(true);
+      expect(isValidHex(preset.accent)).toBe(true);
+      expect(isValidHex(preset.bgDeep)).toBe(true);
+    }
+  });
+
+  it("generates css using sanitized values and exposes required tokens", () => {
     const css = generateThemeCss({
       id: "custom",
       name: "Custom",
@@ -24,47 +40,11 @@ describe("theme helpers", () => {
     });
 
     expect(css).toContain("--color-neon-green: #11AA22");
+    expect(css).toContain("--color-neon-purple: #2222FF");
+    expect(css).toContain("--color-neon-cyan: #33FFFF");
+    expect(css).toContain("--bg-deep: #050505");
+    expect(css).toContain("--color-primary: #11AA22");
+    expect(css).toContain("--color-primary-rgb: 17, 170, 34");
     expect(css).toContain("background-color: #050505 !important");
   });
 });
-=======
-import { describe, it, expect } from "vitest";
-import { isValidHex, sanitizeColor, generateThemeCss } from "./theme";
-
-describe("isValidHex", () => {
-  it("accepts valid 6-digit hex with #", () => {
-    expect(isValidHex("#00FF41")).toBe(true);
-    expect(isValidHex("#BF40FF")).toBe(true);
-  });
-
-  it("rejects hex missing the leading #", () => {
-    expect(isValidHex("00FF41")).toBe(false);
-  });
-
-  it("rejects non-hex characters", () => {
-    expect(isValidHex("#zzz")).toBe(false);
-  });
-});
-
-describe("sanitizeColor", () => {
-  it("returns the fallback for invalid input", () => {
-    expect(sanitizeColor("nope", "#07070B")).toBe("#07070B");
-  });
-});
-
-describe("generateThemeCss", () => {
-  it("embeds the preset colors and emits !important declarations", () => {
-    const css = generateThemeCss({
-      id: "x",
-      name: "x",
-      primary: "#00FF41",
-      secondary: "#BF40FF",
-      accent: "#00F0FF",
-      bgDeep: "#07070B",
-      isCustom: false,
-    });
-    expect(css).toContain("#00FF41");
-    expect(css).toContain("!important");
-  });
-});
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
