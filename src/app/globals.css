@@ -29,6 +29,24 @@
   --color-bg-card-hover: rgba(18, 20, 38, 0.88);
   --color-bg-sidebar: rgba(8, 9, 15, 0.94);
 
+  /* 4-Step Surface Ladder */
+  --color-canvas: #07070B;
+  --color-surface-1: #0D0E17;
+  --color-surface-2: #131522;
+  --color-surface-3: #1A1D2E;
+  --color-surface-overlay: #1F2338;
+
+  /* Ink Contrast Hierarchy */
+  --color-ink-primary: #F1F3F9;
+  --color-ink-secondary: #9499B3;
+  --color-ink-muted: #5A5E78;
+  --color-ink-faint: #35384B;
+
+  /* Hairlines */
+  --color-hairline: rgba(255, 255, 255, 0.08);
+  --color-hairline-hover: rgba(255, 255, 255, 0.16);
+  --hairline-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
+
   /* Text */
   --color-text-primary: #F1F3F9;
   --color-text-secondary: #9499B3;
@@ -78,6 +96,25 @@
   --color-neon-green: #00FF41;
   --color-neon-purple: #BF40FF;
   --color-neon-cyan: #00F0FF;
+
+  /* 4-Step Surface Ladder */
+  --color-canvas: #07070B;
+  --color-surface-1: #0D0E17;
+  --color-surface-2: #131522;
+  --color-surface-3: #1A1D2E;
+  --color-surface-overlay: #1F2338;
+
+  /* Ink Contrast Hierarchy */
+  --color-ink-primary: #F1F3F9;
+  --color-ink-secondary: #9499B3;
+  --color-ink-muted: #5A5E78;
+  --color-ink-faint: #35384B;
+
+  /* Hairlines */
+  --color-hairline: rgba(255, 255, 255, 0.08);
+  --color-hairline-hover: rgba(255, 255, 255, 0.16);
+  --hairline-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
+
   /* shadcn dark theme — DirtyNest Cyber */
   --background: #07070B;
   --foreground: #F1F3F9;
