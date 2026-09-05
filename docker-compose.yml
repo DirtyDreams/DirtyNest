@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dirtynest-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dirtynest
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ae132a343bbfe69efb3e083a176c695d}
+      POSTGRES_DB: dirtynest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dirtynest-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dirtynest -d dirtynest"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.next
+    container_name: dirtynest-web
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://dirtynest:${POSTGRES_PASSWORD:-ae132a343bbfe69efb3e083a176c695d}@postgres:5432/dirtynest
+      - NEXT_PUBLIC_SIDECAR_URL=http://localhost:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sidecar:
+        condition: service_started
+    networks:
+      - dirtynest-network
+
+  sidecar:
+    build:
+      context: ./sidecar
+      dockerfile: Dockerfile
+    container_name: dirtynest-sidecar
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://dirtynest:${POSTGRES_PASSWORD:-ae132a343bbfe69efb3e083a176c695d}@postgres:5432/dirtynest
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_started
+    networks:
+      - dirtynest-network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: pitest-qdrant
+    restart: unless-stopped
+    ports:
+      - "6335:6333"
+      - "6336:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - dirtynest-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: pitest-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    networks:
+      - dirtynest-network
+
+volumes:
+  postgres_data:
+    driver: local
+  qdrant_data:
+    driver: local
+
+networks:
+  dirtynest-network:
+    driver: bridge
+

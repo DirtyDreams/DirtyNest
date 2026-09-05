@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+<<<<<<< HEAD
 import {
   Terminal as TerminalIcon,
   X,
@@ -8,10 +9,17 @@ import {
   Minimize2,
   RefreshCw,
 } from "lucide-react";
+=======
+import { Terminal as TerminalIcon, X, Maximize2, Minimize2, RefreshCw } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { cyberAudio } from "@/lib/cyberAudio";
+<<<<<<< HEAD
+=======
+import {  } from "@/lib/hermes/hermesSocket";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 

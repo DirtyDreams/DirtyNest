@@ -191,7 +191,11 @@ export default function ControlRoomView() {
 
   useEffect(() => {
     fetchSessions();
+<<<<<<< HEAD
   }, [fetchSessions]);
+=======
+  }, []);
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
   const activeHarness = HARNESSES.find((h) => h.id === selectedHarnessId) || HARNESSES[0];
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0] || {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   ClipboardList,
   Copy,
@@ -8,6 +9,9 @@ import {
   Check,
   Plus,
 } from "lucide-react";
+=======
+import { ClipboardList, Copy, Pin, Check, Plus } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface ClipItem {

@@ -1,16 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import {
-  ShieldAlert,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  FileCode,
-  Terminal,
-  Zap,
-  Lock,
-} from "lucide-react";
+import { ShieldAlert, CheckCircle2, XCircle, AlertTriangle, FileCode, Terminal, Zap, Lock } from "lucide-react";
 import { AcpGateItem } from "@/lib/hermes/hermesAcpStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Button } from "@/components/ui/button";

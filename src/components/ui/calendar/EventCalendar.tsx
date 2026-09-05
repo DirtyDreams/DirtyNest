@@ -1,12 +1,16 @@
 "use client";
 
-import * as React from "react";
+import {  } from "react";
 import { useState, useMemo } from "react";
+<<<<<<< HEAD
 import {
   ChevronLeft,
   ChevronRight,
   Plus,
 } from "lucide-react";
+=======
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -232,7 +236,11 @@ export function EventCalendar({
                           key={ev.id}
                           onClick={(e) => {
                             e.stopPropagation();
+<<<<<<< HEAD
                             if (onSelectEvent) onSelectEvent(ev);
+=======
+                            onSelectEvent?.(ev);
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
                           }}
                           className="px-1.5 py-0.5 rounded text-[9px] font-bold truncate transition-transform hover:scale-102"
                           style={{
@@ -273,7 +281,7 @@ export function EventCalendar({
               return (
                 <div
                   key={ev.id}
-                  onClick={() => onSelectEvent && onSelectEvent(ev)}
+                  onClick={() => onSelectEvent?.(ev)}
                   className="p-3 rounded-xl border border-white/5 bg-black/40 hover:border-white/15 transition-all flex items-center justify-between gap-3 cursor-pointer"
                 >
                   <div className="flex items-center gap-3">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   ZoomIn,
   ZoomOut,
@@ -11,6 +12,9 @@ import {
   Eye,
   Check,
 } from "lucide-react";
+=======
+import { ZoomIn, ZoomOut, Download, Share2, Sparkles, Split, Eye, Check } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface Props {

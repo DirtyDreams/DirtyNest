@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+<<<<<<< HEAD
 import {
   Calendar as CalendarIcon,
   Plus,
@@ -8,6 +9,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+=======
+import { Calendar as CalendarIcon, Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
 interface CalendarEvent {
   id: number;

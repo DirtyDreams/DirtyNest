@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+<<<<<<< HEAD
 import path from "node:path";
 
 export default defineConfig({
@@ -12,3 +13,12 @@ export default defineConfig({
     },
   },
 });
+=======
+
+export default defineConfig({
+  test: {
+    environment: "happy-dom",
+    include: ["src/**/*.test.{ts,tsx}"],
+  },
+});
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24

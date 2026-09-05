@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+<<<<<<< HEAD
 import {
   Calendar,
   Sparkles,
@@ -9,6 +10,9 @@ import {
   Download,
   Globe,
 } from "lucide-react";
+=======
+import { Calendar, Sparkles, Clock, Volume2, Download, Globe } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

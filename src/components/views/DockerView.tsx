@@ -223,6 +223,7 @@ export default function DockerView() {
 
     fetchContainers();
     const interval = setInterval(fetchContainers, 4000);
+<<<<<<< HEAD
 
     const fetchStacks = async () => {
       try {
@@ -246,6 +247,8 @@ export default function DockerView() {
     };
     fetchStacks();
 
+=======
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
     return () => {
       active = false;
       clearInterval(interval);
@@ -266,7 +269,12 @@ export default function DockerView() {
     );
 
     try {
+<<<<<<< HEAD
       const res = await fetch(`/api/docker/containers/${id}/action`, {
+=======
+      const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
+      const res = await fetch(`${sidecarUrl}/api/docker/containers/${id}/action`, {
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),

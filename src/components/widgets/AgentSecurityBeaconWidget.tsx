@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   ShieldCheck,
   Terminal,
   FileCode,
   Globe,
 } from "lucide-react";
+=======
+import { ShieldCheck, Terminal, FileCode, Globe } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface AuditEvent {

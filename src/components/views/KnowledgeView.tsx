@@ -508,6 +508,7 @@ export default function KnowledgeView() {
   const [executedSkillId, setExecutedSkillId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+<<<<<<< HEAD
   // F7.6: the 3D graph deck is wired to the real GET /api/knowledge/graph
   // (knowledge_graph_edges + knowledge_docs). Loading/empty/error states are
   // rendered by KnowledgeGraphCanvas via GraphStateOverlay.
@@ -534,6 +535,9 @@ export default function KnowledgeView() {
       // fall through to legacy sources
     }
 
+=======
+  const fetchMemories = useCallback(async () => {
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
     try {
       const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
       const res = await fetch(`${sidecarUrl}/api/hermes/memories`);
@@ -574,6 +578,7 @@ export default function KnowledgeView() {
     } catch {}
   }, []);
 
+<<<<<<< HEAD
   // F7.6: fetch real Vault docs on mount (the initial state is a static
   // demo set; without this the deck never reads /api/knowledge/docs).
   useEffect(() => {
@@ -610,6 +615,17 @@ export default function KnowledgeView() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+=======
+  // Load saved state
+  useEffect(() => {
+    fetchMemories();
+    const savedVault = localStorage.getItem("dirtynest_obsidian_path");
+    if (savedVault) {
+      setObsidianVaultPath(savedVault);
+    }
+  }, [fetchMemories]);
+
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
   const saveDocs = (newDocs: KnowledgeDoc[]) => {
     setDocs(newDocs);
     try {
@@ -755,6 +771,7 @@ export default function KnowledgeView() {
   // Delete Document
   const handleDeleteDoc = async (id: string) => {
     cyberAudio.play("click");
+<<<<<<< HEAD
     // Prefer the real Knowledge Vault API (F4); fall back to the sidecar
     // memory engine, then to a local mock removal.
     try {
@@ -780,6 +797,19 @@ export default function KnowledgeView() {
         const updated = docs.filter((d) => d.id !== id);
         saveDocs(updated);
       }
+=======
+    try {
+      const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
+      const res = await fetch(`${sidecarUrl}/api/hermes/memories/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        await fetchMemories();
+      } else {
+        throw new Error();
+      }
+    } catch {
+      const updated = docs.filter((d) => d.id !== id);
+      saveDocs(updated);
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
     }
     if (selectedDocId === id && docs.length > 1) {
       setSelectedDocId(docs[0].id);
@@ -803,6 +833,7 @@ export default function KnowledgeView() {
       setIngestProgress(75);
       setIngestPhase("Computing 384-dimensional FastEmbed embeddings (bge-small)...");
     }, 600);
+<<<<<<< HEAD
 
     const tagsArray = newTags
       .split(",")
@@ -886,6 +917,60 @@ export default function KnowledgeView() {
     setIngestProgress(100);
     setIngestPhase("Syncing into Qdrant vector database...");
 
+=======
+
+    const tagsArray = newTags
+      .split(",")
+      .map((t) => t.trim().replace(/^#/, ""))
+      .filter(Boolean);
+
+    try {
+      const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
+      const res = await fetch(`${sidecarUrl}/api/hermes/memories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTitle.trim(),
+          content: newContent.trim(),
+          category: newCategory === "Karpathy Skills" ? "ai" : newCategory === "System Arch" ? "architecture" : newCategory === "Threat Intel" ? "security" : "fact",
+          tags: tagsArray,
+        }),
+      });
+      if (res.ok) {
+        await fetchMemories();
+      } else {
+        throw new Error();
+      }
+    } catch {
+      const isKarpathy = newCategory === "Karpathy Skills";
+      const slugBase = newTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);
+      const newDoc: KnowledgeDoc = {
+        id: `doc-${Date.now().toString(36)}`,
+        title: newTitle.trim(),
+        category: newCategory,
+        slug: `/${newCategory.toLowerCase().replace(/\s+/g, "-")}/${slugBase}.md`,
+        tags: tagsArray.length > 0 ? tagsArray : ["obsidian", "pkm"],
+        tokens: Math.max(120, Math.floor(newContent.length / 4)),
+        chunks: Math.max(1, Math.ceil(newContent.length / 800)),
+        vectors: "1536-dim float32",
+        updatedAt: new Date().toISOString().replace("T", " ").slice(0, 16),
+        author: "OPERATOR",
+        obsidianPath: `${newCategory.replace(/\s+/g, "_")}/${newTitle.replace(/[^a-zA-Z0-9_-]/g, "_")}.md`,
+        backlinks: [],
+        wikiLinks: [],
+        isKarpathySkill: isKarpathy,
+        embeddingSnippet: [0.12, -0.05, 0.38, 0.19],
+        content: newContent,
+      };
+      const updated = [newDoc, ...docs];
+      saveDocs(updated);
+      setSelectedDocId(newDoc.id);
+    }
+
+    setIngestProgress(100);
+    setIngestPhase("Syncing into Qdrant vector database...");
+
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
     setTimeout(() => {
       setIsIngesting(false);
       setShowIngestModal(false);

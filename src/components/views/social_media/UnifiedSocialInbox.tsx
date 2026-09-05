@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   Inbox,
   Send,
@@ -14,6 +15,9 @@ import {
   HelpCircle,
   Briefcase,
 } from "lucide-react";
+=======
+import { Inbox, Send, Star, Check, CheckCircle2, Search, Bot, ThumbsUp, AlertTriangle, HelpCircle, Briefcase } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 export interface CommunityMessage {

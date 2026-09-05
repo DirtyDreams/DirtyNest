@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+<<<<<<< HEAD
 import {
   LayoutDashboard,
   Eye,
@@ -19,6 +20,10 @@ import {
   saveWidgetLayout,
   LAYOUT_PRESETS,
 } from "@/lib/widgetLayout";
+=======
+import { LayoutDashboard, Eye, EyeOff, Sparkles, ArrowUp, ArrowDown, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
+import { ALL_WIDGETS_METADATA, WidgetLayoutItem, loadWidgetLayout, saveWidgetLayout, LAYOUT_PRESETS } from "@/lib/widgetLayout";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+<<<<<<< HEAD
 import {
   Mic,
   Volume2,
@@ -8,6 +9,9 @@ import {
   X,
   Activity,
 } from "lucide-react";
+=======
+import { Mic, Volume2, Square, X, Activity } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberSpeech, AGENT_VOICE_PROFILES } from "@/lib/cyberSpeech";
 import { cyberAudio } from "@/lib/cyberAudio";
 

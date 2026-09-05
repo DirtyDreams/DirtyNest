@@ -23,6 +23,7 @@ import SocialListeningIntel from "./social_media/SocialListeningIntel";
 import AutomationsMatrix from "./social_media/AutomationsMatrix";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { Bot } from "lucide-react";
+<<<<<<< HEAD
 interface ApiSocialPost {
   id: number;
   platform: string;
@@ -60,6 +61,8 @@ function mapApiPostToScheduledPost(p: ApiSocialPost): ScheduledPost {
     hasMedia: (p.media_urls ?? []).length > 0,
   };
 }
+=======
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
 export default function SocialMediaView() {
   const [posts, setPosts] = useState<ScheduledPost[]>(INITIAL_SCHEDULE);

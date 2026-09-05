@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+<<<<<<< HEAD
 import {
   Sliders,
   Check,
@@ -31,6 +32,9 @@ import {
   Clock,
   Brain,
 } from "lucide-react";
+=======
+import { Sliders, Check, RotateCcw, LayoutDashboard, Cpu, Sparkles, ShieldCheck, DollarSign, Calendar, Rss, Wifi, GitBranch, Rocket, Zap, Server, GitPullRequest, TrendingUp, ShieldAlert, Database, Lock, Globe, ClipboardList, Headphones, Palette, Terminal, Droplets, Clock, Brain } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";

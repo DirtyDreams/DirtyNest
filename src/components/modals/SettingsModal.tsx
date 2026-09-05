@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+<<<<<<< HEAD
 import {
   Settings as SettingsIcon,
   Sliders,
@@ -12,6 +13,9 @@ import {
   Cpu,
   Server,
 } from "lucide-react";
+=======
+import { Settings as SettingsIcon, Sliders, Database, Key, RefreshCw, Download, Bot, Cpu, Server } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

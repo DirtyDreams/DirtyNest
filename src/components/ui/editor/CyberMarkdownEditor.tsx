@@ -1,7 +1,8 @@
 "use client";
 
-import * as React from "react";
+import {  } from "react";
 import { useState, useRef } from "react";
+<<<<<<< HEAD
 import {
   Bold,
   Italic,
@@ -15,6 +16,12 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+=======
+import { Bold, Italic, Code, Heading1, Heading2, List, Quote, Copy, Check, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {  } from "@/components/ui/badge";
+import {  } from "@/components/ui/textarea";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cn } from "@/lib/utils";
 
 export interface CyberMarkdownEditorProps {

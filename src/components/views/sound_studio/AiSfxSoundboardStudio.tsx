@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+<<<<<<< HEAD
 import {
   Zap,
   Sliders,
@@ -8,6 +9,9 @@ import {
   Flame,
   Disc,
 } from "lucide-react";
+=======
+import { Zap, Sliders, Sparkles, Flame, Disc } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface SoundPad {

@@ -4,6 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2, ExternalLink, X, Compass } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+<<<<<<< HEAD
+=======
+import {  } from "@/components/ui/badge";
+import {  } from "@/lib/utils";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
 interface QuickLink {
   id: number;

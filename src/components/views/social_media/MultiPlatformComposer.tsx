@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   Send,
   Image as ImageIcon,
@@ -16,6 +17,9 @@ import {
   RefreshCw,
   FolderOpen,
 } from "lucide-react";
+=======
+import { Send, Image as ImageIcon, Paperclip, Eye, Heart, Repeat, Share, Radio, MessageCircle, Trash2, CheckCircle2, RefreshCw, FolderOpen } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { SAMPLE_ASSETS } from "../image_studio/GeneratedAssetsGallery";
 

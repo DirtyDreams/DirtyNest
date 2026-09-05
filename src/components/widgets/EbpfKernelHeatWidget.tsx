@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   Activity,
 } from "lucide-react";
+=======
+import { Activity } from "lucide-react";
+import {  } from "@/lib/cyberAudio";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
 interface SyscallStat {
   name: string;

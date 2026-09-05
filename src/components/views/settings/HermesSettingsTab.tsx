@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   Brain,
   Sliders,
@@ -14,6 +15,9 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+=======
+import { Brain, Sliders, Database, Sparkles, Shield, Radio, Cpu, Save, RotateCcw, Eye, EyeOff } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { useHermesStore } from "@/lib/hermes/hermesStore";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";

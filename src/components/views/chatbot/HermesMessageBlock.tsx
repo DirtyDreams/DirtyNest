@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   Brain,
   Copy,
@@ -17,6 +18,14 @@ import {
 import { cyberAudio } from "@/lib/cyberAudio";
 import { ReasoningAccordion } from "@/components/ui/assistant/ReasoningAccordion";
 import { ToolCallCard } from "@/components/ui/assistant/ToolCallCard";
+=======
+import { Brain, Copy, Check, Volume2, VolumeX, Database, FileCode, CheckCheck, Play, RotateCcw, Edit2 } from "lucide-react";
+import { cyberAudio } from "@/lib/cyberAudio";
+import { ReasoningAccordion } from "@/components/ui/assistant/ReasoningAccordion";
+import { ToolCallCard } from "@/components/ui/assistant/ToolCallCard";
+import {  } from "@/components/ui/glass/GlassBadge";
+import {  } from "@/components/ui/button";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
 interface Props {
   content: string;

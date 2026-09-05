@@ -2,7 +2,11 @@
 
 import { useMemo } from "react";
 import { BarChart2 } from "lucide-react";
+<<<<<<< HEAD
 import type { SystemLog } from "@/types/logs";
+=======
+import { SystemLog } from "@/db";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
 interface LogHistogramBarChartProps {
   logs: SystemLog[];

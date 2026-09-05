@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+<<<<<<< HEAD
 import {
   Wifi,
   Eye,
@@ -9,6 +10,9 @@ import {
   ExternalLink,
   Clock,
 } from "lucide-react";
+=======
+import { Wifi, Eye, EyeOff, Sparkles, ExternalLink, Clock } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useToast } from "@/components/common/ToastProvider";
 import { fetchApiKeys, saveApiKeys } from "@/lib/auth/apiKeys";

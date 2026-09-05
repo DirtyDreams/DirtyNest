@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   Plus,
   Trash2,
@@ -12,6 +13,9 @@ import {
   Repeat,
   Send,
 } from "lucide-react";
+=======
+import { Plus, Trash2, Share2, Flame, ArrowUp, ArrowDown, CheckCircle2, Repeat, Send } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface TweetNode {

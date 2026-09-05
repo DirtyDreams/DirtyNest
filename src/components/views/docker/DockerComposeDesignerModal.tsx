@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   X,
   Boxes,
@@ -15,6 +16,9 @@ import {
   FileCode,
   Layers,
 } from "lucide-react";
+=======
+import { X, Boxes, Plus, Copy, Check, Download, Database, Shield, Server, Zap, FileCode, Layers } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 
 interface DockerComposeDesignerModalProps {

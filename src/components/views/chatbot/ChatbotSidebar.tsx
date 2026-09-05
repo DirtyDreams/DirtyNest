@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import {
   Plus,
   Search,
@@ -20,6 +21,9 @@ import {
   X,
   Layers,
 } from "lucide-react";
+=======
+import { Plus, Search, MessageSquare, GitBranch, Download, Trash2, Edit2, Check, Star, Bot, Sliders, ChevronDown, ChevronRight, Folder, FolderPlus, X, Layers } from "lucide-react";
+>>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 import { cyberAudio } from "@/lib/cyberAudio";
 import { HermesChatSession } from "./ChatbotSessionsDrawer";
 import { AgentPersona } from "./PersonaStudioModal";
