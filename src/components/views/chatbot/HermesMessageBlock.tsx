@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-<<<<<<< HEAD
 import {
   Brain,
   Copy,
@@ -18,14 +17,6 @@ import {
 import { cyberAudio } from "@/lib/cyberAudio";
 import { ReasoningAccordion } from "@/components/ui/assistant/ReasoningAccordion";
 import { ToolCallCard } from "@/components/ui/assistant/ToolCallCard";
-=======
-import { Brain, Copy, Check, Volume2, VolumeX, Database, FileCode, CheckCheck, Play, RotateCcw, Edit2 } from "lucide-react";
-import { cyberAudio } from "@/lib/cyberAudio";
-import { ReasoningAccordion } from "@/components/ui/assistant/ReasoningAccordion";
-import { ToolCallCard } from "@/components/ui/assistant/ToolCallCard";
-import {  } from "@/components/ui/glass/GlassBadge";
-import {  } from "@/components/ui/button";
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
 interface Props {
   content: string;
@@ -393,12 +384,21 @@ export default function HermesMessageBlock({
   if (sender === "user") {
     return (
       <div className="flex justify-end font-mono select-none my-1.5 animate-slide-up-fade w-full group">
-        <div className="max-w-3xl p-3.5 sm:p-4 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/30 text-[#F1F3F9] text-xs leading-relaxed space-y-1.5 shadow-[0_0_20px_rgba(0,255,65,0.08)] transition-all duration-200 hover:border-[#00FF41]/50">
+        <div className="max-w-3xl p-3.5 sm:p-4 rounded-2xl luminous-surface-l1 border border-[#00FF41]/40 text-[#F1F3F9] text-xs leading-relaxed space-y-1.5 shadow-[0_0_20px_rgba(0,255,65,0.08)] neon-rim-glow transition-all duration-200 hover:border-[#00FF41]/60 relative overflow-hidden">
+          <div className="hud-corner-bracket tr !border-[#00FF41]/60" />
+          <div className="hud-corner-bracket bl !border-[#00FF41]/60" />
+
           <div className="flex items-center justify-between text-[10px] text-[#4F536E] pb-1 border-b border-white/5">
-            <span className="font-bold text-[#00FF41] flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-neural-pulse" />
-              <span>OPERATOR DIRECTIVE</span>
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#00FF41] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] shadow-[0_0_8px_#00FF41] animate-neural-pulse" />
+                <span>OPERATOR DIRECTIVE</span>
+              </span>
+              <span className="tactical-badge text-[8px] border-[#00FF41]/30 text-[#00FF41] bg-[#00FF41]/5 hidden sm:inline-flex">
+                [HUMAN IN THE LOOP]
+              </span>
+            </div>
+
             <div className="flex items-center gap-2">
               {onEdit && (
                 <button
@@ -426,8 +426,8 @@ export default function HermesMessageBlock({
   if (sender === "system") {
     return (
       <div className="flex justify-center my-2 select-none font-mono animate-slide-up-fade w-full">
-        <div className="px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/10 text-[10px] text-[#9499B3] flex items-center gap-2 shadow-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-neural-pulse" />
+        <div className="px-4 py-1.5 rounded-full luminous-surface-l2 border border-white/10 text-[10px] text-[#9499B3] flex items-center gap-2 shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] shadow-[0_0_8px_#00FF41] animate-neural-pulse" />
           <span>{content}</span>
           {timestamp && <span className="text-[#4F536E]">• {timestamp}</span>}
         </div>
@@ -440,7 +440,10 @@ export default function HermesMessageBlock({
 
   return (
     <div className="flex justify-start font-mono my-2 animate-slide-up-fade w-full">
-      <div className="w-full p-4 sm:p-5 rounded-2xl bg-[#090B14]/95 border border-white/10 text-xs space-y-3.5 shadow-2xl backdrop-blur-md transition-all duration-200 hover:border-white/20">
+      <div className="w-full p-4 sm:p-5 rounded-2xl luminous-surface-l2 border border-white/10 text-xs space-y-3.5 shadow-2xl backdrop-blur-md transition-all duration-200 hover:border-white/20 relative overflow-hidden">
+        <div className="hud-corner-bracket tl" />
+        <div className="hud-corner-bracket br" />
+
         {/* Hermes Message Header */}
         <div className="flex items-center justify-between pb-2.5 border-b border-white/10">
           <div className="flex items-center gap-2.5">
@@ -451,15 +454,18 @@ export default function HermesMessageBlock({
               <span className="font-bold text-[#F1F3F9] tracking-wider text-xs">
                 HERMES NEURAL SYNAPSE
               </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-neural-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] shadow-[0_0_8px_#00FF41] animate-neural-pulse" />
             </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-white/5 text-[#00FF41] border border-white/10">
+            <span className="tactical-badge text-[9px] font-bold text-[#00FF41] border-[#00FF41]/30 bg-[#00FF41]/10">
+              [HERMES ACP]
+            </span>
+            <span className="tactical-badge text-[9px] text-[#9499B3] border-white/10 bg-white/5 hidden md:inline-flex">
               {model || "Nous-Hermes-3-70B"}
             </span>
           </div>
 
           <div className="flex items-center gap-2 text-[10px] text-[#4F536E]">
-            {tokens && <span className="text-[#00FF41] font-mono">{tokens} tok</span>}
+            {tokens && <span className="tactical-badge text-[9px] text-[#00FF41] border-[#00FF41]/30">{tokens} tok</span>}
             {timestamp && <span>{timestamp}</span>}
           </div>
         </div>

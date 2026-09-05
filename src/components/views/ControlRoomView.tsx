@@ -191,11 +191,7 @@ export default function ControlRoomView() {
 
   useEffect(() => {
     fetchSessions();
-<<<<<<< HEAD
   }, [fetchSessions]);
-=======
-  }, []);
->>>>>>> 29c61f5ff3ec86ceaa460801926554e8eed63f24
 
   const activeHarness = HARNESSES.find((h) => h.id === selectedHarnessId) || HARNESSES[0];
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0] || {
@@ -442,8 +438,17 @@ export default function ControlRoomView() {
             {/* Left Sessions & Parameters (4 cols) */}
             <div className="lg:col-span-4 flex flex-col gap-4">
               {/* Active Sessions List */}
-              <div className="cyber-card p-4 flex flex-col gap-3">
-                <span className="text-[10px] text-[#4F536E] uppercase font-bold">Active Sessions ({sessions.length}):</span>
+              <div className="luminous-surface-l2 rounded-2xl border border-white/10 p-4 flex flex-col gap-3 relative overflow-hidden">
+                <div className="hud-corner-bracket tl" />
+                <div className="hud-corner-bracket br" />
+
+                <div className="flex items-center justify-between">
+                  <span className="tactical-badge text-[9px] text-[#4F536E] uppercase font-bold">
+                    ACTIVE SESSIONS ({sessions.length})
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] shadow-[0_0_8px_#00FF41] animate-neural-pulse" />
+                </div>
+
                 <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
                   {sessions.map((sess) => {
                     const isSelected = activeSessionId === sess.id;
@@ -463,7 +468,7 @@ export default function ControlRoomView() {
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-[#F1F3F9] truncate">{sess.name}</span>
                           <span
-                            className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
+                            className={`tactical-badge text-[9px] font-mono border ${
                               sess.status === "WAITING_CLEARANCE"
                                 ? "bg-[#FFB800]/20 text-[#FFB800] border-[#FFB800]/40 animate-pulse"
                                 : sess.status === "RUNNING"
@@ -471,7 +476,7 @@ export default function ControlRoomView() {
                                 : "bg-[#00FF41]/20 text-[#00FF41] border-[#00FF41]/40"
                             }`}
                           >
-                            {sess.status}
+                            [{sess.status}]
                           </span>
                         </div>
 
@@ -485,8 +490,13 @@ export default function ControlRoomView() {
               </div>
 
               {/* Harness Runtime Dials */}
-              <div className="cyber-card p-4 flex flex-col gap-3.5">
-                <span className="text-[10px] text-[#4F536E] uppercase font-bold">Harness Parameters:</span>
+              <div className="luminous-surface-l2 rounded-2xl border border-white/10 p-4 flex flex-col gap-3.5 relative overflow-hidden">
+                <div className="hud-corner-bracket tl" />
+                <div className="hud-corner-bracket br" />
+
+                <span className="tactical-badge text-[9px] text-[#4F536E] uppercase font-bold w-fit">
+                  HARNESS PARAMETERS
+                </span>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between text-xs">
@@ -529,11 +539,17 @@ export default function ControlRoomView() {
             </div>
 
             {/* Right Cognitive Trace & Injection (8 cols) */}
-            <div className="lg:col-span-8 cyber-card p-5 flex flex-col gap-4">
+            <div className="lg:col-span-8 luminous-surface-l2 rounded-2xl border border-white/10 p-5 flex flex-col gap-4 relative overflow-hidden">
+              <div className="hud-corner-bracket tl" />
+              <div className="hud-corner-bracket br" />
+
               <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <Activity size={18} style={{ color: activeHarness.color }} />
                   <h3 className="text-sm font-black text-[#F1F3F9]">COGNITIVE TRACE & STEP DEBUGGER</h3>
+                  <span className="tactical-badge text-[9px] text-[#00FF41] border-[#00FF41]/30 bg-[#00FF41]/5 hidden sm:inline-flex">
+                    [REALTIME ACP]
+                  </span>
                 </div>
 
                 {/* Cognitive Step Playback Controls */}
@@ -570,7 +586,7 @@ export default function ControlRoomView() {
                 {messages.map((msg, idx) => (
                   <div key={msg.id || idx} className="p-4 rounded-xl bg-black/50 border border-white/10 flex flex-col gap-2.5">
                     <div className="flex items-center justify-between pb-1 border-b border-white/5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#00FF41]">
+                      <span className="tactical-badge text-[9px] font-bold uppercase tracking-wider text-[#00FF41] border-[#00FF41]/30 bg-[#00FF41]/5">
                         {msg.role === "user" ? "OPERATOR INJECTION" : "HERMES COGNITION"}
                       </span>
                       <span className="text-[9px] text-[#4F536E] font-mono">
@@ -592,7 +608,11 @@ export default function ControlRoomView() {
 
                 {currentReasoningTrace && (
                   <div className="p-4 rounded-xl bg-[#00FF41]/5 border border-[#00FF41]/30 flex flex-col gap-2 animate-pulse">
-                    <span className="text-[10px] font-bold text-[#00FF41]">STREAMING THOUGHT TRACE...</span>
+                    <div className="flex items-center gap-2">
+                      <span className="tactical-badge text-[9px] font-bold text-[#00FF41] border-[#00FF41]/40 bg-[#00FF41]/10">
+                        [THOUGHT TRACE // ACTIVE]
+                      </span>
+                    </div>
                     <pre className="text-xs text-[#00FF41] font-mono whitespace-pre-wrap leading-relaxed">
                       {currentReasoningTrace}
                       <span className="inline-block w-1.5 h-3.5 bg-[#00FF41] ml-1 animate-ping" />
