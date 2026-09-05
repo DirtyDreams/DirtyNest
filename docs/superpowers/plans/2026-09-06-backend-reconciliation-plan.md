@@ -30,18 +30,18 @@
 - Consumes: PostgreSQL 16 database pool via `postgres-js`.
 - Produces: Complete Drizzle schema exporting `users`, `auditLogs`, `systemLogs`, `chatSessions`, `chatMessages`, `agentConfigs`, `knowledgeDocs`, `knowledgeGraphEdges`, `socialAccounts`, `socialPosts`, `socialMetrics`, `zbTopics`, `zbQueue`, `zbActivityLog`, `zbRules`, `todos`, `notes`, `quickLinks`, `calendarEvents`, `focusSessions`, `hermesSessions`, `hermesMessages`, `hermesToolLogs`, `hermesMemories`.
 
-- [ ] **Step 1: Checkout relational schema and migrations from commit `60a17ce`**
+- [x] **Step 1: Checkout relational schema and migrations from commit `60a17ce`**
 
 ```bash
 git checkout 60a17ce -- src/lib/schema.ts drizzle/ src/db/index.ts
 ```
 
-- [ ] **Step 2: Verify schema export and integrity with typecheck**
+- [x] **Step 2: Verify schema export and integrity with typecheck**
 
 Run: `npx tsc --noEmit src/lib/schema.ts src/db/index.ts`
 Expected: PASS with 0 errors.
 
-- [ ] **Step 3: Commit restored data layer**
+- [x] **Step 3: Commit restored data layer**
 
 ```bash
 git add src/lib/schema.ts drizzle/ src/db/index.ts
@@ -69,18 +69,18 @@ git commit -m "feat(db): restore PostgreSQL Drizzle schema and migrations from 6
 - Consumes: Python 3.11, FastAPI, Chrome CDP (:9222), Hermes ACP, Qdrant client.
 - Produces: Endpoints for `/api/hermes/*`, `/api/docker/*`, `/api/intel/*`, `/api/automations/*`, and WebSockets `/ws/telemetry` & `/ws/acp`.
 
-- [ ] **Step 1: Checkout sidecar services, adapters, and tests from commit `60a17ce`**
+- [x] **Step 1: Checkout sidecar services, adapters, and tests from commit `60a17ce`**
 
 ```bash
 git checkout 60a17ce -- sidecar/acp_client.py sidecar/cdp_service.py sidecar/docker_service.py sidecar/intel_service.py sidecar/memory_service.py sidecar/social_scheduler.py sidecar/automations/adapters/ sidecar/tests/ sidecar/requirements.txt sidecar/requirements-dev.txt sidecar/main.py
 ```
 
-- [ ] **Step 2: Run sidecar pytest test suite**
+- [x] **Step 2: Run sidecar pytest test suite**
 
 Run: `cd sidecar && pytest tests/ -v` (or via Python environment)
 Expected: PASS (all 86 tests pass).
 
-- [ ] **Step 3: Commit restored sidecar modules**
+- [x] **Step 3: Commit restored sidecar modules**
 
 ```bash
 git add sidecar/
@@ -106,18 +106,18 @@ git commit -m "feat(sidecar): restore FastAPI ACP, CDP, Docker, Knowledge, and S
 - Consumes: `src/lib/schema.ts`, `sidecar` endpoints via HTTP & WS.
 - Produces: `Classifier`, `AcpBridge`, `verifyJwt`, `encryptApiKey`, `decryptApiKey`, `useRealAuthStore`.
 
-- [ ] **Step 1: Checkout orchestrator, auth, and client bridge libs from `60a17ce`**
+- [x] **Step 1: Checkout orchestrator, auth, and client bridge libs from `60a17ce`**
 
 ```bash
 git checkout 60a17ce -- src/lib/orchestrator/ src/lib/auth/ src/lib/docker/ src/lib/intel/ src/lib/knowledge/ src/lib/social/ src/middleware.ts src/stores/useRealAuthStore.ts
 ```
 
-- [ ] **Step 2: Run Vitest on restored orchestrator and auth modules**
+- [x] **Step 2: Run Vitest on restored orchestrator and auth modules**
 
 Run: `npx vitest run src/lib/orchestrator src/lib/auth`
 Expected: PASS (classifier snapshots, bridge event mapping, jwt and encryption tests pass).
 
-- [ ] **Step 3: Commit restored core libs and orchestrator**
+- [x] **Step 3: Commit restored core libs and orchestrator**
 
 ```bash
 git add src/lib/orchestrator/ src/lib/auth/ src/lib/docker/ src/lib/intel/ src/lib/knowledge/ src/lib/social/ src/middleware.ts src/stores/useRealAuthStore.ts
@@ -142,18 +142,18 @@ git commit -m "feat(orchestrator): restore agent classifier, ACP bridge, and JWT
 - Consumes: `src/lib/schema.ts`, `src/lib/orchestrator/*`, `src/lib/auth/*`, Sidecar HTTP API.
 - Produces: REST API endpoints under `/api/*` validated with Zod and protected by JWT.
 
-- [ ] **Step 1: Checkout API routes and their vitest test files from `60a17ce`**
+- [x] **Step 1: Checkout API routes and their vitest test files from `60a17ce`**
 
 ```bash
 git checkout 60a17ce -- src/app/api/auth/ src/app/api/chat/ src/app/api/docker/ src/app/api/intel/ src/app/api/knowledge/ src/app/api/social/ src/app/api/audit/ src/app/api/hermes/
 ```
 
-- [ ] **Step 2: Run Vitest on API route tests**
+- [x] **Step 2: Run Vitest on API route tests**
 
 Run: `npx vitest run src/app/api`
 Expected: PASS (all API route tests pass).
 
-- [ ] **Step 3: Commit restored API routes**
+- [x] **Step 3: Commit restored API routes**
 
 ```bash
 git add src/app/api/
@@ -174,18 +174,18 @@ git commit -m "feat(api): restore auth, chat, docker, intel, knowledge, and soci
 - Consumes: Docker engine, homelab network configuration.
 - Produces: Full multi-container composition (`postgres`, `qdrant`, `redis`, `searxng`, `ollama`, `web`, `sidecar`) and official architectural records.
 
-- [ ] **Step 1: Checkout infrastructure and ADR files from `60a17ce`**
+- [x] **Step 1: Checkout infrastructure and ADR files from `60a17ce`**
 
 ```bash
 git checkout 60a17ce -- docker-compose.yml searxng/ scripts/ docs/adr/
 ```
 
-- [ ] **Step 2: Verify docker compose file validity**
+- [x] **Step 2: Verify docker compose file validity**
 
 Run: `docker compose config` (or dry-run parse)
 Expected: Valid compose configuration with 7 services.
 
-- [ ] **Step 3: Commit restored infrastructure and ADR documents**
+- [x] **Step 3: Commit restored infrastructure and ADR documents**
 
 ```bash
 git add docker-compose.yml searxng/ scripts/ docs/adr/
@@ -205,26 +205,26 @@ git commit -m "feat(infra): restore full 7-service docker-compose, searxng confi
 - Consumes: `useRealAuthStore` from `src/stores/useRealAuthStore.ts`, `/api/auth/login`.
 - Produces: Protected SPA root with Luminous Cyber-Industrial styled authentication overlay and 1-click Dev Quick-Login button.
 
-- [ ] **Step 1: Checkout `LoginScreen.tsx` and `RealAuthGate.tsx` from `60a17ce`**
+- [x] **Step 1: Checkout `LoginScreen.tsx` and `RealAuthGate.tsx` from `60a17ce`**
 
 ```bash
 git checkout 60a17ce -- src/components/auth/LoginScreen.tsx src/components/auth/RealAuthGate.tsx
 ```
 
-- [ ] **Step 2: Add 1-click Dev Quick-Login button to `LoginScreen.tsx`**
+- [x] **Step 2: Add 1-click Dev Quick-Login button to `LoginScreen.tsx`**
 
 Ensure `LoginScreen.tsx` provides a distinct "⚡ Quick Dev Login" button prefilling and submitting default homelab credentials (`dev` / password from `.env`) when in development environment.
 
-- [ ] **Step 3: Ensure `RealAuthGate` wraps SPA in `src/app/page.tsx`**
+- [x] **Step 3: Ensure `RealAuthGate` wraps SPA in `src/app/page.tsx`**
 
 Integrate `RealAuthGate` at the top of `src/app/page.tsx` while preserving all new Luminous UI header, sidebar, and context decks.
 
-- [ ] **Step 4: Verify TypeScript build**
+- [x] **Step 4: Verify TypeScript build**
 
 Run: `npm run typecheck`
 Expected: PASS with 0 errors.
 
-- [ ] **Step 5: Commit auth UI integration**
+- [x] **Step 5: Commit auth UI integration**
 
 ```bash
 git add src/components/auth/ src/app/page.tsx
@@ -243,27 +243,27 @@ git commit -m "feat(auth): integrate RealAuthGate and LoginScreen with dev quick
   - `npm run lint`
   - `pytest tests/` (in `sidecar/`)
 
-- [ ] **Step 1: Run TypeScript compiler check**
+- [x] **Step 1: Run TypeScript compiler check**
 
 Run: `npm run typecheck`
 Expected: 0 errors.
 
-- [ ] **Step 2: Run frontend test suites (Vitest)**
+- [x] **Step 2: Run frontend test suites (Vitest)**
 
 Run: `npm test`
 Expected: PASS (all Vitest suites pass).
 
-- [ ] **Step 3: Run ESLint**
+- [x] **Step 3: Run ESLint**
 
 Run: `npm run lint`
 Expected: 0 errors, 0 warnings.
 
-- [ ] **Step 4: Run Sidecar Pytest suite**
+- [x] **Step 4: Run Sidecar Pytest suite**
 
 Run: `cd sidecar && pytest tests/`
 Expected: 86 passed.
 
-- [ ] **Step 5: Final commit if any lint/typing formatting adjustments were needed**
+- [x] **Step 5: Final commit if any lint/typing formatting adjustments were needed**
 
 ```bash
 git commit -m "chore(qa): ensure all verification quality gates pass across frontend and sidecar"
