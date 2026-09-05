@@ -198,12 +198,10 @@ export function generateThemeCss(preset: ThemePreset): string {
       --color-neon-purple: ${safeSecondary};
       --color-neon-cyan: ${safeAccent};
       --bg-deep: ${safeBg};
+      --color-canvas: ${safeBg};
       --color-primary: ${safePrimary};
       --color-secondary: ${safeSecondary};
       --color-accent: ${safeAccent};
-      --color-primary: ${preset.primary};
-      --color-secondary: ${preset.secondary};
-      --color-accent: ${preset.accent};
       --color-primary-rgb: ${p.r}, ${p.g}, ${p.b};
       --color-secondary-rgb: ${s.r}, ${s.g}, ${s.b};
       --color-accent-rgb: ${a.r}, ${a.g}, ${a.b};
@@ -211,7 +209,7 @@ export function generateThemeCss(preset: ThemePreset): string {
     }
 
     body {
-      background-color: ${preset.bgDeep} !important;
+      background-color: ${safeBg} !important;
       background-image: 
         radial-gradient(circle at 12% 18%, rgba(${p.r}, ${p.g}, ${p.b}, 0.08) 0%, transparent 45%),
         radial-gradient(circle at 88% 50%, rgba(${s.r}, ${s.g}, ${s.b}, 0.08) 0%, transparent 45%),
@@ -222,18 +220,18 @@ export function generateThemeCss(preset: ThemePreset): string {
 
     /* Primary text and hover */
     [class*="text-[#00FF41]"], [class*="text-[#00ff41]"], .text-neon-green {
-      color: ${preset.primary} !important;
+      color: ${safePrimary} !important;
     }
     [class*="hover:text-[#00FF41]"]:hover, [class*="hover:text-[#00ff41]"]:hover {
-      color: ${preset.primary} !important;
+      color: ${safePrimary} !important;
     }
     [class*="group-hover:text-[#00FF41]"]:is(:hover, :focus, .group:hover *), [class*="group-hover:text-[#00ff41]"]:is(:hover, :focus, .group:hover *) {
-      color: ${preset.primary} !important;
+      color: ${safePrimary} !important;
     }
 
     /* Primary borders */
     [class*="border-[#00FF41]"], [class*="border-[#00ff41]"], .border-neon-green {
-      border-color: ${preset.primary} !important;
+      border-color: ${safePrimary} !important;
     }
     [class*="border-[#00FF41]/10"], [class*="border-[#00ff41]/10"] { border-color: rgba(${p.r}, ${p.g}, ${p.b}, 0.1) !important; }
     [class*="border-[#00FF41]/20"], [class*="border-[#00ff41]/20"] { border-color: rgba(${p.r}, ${p.g}, ${p.b}, 0.2) !important; }
@@ -246,7 +244,7 @@ export function generateThemeCss(preset: ThemePreset): string {
 
     /* Primary backgrounds */
     [class*="bg-[#00FF41]"], [class*="bg-[#00ff41]"], .bg-neon-green {
-      background-color: ${preset.primary} !important;
+      background-color: ${safePrimary} !important;
     }
     [class*="bg-[#00FF41]/5"], [class*="bg-[#00ff41]/5"] { background-color: rgba(${p.r}, ${p.g}, ${p.b}, 0.05) !important; }
     [class*="bg-[#00FF41]/10"], [class*="bg-[#00ff41]/10"] { background-color: rgba(${p.r}, ${p.g}, ${p.b}, 0.1) !important; }
@@ -268,18 +266,18 @@ export function generateThemeCss(preset: ThemePreset): string {
 
     /* Secondary (#BF40FF) text, background, border, glow */
     [class*="text-[#BF40FF]"], [class*="text-[#bf40ff]"], .text-neon-purple {
-      color: ${preset.secondary} !important;
+      color: ${safeSecondary} !important;
     }
     [class*="hover:text-[#BF40FF]"]:hover, [class*="hover:text-[#bf40ff]"]:hover {
-      color: ${preset.secondary} !important;
+      color: ${safeSecondary} !important;
     }
     [class*="border-[#BF40FF]"], [class*="border-[#bf40ff]"], .border-neon-purple {
-      border-color: ${preset.secondary} !important;
+      border-color: ${safeSecondary} !important;
     }
     [class*="border-[#BF40FF]/30"] { border-color: rgba(${s.r}, ${s.g}, ${s.b}, 0.3) !important; }
     [class*="border-[#BF40FF]/40"] { border-color: rgba(${s.r}, ${s.g}, ${s.b}, 0.4) !important; }
     [class*="bg-[#BF40FF]"], [class*="bg-[#bf40ff]"], .bg-neon-purple {
-      background-color: ${preset.secondary} !important;
+      background-color: ${safeSecondary} !important;
     }
     [class*="bg-[#BF40FF]/10"] { background-color: rgba(${s.r}, ${s.g}, ${s.b}, 0.1) !important; }
     [class*="bg-[#BF40FF]/15"] { background-color: rgba(${s.r}, ${s.g}, ${s.b}, 0.15) !important; }
@@ -295,18 +293,18 @@ export function generateThemeCss(preset: ThemePreset): string {
 
     /* Accent (#00F0FF) text, background, border, glow */
     [class*="text-[#00F0FF]"], [class*="text-[#00f0ff]"], [class*="text-[#00E5FF]"], .text-neon-cyan {
-      color: ${preset.accent} !important;
+      color: ${safeAccent} !important;
     }
     [class*="hover:text-[#00F0FF]"]:hover, [class*="hover:text-[#00f0ff]"]:hover {
-      color: ${preset.accent} !important;
+      color: ${safeAccent} !important;
     }
     [class*="border-[#00F0FF]"], [class*="border-[#00f0ff]"], .border-neon-cyan {
-      border-color: ${preset.accent} !important;
+      border-color: ${safeAccent} !important;
     }
     [class*="border-[#00F0FF]/30"] { border-color: rgba(${a.r}, ${a.g}, ${a.b}, 0.3) !important; }
     [class*="border-[#00F0FF]/40"] { border-color: rgba(${a.r}, ${a.g}, ${a.b}, 0.4) !important; }
     [class*="bg-[#00F0FF]"], [class*="bg-[#00f0ff]"], .bg-neon-cyan {
-      background-color: ${preset.accent} !important;
+      background-color: ${safeAccent} !important;
     }
     [class*="bg-[#00F0FF]/10"] { background-color: rgba(${a.r}, ${a.g}, ${a.b}, 0.1) !important; }
     [class*="bg-[#00F0FF]/15"] { background-color: rgba(${a.r}, ${a.g}, ${a.b}, 0.15) !important; }
@@ -321,7 +319,7 @@ export function generateThemeCss(preset: ThemePreset): string {
 
     /* Backgrounds & Cards */
     [class*="bg-[#07070B]"], [class*="bg-[#07070b]"], [class*="bg-[#0A080E]"] {
-      background-color: ${preset.bgDeep} !important;
+      background-color: ${safeBg} !important;
     }
     [class*="bg-[#07070B]/90"], [class*="bg-[#07070b]/90"] {
       background-color: rgba(${bg.r}, ${bg.g}, ${bg.b}, 0.9) !important;
@@ -332,23 +330,20 @@ export function generateThemeCss(preset: ThemePreset): string {
 
     /* Cyber Card Hover */
     .cyber-card:hover {
-      border-color: rgba(${p.r}, ${p.g}, ${p.b}, 0.4) !important;
+      border-color: rgba(${p.r}, ${p.g}, ${p.b}, 0.25) !important;
       box-shadow: 
-        0 20px 48px -12px rgba(0, 0, 0, 0.85),
-        0 0 24px rgba(${p.r}, ${p.g}, ${p.b}, 0.15),
-        0 0 0 1px rgba(${p.r}, ${p.g}, ${p.b}, 0.2) inset !important;
-    }
-    .cyber-card:hover::before {
-      background: linear-gradient(90deg, transparent 0%, ${preset.primary} 50%, transparent 100%) !important;
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+        0 16px 40px -10px rgba(0, 0, 0, 0.75),
+        0 0 20px rgba(${p.r}, ${p.g}, ${p.b}, 0.08) !important;
     }
     .hud-corner {
-      border-color: ${preset.primary} !important;
+      border-color: ${safePrimary} !important;
     }
 
     /* Selection Colors */
     ::selection, [class*="selection:bg-[#00FF41]/20"]::selection {
       background-color: rgba(${p.r}, ${p.g}, ${p.b}, 0.25) !important;
-      color: ${preset.primary} !important;
+      color: ${safePrimary} !important;
     }
 
     /* Scrollbars */
@@ -356,8 +351,8 @@ export function generateThemeCss(preset: ThemePreset): string {
       background: rgba(${p.r}, ${p.g}, ${p.b}, 0.3) !important;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: ${preset.primary} !important;
-      box-shadow: 0 0 10px ${preset.primary} !important;
+      background: ${safePrimary} !important;
+      box-shadow: 0 0 10px ${safePrimary} !important;
     }
   `;
 }
@@ -374,11 +369,20 @@ export function applyThemePreset(presetOrId: string | ThemePreset) {
 
     if (preset) {
       if (typeof document !== "undefined") {
+        const safePrimary = sanitizeColor(preset.primary, "#00FF41");
+        const safeSecondary = sanitizeColor(preset.secondary, "#BF40FF");
+        const safeAccent = sanitizeColor(preset.accent, "#00F0FF");
+        const safeBg = sanitizeColor(preset.bgDeep, "#07070B");
+
         const root = document.documentElement;
-        root.style.setProperty("--color-neon-green", preset.primary);
-        root.style.setProperty("--color-neon-purple", preset.secondary);
-        root.style.setProperty("--color-neon-cyan", preset.accent);
-        root.style.setProperty("--bg-deep", preset.bgDeep);
+        root.style.setProperty("--color-neon-green", safePrimary);
+        root.style.setProperty("--color-neon-purple", safeSecondary);
+        root.style.setProperty("--color-neon-cyan", safeAccent);
+        root.style.setProperty("--bg-deep", safeBg);
+        root.style.setProperty("--color-canvas", safeBg);
+        root.style.setProperty("--color-primary", safePrimary);
+        root.style.setProperty("--color-secondary", safeSecondary);
+        root.style.setProperty("--color-accent", safeAccent);
 
         let styleTag = document.getElementById("dirtynest-dynamic-theme") as HTMLStyleElement | null;
         if (!styleTag) {

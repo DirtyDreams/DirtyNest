@@ -48,3 +48,38 @@ describe("theme helpers", () => {
     expect(css).toContain("background-color: #050505 !important");
   });
 });
+
+describe("generateThemeCss", () => {
+  it("injects primary, secondary, and accent variables for Matrix preset", () => {
+    const matrix = DEFAULT_THEMES.find((t) => t.id === "matrix")!;
+    const css = generateThemeCss(matrix);
+    expect(css).toContain("--color-primary: #00FF41");
+    expect(css).toContain("--color-secondary: #BF40FF");
+    expect(css).toContain("--color-accent: #00F0FF");
+    expect(css).toContain("--color-primary-rgb: 0, 255, 65");
+    expect(css).toContain("--color-canvas: #07070B");
+  });
+
+  it("handles custom presets with fallback sanitization", () => {
+    const css = generateThemeCss({
+      id: "test",
+      name: "Test",
+      primary: "invalid-color",
+      secondary: "#123456",
+      accent: "#654321",
+      bgDeep: "#000000",
+    });
+    expect(css).toContain("--color-primary: #00FF41");
+    expect(css).toContain("--color-secondary: #123456");
+    expect(css).toContain("--color-canvas: #000000");
+    expect(css).not.toContain("invalid-color");
+  });
+
+  it("aligns .cyber-card:hover with Stitch top-lit hairline without ::before", () => {
+    const matrix = DEFAULT_THEMES.find((t) => t.id === "matrix")!;
+    const css = generateThemeCss(matrix);
+    expect(css).not.toContain(".cyber-card:hover::before");
+    expect(css).toContain("inset 0 1px 0 0 rgba(255, 255, 255,");
+  });
+});
+
