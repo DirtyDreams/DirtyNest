@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "sidecar/**",
     "scripts/**",
+    ".agents/**",
   ]),
   // Project-level rule overrides — must come AFTER the preset spreads
   {
