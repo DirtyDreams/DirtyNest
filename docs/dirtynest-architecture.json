@@ -1,0 +1,383 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "DirtyNest Operations Hub Architecture",
+    "output": "dirtynest-architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1220,
+      680
+    ],
+    "views": [
+      {
+        "id": "operator-and-ui",
+        "label": "Operator UI & Next.js Core",
+        "focus": [
+          "operator",
+          "next_spa",
+          "postgres"
+        ],
+        "note": "Next.js 16 App Router SPA with cyberpunk UI deck, reactive Zustand stores, and Drizzle ORM connecting to PostgreSQL 16."
+      },
+      {
+        "id": "agentic-operations",
+        "label": "Agent Swarm & Sidecar Backbone",
+        "focus": [
+          "next_spa",
+          "sidecar",
+          "acp_hermes",
+          "cdp_chrome",
+          "qdrant",
+          "ollama"
+        ],
+        "note": "Orchestrator bridge streaming events over WebSocket to Hermes ACP, Chrome CDP automation, Ollama local models, and Qdrant vector vault."
+      },
+      {
+        "id": "automation-subsystems",
+        "label": "HITL & External Automations",
+        "focus": [
+          "sidecar",
+          "cdp_chrome",
+          "zbiornik_portal",
+          "social_platforms"
+        ],
+        "note": "Zbiornik.com automation with strict HITL gate enforcement, social platform adapters, and CDP session management."
+      },
+      {
+        "id": "infrastructure-telemetry",
+        "label": "Infrastructure & Background Tasks",
+        "focus": [
+          "sidecar",
+          "docker_host",
+          "redis",
+          "postgres"
+        ],
+        "note": "Docker daemon container monitoring, Redis task queue for background cron execution, and resilient database state."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "Operator Browser",
+      "sublabel": "Cyberpunk UI Deck",
+      "pos": [
+        40,
+        260
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "next_spa",
+      "type": "frontend",
+      "brand": "next-js",
+      "label": "Next.js 16 SPA",
+      "sublabel": "React 19 / App Router :3000",
+      "pos": [
+        250,
+        260
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "docker_host",
+      "type": "cloud",
+      "brand": "docker",
+      "label": "Docker Engine",
+      "sublabel": "7 Stack Containers",
+      "pos": [
+        250,
+        420
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "brand": "postgresql",
+      "label": "PostgreSQL 16",
+      "sublabel": "Drizzle schema :5432",
+      "pos": [
+        480,
+        100
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "sidecar",
+      "type": "backend",
+      "brand": "fastapi",
+      "label": "FastAPI Sidecar",
+      "sublabel": "Python 3.11 :8000",
+      "pos": [
+        480,
+        260
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "database",
+      "brand": "redis",
+      "label": "Redis Store",
+      "sublabel": "Cron & PubSub :6379",
+      "pos": [
+        480,
+        420
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "acp_hermes",
+      "type": "backend",
+      "label": "Hermes ACP Agent",
+      "sublabel": "Profile dirtydaily",
+      "pos": [
+        710,
+        140
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "cdp_chrome",
+      "type": "backend",
+      "label": "Chrome CDP Engine",
+      "sublabel": "Automations & Headless",
+      "pos": [
+        710,
+        280
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "qdrant",
+      "type": "database",
+      "label": "Qdrant Vector DB",
+      "sublabel": "FastEmbed Vault :6333",
+      "pos": [
+        710,
+        420
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "ollama",
+      "type": "backend",
+      "brand": "ollama",
+      "label": "Ollama & SearXNG",
+      "sublabel": "Local LLM & Intel :11434",
+      "pos": [
+        710,
+        560
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "zbiornik_portal",
+      "type": "external",
+      "label": "Zbiornik.com",
+      "sublabel": "HITL Portal Automation",
+      "pos": [
+        970,
+        220
+      ],
+      "size": [
+        140,
+        60
+      ]
+    },
+    {
+      "id": "social_platforms",
+      "type": "external",
+      "brand": "reddit",
+      "label": "Social Adapters",
+      "sublabel": "Reddit & Platform Stubs",
+      "pos": [
+        970,
+        340
+      ],
+      "size": [
+        140,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "DirtyNest Docker Stack (7 Services)",
+      "wraps": [
+        "next_spa",
+        "docker_host",
+        "postgres",
+        "sidecar",
+        "redis",
+        "acp_hermes",
+        "cdp_chrome",
+        "qdrant",
+        "ollama"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "Agent Swarm & Engine Core",
+      "wraps": [
+        "acp_hermes",
+        "cdp_chrome",
+        "qdrant",
+        "ollama"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "op-to-spa",
+      "from": "operator",
+      "to": "next_spa",
+      "label": "HTTPS / WS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "spa-to-pg",
+      "from": "next_spa",
+      "to": "postgres",
+      "label": "Drizzle SQL",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "spa-to-sidecar",
+      "from": "next_spa",
+      "to": "sidecar",
+      "label": "REST + /ws/acp",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "sidecar-to-docker",
+      "from": "sidecar",
+      "to": "docker_host",
+      "label": "Docker stats",
+      "fromSide": "bottom",
+      "toSide": "right"
+    },
+    {
+      "id": "sidecar-to-redis",
+      "from": "sidecar",
+      "to": "redis",
+      "label": "Task queue",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 48
+    },
+    {
+      "id": "sidecar-to-hermes",
+      "from": "sidecar",
+      "to": "acp_hermes",
+      "label": "ACP stream",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "sidecar-to-cdp",
+      "from": "sidecar",
+      "to": "cdp_chrome",
+      "label": "CDP actions",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "sidecar-to-qdrant",
+      "from": "sidecar",
+      "to": "qdrant",
+      "label": "Vector search",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "qdrant-to-ollama",
+      "from": "qdrant",
+      "to": "ollama",
+      "label": "Embeddings",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "cdp-to-zbiornik",
+      "from": "cdp_chrome",
+      "to": "zbiornik_portal",
+      "label": "HITL Gate",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "cdp-to-social",
+      "from": "cdp_chrome",
+      "to": "social_platforms",
+      "label": "Adapters",
+      "fromSide": "right",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Frontend & Control Deck",
+      "items": [
+        "Next.js 16 SPA (React 19) with cyberpunk theme and live WebSocket feeds",
+        "Persistent state via Drizzle ORM and postgres-js connection pool"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Sidecar Operational Backbone",
+      "items": [
+        "FastAPI Python 3.11 service with Hermes ACP and headless Chrome CDP",
+        "Qdrant vector engine and Ollama / SearXNG local AI & intel stack"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Automations & HITL Governance",
+      "items": [
+        "Zbiornik.com CDP automation guarded by human-in-the-loop gates",
+        "Redis task scheduler and Docker daemon container telemetry"
+      ]
+    }
+  ]
+}
