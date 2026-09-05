@@ -47,6 +47,7 @@ import TerminalDock from "@/components/terminal/TerminalDock";
 import CyberWindowManager from "@/components/desktop/CyberWindowManager";
 import KeyboardHotkeyStudioModal from "@/components/views/tools/KeyboardHotkeyStudioModal";
 import { ParticleMeshBackground } from "@/components/ui/animated/ParticleMeshBackground";
+import CyberCardSpotlight from "@/components/common/CyberCardSpotlight";
 import dynamic from "next/dynamic";
 import ViewLoadingSkeleton from "@/components/common/ViewLoadingSkeleton";
 import { loadWidgetLayout, saveWidgetLayout, type WidgetLayoutItem, LAYOUT_PRESETS, ALL_WIDGETS_METADATA } from "@/lib/widgetLayout";
@@ -159,6 +160,41 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+function HudTimeDate() {
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!now) {
+    return (
+      <div className="hidden lg:flex items-center gap-1.5 text-xs font-mono text-[#9499B3]">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-pulse" />
+        <span className="text-white/40">--:--:--</span>
+      </div>
+    );
+  }
+
+  const timeStr = now.toLocaleTimeString("en-US", { hour12: false });
+  const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase();
+
+  return (
+    <div className="hidden lg:flex items-center gap-2 text-xs font-mono">
+      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/[0.03] border border-white/10 text-[#00F0FF] shadow-[0_0_8px_rgba(0,240,255,0.15)]">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] animate-pulse" />
+        <span className="font-bold tracking-wider">{timeStr}</span>
+        <span className="text-[9px] text-[#9499B3] tracking-normal font-sans">SYS</span>
+      </div>
+      <span className="text-[10px] text-[#9499B3] uppercase tracking-wider">{dateStr}</span>
+    </div>
+  );
+}
 
 export default function Home() {
   const {
@@ -588,8 +624,11 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
 
         {/* Top Operational Breadcrumb HUD Bar (Persistent Global Header) */}
         <header
-          className={`sticky md:fixed top-0 left-0 right-0 md:left-[68px] ${isRightPanelOpen ? "xl:right-[340px]" : "xl:right-[52px]"} z-40 shrink-0 flex flex-col gap-2 px-3 sm:px-5 pt-safe pt-2 sm:pt-3 pb-2 bg-[#07070B]/98 backdrop-blur-2xl border-b border-white/10 shadow-[0_4px_25px_rgba(0,0,0,0.85)] transition-all duration-300`}
+          className={`sticky md:fixed top-0 left-0 right-0 md:left-[68px] ${isRightPanelOpen ? "xl:right-[340px]" : "xl:right-[52px]"} z-40 shrink-0 flex flex-col gap-2 px-3 sm:px-5 pt-safe pt-2 sm:pt-3 pb-2 luminous-surface-l1 border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.85)] transition-all duration-300 relative`}
         >
+          {/* Subtle Cyber Border Gradient Line */}
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#00FF41]/30 to-transparent pointer-events-none" />
+
           {/* Row 1: Brand & Node Status (Left) + Identity + Compact Non-wrapping HUD Toolbar (Right) */}
           <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-4 w-full h-10 shrink-0">
             {/* Left: Brand & Mobile Trigger */}
@@ -617,7 +656,8 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                   >
                     DirtyNest
                   </span>
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30">
+                  <span className="tactical-badge text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 flex items-center gap-1.5 shadow-[0_0_8px_rgba(0,255,65,0.2)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-pulse" />
                     OPERATIONAL
                   </span>
                 </div>
@@ -626,6 +666,8 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                   <span>NODE://ROOT/MAIN</span>
                   <span>•</span>
                   <UptimeBadge />
+                  <span>•</span>
+                  <HudTimeDate />
                 </div>
               </div>
 
@@ -696,13 +738,13 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                 {/* Command palette search trigger */}
                 <button
                   onClick={triggerCmdPalette}
-                  className="group h-7 w-7 flex items-center justify-center rounded-lg bg-white/[0.03] hover:scale-110 hover:-translate-y-0.5 transition-all duration-200 border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all cursor-pointer group"
-                  title="Open Command Palette (Ctrl+P)"
+                  className="group h-7 px-2 flex items-center gap-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-[#00FF41]/40 text-[#9499B3] hover:text-[#00FF41] transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
+                  title="Open Command Palette (Ctrl+K or ⌘K)"
                   aria-label="Open Command Palette"
                 >
-                  <Search size={12} className="group-hover:text-[#00FF41] group-hover:scale-125 transition-transform duration-300" />
-
-
+                  <Search size={12} className="group-hover:text-[#00FF41] group-hover:scale-110 transition-transform duration-200" />
+                  <span className="hidden xl:inline text-[10px] font-mono tracking-wider text-[#9499B3] group-hover:text-[#F1F3F9]">SEARCH</span>
+                  <kbd className="hidden xl:inline text-[9px] font-mono px-1 py-0.2 rounded bg-black/40 border border-white/10 text-[#9499B3] group-hover:text-[#00FF41] group-hover:border-[#00FF41]/40 transition-colors">⌘K</kbd>
                 </button>
 
                 {/* DevTools Matrix modal button */}
@@ -728,7 +770,6 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                   }`}
                 >
                   <Terminal size={12} className="transition-transform duration-300 group-hover:-translate-y-0.5" />
-
 
                 </button>}
 
@@ -765,7 +806,7 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
             </div>
 
             {/* Row 2: View Mode Quick Navigation Strip (Full width, scrollable, clean) */}
-            <div className="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/5 font-mono text-xs overflow-x-auto scrollbar-none w-full" role="tablist" aria-label="Deck Views">
+            <div className="flex items-center gap-1 p-1 luminous-surface-l1 rounded-xl border border-white/[0.06] font-mono text-xs overflow-x-auto scrollbar-none w-full" role="tablist" aria-label="Deck Views">
               <button
                 role="tab"
                 aria-selected={activeView === "dashboard"}
@@ -1016,13 +1057,17 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
           {/* Central Tactical Workspace */}
           <main className={`flex-1 overflow-y-auto md:overflow-visible min-w-0 max-w-full ml-0 md:ml-[68px] ${isRightPanelOpen ? "xl:mr-[340px]" : "xl:mr-[52px]"} px-3 sm:px-5 py-3 md:pt-[112px] md:sm:pt-[118px] pb-24 md:pb-40 flex flex-col transition-all duration-300`}>
             {/* ACTIVE VIEW RENDERING WITH SMOOTH VIEW TRANSITION, ERROR BOUNDARIES & ACCESS GATES */}
-            <div key={activeView} className="animate-view-enter w-full flex flex-col flex-1">
+            <div key={activeView} className="animate-in fade-in-50 duration-200 w-full flex flex-col flex-1">
           {activeView === "dashboard" && (
             <ProtectedAccessGate minClearance={1} viewName="Overview Dashboard">
               <ErrorBoundary fallbackTitle="DASHBOARD WIDGET GRID ERROR">
-                <div className="flex flex-col gap-4 sm:gap-5 pb-6 animate-fade-in">
+                <div className="flex flex-col gap-4 sm:gap-5 pb-6 animate-in fade-in-50 duration-200">
                   {/* Tactical Preset Quick Toolbar */}
-                  <div className="cyber-card p-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                  <CyberCardSpotlight
+                    className="p-3 text-xs font-mono [&>div.relative]:flex [&>div.relative]:flex-wrap [&>div.relative]:items-center [&>div.relative]:justify-between [&>div.relative]:gap-3 [&>div.relative]:w-full"
+                    spotlightColor="rgba(0, 255, 65, 0.06)"
+                    showBrackets={false}
+                  >
                     <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
                       <span className="text-[10px] text-slate-500 uppercase font-bold shrink-0">BENTO PRESET:</span>
                       {[
@@ -1053,7 +1098,7 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                       <Sliders size={12} />
                       <span>EDIT TILES ({dashboardLayout.filter((w) => w.enabled).length})</span>
                     </button>
-                  </div>
+                  </CyberCardSpotlight>
 
                   {/* Top North Star DORA Metrics Bar */}
                   {customWidgets.dora_metrics !== false && (
@@ -1188,7 +1233,7 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
                             onDrop={(e) => handleWidgetDrop(e, w.id)}
                             onDragEnd={handleWidgetDragEnd}
                             className={cn(
-                              "w-full h-full flex flex-col relative group/widget transition-all duration-200 rounded-2xl",
+                              "w-full h-full flex flex-col relative group/widget transition-all duration-200 rounded-2xl cyber-spotlight-card",
                               isDragging && "opacity-40 scale-[0.98] border border-dashed border-[#00F0FF]",
                               isOver && !isDragging && "ring-2 ring-[#00FF41] shadow-[0_0_20px_rgba(0,255,65,0.4)] scale-[1.01]"
                             )}

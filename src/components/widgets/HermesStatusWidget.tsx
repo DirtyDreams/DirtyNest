@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Brain, ArrowRight, Play, Terminal } from "lucide-react";
 import { useHermesStore } from "@/lib/hermes/hermesStore";
 import { cyberAudio } from "@/lib/cyberAudio";
+import CyberCardSpotlight from "@/components/common/CyberCardSpotlight";
 
 export default function HermesStatusWidget() {
   const { config, memories, skills, isAcpConnected } = useHermesStore();
@@ -30,22 +31,31 @@ export default function HermesStatusWidget() {
   };
 
   return (
-    <div className="cyber-card p-4 flex flex-col justify-between gap-3 h-full font-mono select-none border-[#00FF41]/20 hover:border-[#00FF41]/40 transition-all">
+    <CyberCardSpotlight
+      className="p-4 h-full font-mono select-none border-[#00FF41]/20 hover:border-[#00FF41]/40 transition-all [&>div.relative]:h-full [&>div.relative]:flex [&>div.relative]:flex-col [&>div.relative]:justify-between [&>div.relative]:gap-3"
+      spotlightColor="rgba(0, 255, 65, 0.08)"
+      showBrackets
+    >
       {/* Header */}
       <div>
-        <div className="flex items-center justify-between pb-2 border-b border-white/5">
+        <div className="widget-header flex items-center justify-between pb-2 border-b border-white/5 mb-2">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-[#00FF41]/15 border border-[#00FF41]/40 flex items-center justify-center text-[#00FF41] shadow-[0_0_8px_rgba(0,255,65,0.2)]">
-              <Brain size={13} />
+              <Brain size={13} className="shrink-0" />
             </div>
-            <span className="text-xs font-black text-[#F1F3F9] tracking-wider">
-              HERMES MASTER BRAIN
-            </span>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-mono font-black text-[#F1F3F9] tracking-wider uppercase m-0">
+                HERMES MASTER BRAIN
+              </h3>
+              <span className="tactical-badge text-[9px] font-mono text-[#00FF41] border-[#00FF41]/30 bg-[#00FF41]/10">
+                [HERMES ACP]
+              </span>
+            </div>
           </div>
 
-          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 font-bold flex items-center gap-1">
+          <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 font-bold flex items-center gap-1.5 shadow-[0_0_8px_rgba(0,255,65,0.15)]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-pulse" />
-            ONLINE
+            {isAcpConnected ? "ONLINE" : "STANDBY"}
           </span>
         </div>
 
@@ -103,6 +113,6 @@ export default function HermesStatusWidget() {
         <span>OPEN HERMES COMMAND PALETTE (CTRL+K)</span>
         <ArrowRight size={11} />
       </button>
-    </div>
+    </CyberCardSpotlight>
   );
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, memo } from "react";
 import { Cpu, HardDrive, Wifi, MemoryStick, Activity } from "lucide-react";
 import NumberFlow from "@number-flow/react";
-import { Badge } from "@/components/ui/badge";
+import CyberCardSpotlight from "@/components/common/CyberCardSpotlight";
 
 interface StatData {
   id: string;
@@ -183,19 +183,31 @@ function SystemStats() {
   }, []);
 
   return (
-    <div className="cyber-card p-5 relative flex flex-col justify-between gap-3.5 h-full min-h-[330px]">
-      <div className="hud-corner hud-corner-tl" />
-      <div className="hud-corner hud-corner-tr" />
-      <div className="hud-corner hud-corner-bl" />
-      <div className="hud-corner hud-corner-br" />
+    <CyberCardSpotlight
+      className="p-5 flex flex-col justify-between gap-3.5 h-full min-h-[330px] [&>div.relative]:h-full [&>div.relative]:flex [&>div.relative]:flex-col [&>div.relative]:justify-between [&>div.relative]:gap-3.5"
+      spotlightColor="rgba(0, 255, 65, 0.08)"
+      showBrackets
+    >
+      <div className="widget-header flex items-center justify-between pb-2 border-b border-white/5 mb-1">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-[#00FF41]/15 border border-[#00FF41]/40 flex items-center justify-center text-[#00FF41] shadow-[0_0_8px_rgba(0,255,65,0.2)]">
+            <Activity size={13} className="shrink-0" />
+          </div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-mono font-black text-[#F1F3F9] tracking-wider uppercase m-0">
+              Hardware Telemetry
+            </h3>
+            <span className="tactical-badge text-[9px] font-mono text-[#00FF41] border-[#00FF41]/30 bg-[#00FF41]/10">
+              [TELEMETRY]
+            </span>
+          </div>
+        </div>
 
-      <div className="widget-header">
-        <Activity size={15} className="icon" />
-        <h3>Hardware Telemetry</h3>
         <div className="ml-auto flex items-center gap-2">
-          <Badge variant="outline" className="text-[10px] font-mono text-[#00FF41] bg-[#00FF41]/10 border-[#00FF41]/30">
-            POLL: 2.5s
-          </Badge>
+          <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30 font-bold flex items-center gap-1.5 shadow-[0_0_8px_rgba(0,255,65,0.15)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-pulse" />
+            POLL 2.5s
+          </span>
         </div>
       </div>
 
@@ -272,7 +284,7 @@ function SystemStats() {
           <span className="font-bold text-[#00F0FF] mt-0.5 block truncate">0.8/8.0G</span>
         </div>
       </div>
-    </div>
+    </CyberCardSpotlight>
   );
 }
 
