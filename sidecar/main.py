@@ -5,7 +5,11 @@ import os
 import socket
 import time
 from typing import Dict, List, Optional, Any
+from datetime import datetime
 from contextlib import asynccontextmanager
+import base64
+import hashlib
+import hmac
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,10 +19,11 @@ import psutil
 
 from acp_client import acp_bridge
 from memory_service import memory_engine
-from knowledge_service import KnowledgeVaultEngine
+from knowledge_service import COLLECTION_NAME, knowledge_service
 from cdp_service import cdp_engine
 from cron_service import cron_manager
 from docker_service import docker_engine
+from intel_service import intel_service
 from automations import (
     EngagementManager,
     TopicManager,
@@ -27,19 +32,47 @@ from automations import (
     zbiornik_manager,
     zbiornik_monitor,
 )
+from automations.adapters import get_adapter, list_adapters
 
 engagement_mgr = EngagementManager()
 topic_mgr = TopicManager()
 dedup_service = DeduplicationService()
 verification_service = VerificationService()
 
-# Knowledge vault shares the single fastembed model with the memory engine
-knowledge_engine = KnowledgeVaultEngine(embed_fn=memory_engine.embed_text)
-
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("dirtynest-sidecar")
+
+# ---------------------------------------------------------------------------
+# JWT verification (HS256) for WebSocket handshakes. No external dependency —
+# HMAC-SHA256 via stdlib. Shares JWT_SECRET with the Next.js web app.
+# ---------------------------------------------------------------------------
+
+def _b64url_decode(data: str) -> bytes:
+    padding = "=" * (-len(data) % 4)
+    return base64.urlsafe_b64decode(data + padding)
+
+
+def verify_jwt(token: str, secret: str) -> Optional[dict]:
+    """Return the JWT payload if the token is a valid HS256 JWT signed with
+    `secret` and not expired; otherwise None."""
+    if not token or not secret:
+        return None
+    try:
+        header_b64, payload_b64, sig_b64 = token.split(".")
+        signing_input = f"{header_b64}.{payload_b64}".encode()
+        expected = hmac.new(secret.encode(), signing_input, hashlib.sha256).digest()
+        actual = _b64url_decode(sig_b64)
+        if not hmac.compare_digest(expected, actual):
+            return None
+        payload = json.loads(_b64url_decode(payload_b64))
+        exp = payload.get("exp")
+        if exp and time.time() > exp:
+            return None
+        return payload
+    except Exception:
+        return None
 
 # Global Telemetry & Status Cache
 ecosystem_status = {
@@ -55,6 +88,9 @@ ecosystem_status = {
         "minions": {"port": 6969, "status": "checking", "latency_ms": 0, "name": "Hermes Minions Master"},
         "postgres": {"port": 5432, "status": "checking", "latency_ms": 0, "name": "PostgreSQL Primary DB"},
         "qdrant": {"port": 6333, "status": "checking", "latency_ms": 0, "name": "Qdrant Vector Engine"},
+        "redis": {"port": 6379, "status": "checking", "latency_ms": 0, "name": "Redis Task Queue"},
+        "searxng": {"port": 8080, "status": "checking", "latency_ms": 0, "name": "SearXNG Metasearch"},
+        "ollama": {"port": 11434, "status": "checking", "latency_ms": 0, "name": "Ollama LLM Runtime"},
         "cdp_main": {"port": 9222, "status": "checking", "latency_ms": 0, "name": "Chrome CDP Primary"},
         "cdp_mina": {"port": 9333, "status": "checking", "latency_ms": 0, "name": "Mina Chrome CDP"},
     },
@@ -75,6 +111,36 @@ minions_registry = [
     {"id": "minion-03", "name": "Nexus-Gamma", "role": "Social & Engagement", "status": "IDLE", "model": "mistral-nemo-12b", "load": 5, "last_ping": "now"},
     {"id": "minion-04", "name": "Chronos-Delta", "role": "Cron & Health Orchestrator", "status": "ACTIVE", "model": "hermes-3-llama-3.1-8b", "load": 41, "last_ping": "now"},
 ]
+MINIONS_MASTER_URL = os.environ.get("MINIONS_MASTER_URL", "http://localhost:6969")
+
+
+async def sync_minions_registry() -> None:
+    """Best-effort sync with the Minions master (:6969). On failure, mark the
+    static registry as unreachable with a last-seen timestamp instead of
+    failing startup."""
+    global minions_registry
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            res = await client.get(f"{MINIONS_MASTER_URL}/api/minions")
+            if res.status_code == 200:
+                live = res.json()
+                if isinstance(live, list) and live:
+                    minions_registry = live
+                    logger.info(f"Minions registry synced from {MINIONS_MASTER_URL} ({len(live)} minions).")
+                    return
+    except Exception as exc:  # noqa: BLE001 - best-effort sync
+        logger.warning(f"Minions master unreachable at {MINIONS_MASTER_URL}: {exc}")
+    # Mark the static registry as unreachable with a last-seen timestamp.
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    for m in minions_registry:
+        m["status"] = "UNREACHABLE"
+        m["last_ping"] = now
+
+
+async def minions_sync_loop() -> None:
+    while True:
+        await sync_minions_registry()
+        await asyncio.sleep(60)
 
 cron_jobs_registry = [
     {"name": "dirtydaily-daily-health", "schedule": "0 6 * * *", "script": "daily-health.sh", "status": "SUCCESS", "last_run": "2026-08-27 07:00:00"},
@@ -121,6 +187,10 @@ def probe_tcp_port(host: str, port: int, timeout: float = 0.5) -> tuple[bool, fl
     except (socket.timeout, ConnectionRefusedError, OSError):
         return False, 0.0
 
+def probe_host(key: str, default: str = "127.0.0.1") -> str:
+    """Resolve a service probe host from env (PROBE_HOST_<KEY>), for compose in-network probing."""
+    return os.environ.get(f"PROBE_HOST_{key.upper()}", default)
+
 async def background_telemetry_prober():
     """Continuously probe local Hermes ports and broadcast telemetry."""
     while True:
@@ -132,7 +202,7 @@ async def background_telemetry_prober():
 
             # Check Services
             for key, svc in ecosystem_status["services"].items():
-                is_up, latency = probe_tcp_port("127.0.0.1", svc["port"], timeout=0.3)
+                is_up, latency = probe_tcp_port(probe_host(key), svc["port"], timeout=0.3)
                 svc["status"] = "UP" if is_up else "DOWN"
                 svc["latency_ms"] = latency
 
@@ -163,20 +233,26 @@ async def lifespan(app: FastAPI):
     acp_bridge.add_listener(manager.broadcast)
     cron_manager.set_broadcast_callback(manager.broadcast)
 
-    # Startup: Launch background probe & cron scheduler tasks
+    # Startup: Launch background probe, cron scheduler, and minions sync tasks
     probe_task = asyncio.create_task(background_telemetry_prober())
     cron_task = asyncio.create_task(cron_manager.scheduler_loop())
-    logger.info("DirtyNest Sidecar started, telemetry prober and Redis cron scheduler initialized.")
+    minions_task = asyncio.create_task(minions_sync_loop())
+    logger.info("DirtyNest Sidecar started, telemetry prober, Redis cron scheduler, and minions sync initialized.")
     yield
     # Shutdown
     probe_task.cancel()
     cron_task.cancel()
+    minions_task.cancel()
     try:
         await probe_task
     except asyncio.CancelledError:
         pass
     try:
         await cron_task
+    except asyncio.CancelledError:
+        pass
+    try:
+        await minions_task
     except asyncio.CancelledError:
         pass
     logger.info("DirtyNest Sidecar stopped.")
@@ -276,6 +352,13 @@ async def resolve_acp_gate_endpoint(req: AcpGateResolveRequest):
     if not success:
         raise HTTPException(status_code=404, detail="Gate request ID not found or already resolved.")
     return {"status": "success", "request_id": req.request_id, "decision": req.decision}
+class AcpCancelRequest(BaseModel):
+    session_id: str
+
+@app.post("/api/hermes/acp/cancel")
+async def cancel_acp_session_endpoint(req: AcpCancelRequest):
+    await acp_bridge.cancel_session(req.session_id)
+    return {"status": "success", "session_id": req.session_id, "message": "Session cancellation requested."}
 
 class MemoryCreateRequest(BaseModel):
     title: str = Field(..., description="Title of the memory fact")
@@ -306,53 +389,61 @@ def create_memory_endpoint(req: MemoryCreateRequest):
     )
     return {"status": "success", "memory": result}
 
-@app.delete("/api/hermes/memories/{memory_id}")
-def delete_memory_endpoint(memory_id: str):
-    success = memory_engine.delete_memory(memory_id)
-    return {"status": "success" if success else "failed", "deleted_id": memory_id}
-
-
 class KnowledgeIngestRequest(BaseModel):
-    title: str
-    content: str
-    doc_id: Optional[str] = None
-    source: Optional[str] = None
-    category: str = "doc"
-    tags: Optional[List[str]] = None
+    doc_id: str = Field(..., description="PG knowledge_docs.id as string")
+    title: str = Field(..., description="Document title")
+    content: str = Field(..., description="Document body text")
+    category: str = Field("general", description="Category")
+    tags: Optional[List[str]] = Field(default_factory=list)
 
+class KnowledgeSearchRequest(BaseModel):
+    query: str = Field(..., description="Semantic search query")
+    limit: int = Field(5, ge=1, le=50)
+    threshold: float = Field(0.5, ge=0.0, le=1.0)
+
+class KnowledgeObsidianIndexRequest(BaseModel):
+    vault_path: str = Field(..., description="Absolute path to Obsidian vault dir")
 
 @app.post("/api/knowledge/ingest")
-def ingest_document_endpoint(req: KnowledgeIngestRequest):
+def knowledge_ingest_endpoint(req: KnowledgeIngestRequest):
     try:
-        result = knowledge_engine.ingest_document(
+        point_ids = knowledge_service.ingest_document(
+            doc_id=req.doc_id,
             title=req.title,
             content=req.content,
-            doc_id=req.doc_id,
-            source=req.source,
             category=req.category,
-            tags=req.tags,
+            tags=req.tags
         )
-        return {"status": "success", "document": result}
-    except Exception as exc:
-        return {"status": "failed", "error": str(exc)}
+        return {"status": "success", "point_ids": point_ids, "chunks": len(point_ids)}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
+@app.post("/api/knowledge/search")
+def knowledge_search_endpoint(req: KnowledgeSearchRequest):
+    results = knowledge_service.search(query=req.query, limit=req.limit, score_threshold=req.threshold)
+    return {"status": "success", "query": req.query, "results": results, "count": len(results)}
 
-@app.get("/api/knowledge/search")
-def search_knowledge_endpoint(q: str, limit: int = 5, threshold: float = 0.65):
-    results = knowledge_engine.search(query=q, limit=limit, score_threshold=threshold)
-    return {"status": "success", "query": q, "results": results, "count": len(results)}
+@app.delete("/api/knowledge/docs/{doc_id}")
+def knowledge_delete_endpoint(doc_id: str):
+    success = knowledge_service.delete_document(doc_id)
+    return {"status": "success" if success else "failed", "deleted_doc_id": doc_id}
 
+@app.get("/api/knowledge/stats")
+def knowledge_stats_endpoint():
+    return {"status": "success", "collection": COLLECTION_NAME,
+            "point_count": knowledge_service.count_points(),
+            "ready": knowledge_service.is_ready}
 
-@app.get("/api/knowledge/list")
-def list_knowledge_endpoint(limit: int = 50):
-    documents = knowledge_engine.list_documents(limit=limit)
-    return {"status": "success", "documents": documents, "count": len(documents)}
-
-
-@app.delete("/api/knowledge/{doc_id}")
-def delete_knowledge_endpoint(doc_id: str):
-    success = knowledge_engine.delete_document(doc_id)
-    return {"status": "success" if success else "failed", "deleted_id": doc_id}
+@app.post("/api/knowledge/obsidian/index")
+def knowledge_obsidian_index_endpoint(req: KnowledgeObsidianIndexRequest):
+    try:
+        result = knowledge_service.index_obsidian_vault(req.vault_path)
+        return {"status": "success", "docs": result["docs"], "edges": result["edges"],
+                "doc_count": len(result["docs"]), "edge_count": len(result["edges"])}
+    except FileNotFoundError as e:
+        return {"status": "error", "error": str(e)}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 class CdpNavigateRequest(BaseModel):
     url: str = Field(..., description="Target URL")
@@ -511,10 +602,15 @@ async def post_docker_container_action(container_id: str, req: DockerActionReque
     result = await docker_engine.manage_container(container_id, req.action)
     return result
 
-@app.get("/api/docker/containers/{container_id}/logs")
-async def get_docker_container_logs(container_id: str, tail: int = 100):
-    logs = await docker_engine.get_container_logs(container_id, tail)
-    return {"container_id": container_id, "logs": logs, "tail": tail}
+@app.get("/api/docker/stacks")
+async def get_docker_stacks():
+    stacks = await docker_engine.list_stacks()
+    return {"stacks": stacks, "count": len(stacks), "timestamp": time.time()}
+
+@app.get("/api/intel/cve")
+async def get_intel_cve(force: bool = False):
+    cves = await intel_service.fetch_cve_feed(force=force)
+    return {"cves": cves, "count": len(cves), "timestamp": time.time()}
 
 @app.post("/api/chat")
 async def chat_endpoint(req: PromptRequest):
@@ -549,6 +645,12 @@ async def chat_endpoint(req: PromptRequest):
 @app.websocket("/ws/telemetry")
 @app.websocket("/ws/acp")
 async def websocket_unified_endpoint(websocket: WebSocket):
+    # F2 auth: require a valid JWT (passed as ?token=) at handshake.
+    token = websocket.query_params.get("token", "")
+    secret = os.environ.get("JWT_SECRET", "")
+    if not verify_jwt(token, secret):
+        await websocket.close(code=4401)
+        return
     await manager.connect(websocket)
     # Send initial snapshot immediately
     initial_snapshot = {
@@ -652,7 +754,34 @@ async def crosscheck_coverage(req: CrosscheckCoverageRequest):
     return report
 
 
+# Social Media Command (F5) — platform adapters. The Next.js app owns PG
+# metadata (social_accounts/social_posts/social_metrics) and proxies the actual
+# publish here. HITL approval is enforced upstream before this is called.
 # ---------------------------------------------------------------------------
+
+class SocialPublishRequest(BaseModel):
+    platform: str
+    text: str
+    post_id: Optional[str] = None  # reddit target thread
+    subreddit: Optional[str] = None
+    account_name: Optional[str] = None
+
+@app.get("/api/social/adapters")
+async def social_adapters_status():
+    return {"platforms": list_adapters()}
+
+@app.post("/api/social/publish")
+async def social_publish(req: SocialPublishRequest):
+    adapter = get_adapter(req.platform)
+    if adapter is None:
+        return {"ok": False, "platform_post_id": None, "error": f"no adapter for platform '{req.platform}'"}
+    kwargs: Dict[str, Any] = {}
+    if req.post_id:
+        kwargs["post_id"] = req.post_id
+    if req.subreddit:
+        kwargs["subreddit"] = req.subreddit
+    result = adapter.publish(req.text, **kwargs)
+    return result
 # Zbiornik Ops — CDP runner wrapper (docs/zbiornik-ops.md)
 # Reads: direct. Writes: REQUIRE confirm_run=True (HITL queue approved upstream
 # in the Next.js dashboard + guarded by zb_rules limits). Single account only.
@@ -785,6 +914,64 @@ async def websocket_terminal_endpoint(websocket: WebSocket):
     finally:
         stdout_task.cancel()
         stderr_task.cancel()
+        if proc.returncode is None:
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+
+@app.websocket("/ws/docker/logs/{container_id}")
+async def websocket_docker_logs(websocket: WebSocket, container_id: str):
+    # F2 auth: require a valid JWT at handshake.
+    token = websocket.query_params.get("token", "")
+    secret = os.environ.get("JWT_SECRET", "")
+    if not verify_jwt(token, secret):
+        await websocket.close(code=4401)
+        return
+    await websocket.accept()
+    logger.info("Docker logs client connected for %s", container_id)
+
+    if not docker_engine.docker_bin:
+        await websocket.send_text(json.dumps({"type": "ERROR", "message": "Docker binary not found on host."}))
+        await websocket.close()
+        return
+
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            docker_engine.docker_bin,
+            "logs",
+            "-f",
+            "--tail",
+            "100",
+            container_id,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+    except Exception as e:
+        await websocket.send_text(json.dumps({"type": "ERROR", "message": str(e)}))
+        await websocket.close()
+        return
+
+    async def forward_stream(stream):
+        while True:
+            try:
+                chunk = await stream.read(1024)
+                if not chunk:
+                    break
+                await websocket.send_text(json.dumps({"type": "LOG", "data": chunk.decode("utf-8", errors="replace")}))
+            except Exception:
+                break
+
+    stream_task = asyncio.create_task(forward_stream(proc.stdout))
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        logger.info("Docker logs client disconnected for %s", container_id)
+    except Exception as e:
+        logger.error(f"Docker logs socket error: {e}")
+    finally:
+        stream_task.cancel()
         if proc.returncode is None:
             try:
                 proc.terminate()
