@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Rss,
   ExternalLink,
@@ -105,6 +105,7 @@ export default function IntelFeedView() {
   const { setActiveView } = useAppStore();
   const [intelList, setIntelList] = useState<IntelItem[]>(INITIAL_INTEL);
   const [channelFilter, setChannelFilter] = useState<string>("ALL");
+  const [severityFilter, setSeverityFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showMitreModal, setShowMitreModal] = useState(false);
@@ -124,72 +125,91 @@ export default function IntelFeedView() {
     } catch {}
   }, []);
 
-  // Fetch real CVE intel from the API (best-effort; keep mock fallback).
-  useEffect(() => {
-    let active = true;
-    const fetchCves = async () => {
-      try {
-        const res = await fetch("/api/intel/cve");
-        if (res.ok) {
-          const data = (await res.json()) as {
-            cves?: Array<{
-              cve_id: string;
-              title: string;
-              description: string;
-              severity: string;
-              cvss_score: string;
-              published_at: string;
-              url: string;
-            }>;
-          };
-          if (active && data.cves && data.cves.length > 0) {
-            const mapped: IntelItem[] = data.cves.map((c) => ({
-              id: c.cve_id,
-              title: c.title || c.cve_id,
-              source: "NVD CVE Feed",
-              channel: "SECURITY",
-              snippet: c.description || c.cve_id,
-              timestamp: c.published_at ? new Date(c.published_at).toLocaleString() : "recent",
-              url: c.url,
-              score: c.cvss_score ? Math.round(Number(c.cvss_score) * 100) : 0,
-              tags: [c.severity, c.cve_id],
-            }));
-            setIntelList(mapped);
-          }
+  const fetchCves = useCallback(async (force = false) => {
+    setIsRefreshing(true);
+    try {
+      const res = await fetch(`/api/intel/cve${force ? "?force=true" : ""}`);
+      if (res.ok) {
+        const data = (await res.json()) as {
+          cves?: Array<{
+            cve_id: string;
+            title: string;
+            description: string;
+            severity: string;
+            cvss_score: string;
+            published_at: string;
+            url: string;
+          }>;
+        };
+        if (data.cves && data.cves.length > 0) {
+          const mapped: IntelItem[] = data.cves.map((c) => ({
+            id: c.cve_id,
+            title: c.title || c.cve_id,
+            source: "NVD CVE Feed",
+            channel: "SECURITY",
+            snippet: c.description || c.cve_id,
+            timestamp: c.published_at ? new Date(c.published_at).toLocaleString() : "recent",
+            url: c.url,
+            score: c.cvss_score ? Math.round(Number(c.cvss_score) * 100) : 0,
+            tags: [c.severity.toUpperCase(), c.cve_id],
+          }));
+          setIntelList(mapped);
+          cyberAudio.play("chime");
+          return;
         }
-      } catch {
-        // graceful demo fallback
       }
-    };
-    fetchCves();
-    return () => {
-      active = false;
-    };
+    } catch {
+      // graceful fallback
+    } finally {
+      setIsRefreshing(false);
+    }
   }, []);
 
-  const handleToggleSave = (id: string) => {
+  useEffect(() => {
+    fetchCves(false);
+  }, [fetchCves]);
+
+  const handleToggleSave = async (id: string) => {
     cyberAudio.play("chime");
+    const item = intelList.find((i) => i.id === id);
+    const willSave = item ? !item.isSaved : false;
     setIntelList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, isSaved: !item.isSaved } : item))
+      prev.map((i) => (i.id === id ? { ...i, isSaved: !i.isSaved } : i))
     );
+
+    if (item && willSave) {
+      try {
+        await fetch("/api/knowledge/docs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: item.title,
+            content: `${item.snippet}\n\nSource: ${item.source}\nReference: ${item.url}`,
+            category: "threat-intel",
+            tags: [...item.tags, "intel", item.channel.toLowerCase()],
+          }),
+        });
+      } catch {
+        // non-blocking
+      }
+    }
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     cyberAudio.play("warp");
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-      cyberAudio.play("chime");
-    }, 800);
+    await fetchCves(true);
   };
 
   const filteredItems = intelList.filter((item) => {
     const matchesChannel = channelFilter === "ALL" || item.channel === channelFilter;
+    const matchesSeverity =
+      severityFilter === "ALL" ||
+      item.tags.some((t) => t.toUpperCase() === severityFilter);
     const matchesSearch =
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.snippet.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesChannel && matchesSearch;
+    return matchesChannel && matchesSeverity && matchesSearch;
   });
 
   return (
@@ -309,6 +329,41 @@ export default function IntelFeedView() {
                   {ch}
                 </button>
               ))}
+            </div>
+
+            {/* Severity Pills */}
+            <div className="flex items-center gap-1 p-1 bg-black/40 rounded-xl border border-white/5 text-xs">
+              <span className="text-[10px] text-[#9499B3] px-1.5 uppercase font-bold">Severity:</span>
+              {["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW"].map((sev) => {
+                const isSelected = severityFilter === sev;
+                const sevColor =
+                  sev === "CRITICAL"
+                    ? "#FF003C"
+                    : sev === "HIGH"
+                    ? "#FF8800"
+                    : sev === "MEDIUM"
+                    ? "#FFB800"
+                    : sev === "LOW"
+                    ? "#00FF41"
+                    : "#00F0FF";
+                return (
+                  <button
+                    key={sev}
+                    onClick={() => {
+                      cyberAudio.play("click");
+                      setSeverityFilter(sev);
+                    }}
+                    className="px-2 py-0.5 rounded transition-all cursor-pointer text-[10px] font-bold border"
+                    style={{
+                      color: isSelected ? sevColor : "#9499B3",
+                      background: isSelected ? `${sevColor}20` : "transparent",
+                      borderColor: isSelected ? `${sevColor}50` : "transparent",
+                    }}
+                  >
+                    {sev}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

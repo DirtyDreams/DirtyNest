@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -15,6 +15,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+
+interface CronDaemon {
+  id: string;
+  name: string;
+  schedule: string;
+  category?: string;
+  status?: string;
+  last_run?: number | null;
+  next_run?: number | null;
+  last_result?: string;
+}
+
+const DEFAULT_CRON_DAEMONS: CronDaemon[] = [
+  { id: "cve_recon_scan", name: "CVE Security Recon & Boundary Audit", schedule: "Every 5 mins", status: "SCHEDULED" },
+  { id: "postgres_vacuum_stats", name: "PostgreSQL 16 Index & Telemetry Vacuum", schedule: "Every 10 mins", status: "SCHEDULED" },
+  { id: "qdrant_memory_optimizer", name: "Qdrant Vector Memory Segment Optimizer", schedule: "Every 15 mins", status: "SCHEDULED" },
+  { id: "swarm_mesh_heartbeat", name: "Swarm Minion & SkillClaw Mesh Pulse", schedule: "Every 1 min", status: "SCHEDULED" },
+  { id: "zbiornik_poll", name: "Zbiornik Ops — read-only poll", schedule: "Every 30 min", status: "SCHEDULED" },
+];
 
 interface ScheduleEvent {
   id: string;
@@ -69,6 +88,7 @@ const INITIAL_EVENTS: ScheduleEvent[] = [
 
 export default function ScheduleView() {
   const [events, setEvents] = useState<ScheduleEvent[]>(INITIAL_EVENTS);
+  const [cronDaemons, setCronDaemons] = useState<CronDaemon[]>(DEFAULT_CRON_DAEMONS);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
@@ -88,7 +108,58 @@ export default function ScheduleView() {
   const [newRecurrence, setNewRecurrence] = useState<ScheduleEvent["recurrence"]>("DAILY");
   const [newDesc, setNewDesc] = useState("");
 
-  const handleAddEvent = (e: React.FormEvent) => {
+  useEffect(() => {
+    // 1. Fetch calendar events from real database
+    const fetchCalendar = async () => {
+      try {
+        const res = await fetch("/api/calendar");
+        if (res.ok) {
+          const data = (await res.json()) as Array<{
+            id: number;
+            title: string;
+            description: string | null;
+            date: string;
+            time: string | null;
+            color: string | null;
+          }>;
+          if (Array.isArray(data) && data.length > 0) {
+            const mapped: ScheduleEvent[] = data.map((d) => ({
+              id: String(d.id),
+              title: d.title,
+              category: "DEPLOYMENT",
+              date: d.date,
+              time: d.time || "12:00",
+              priority: "HIGH",
+              description: d.description || "",
+            }));
+            setEvents(mapped);
+          }
+        }
+      } catch {
+        // fallback to initial events
+      }
+    };
+
+    // 2. Fetch real cron daemons from sidecar
+    const fetchCrons = async () => {
+      try {
+        const res = await fetch("/api/hermes/cron");
+        if (res.ok) {
+          const data = (await res.json()) as { cron_jobs?: CronDaemon[] };
+          if (data.cron_jobs && data.cron_jobs.length > 0) {
+            setCronDaemons(data.cron_jobs);
+          }
+        }
+      } catch {
+        // fallback to defaults
+      }
+    };
+
+    fetchCalendar();
+    fetchCrons();
+  }, []);
+
+  const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle) return;
     cyberAudio.play("chime");
@@ -108,6 +179,33 @@ export default function ScheduleView() {
     setNewTitle("");
     setNewDesc("");
     setShowAddModal(false);
+
+    try {
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTitle,
+          description: newDesc || undefined,
+          date: newDate,
+          time: newTime,
+          color: getCategoryColor(newCategory),
+        }),
+      });
+      if (res.ok) {
+        const serverEvents = (await res.json()) as Array<{ id: number }>;
+        if (Array.isArray(serverEvents) && serverEvents.length > 0) {
+          const last = serverEvents[serverEvents.length - 1];
+          if (last?.id) {
+            setEvents((prev) =>
+              prev.map((ev) => (ev.id === newEvt.id ? { ...ev, id: String(last.id) } : ev))
+            );
+          }
+        }
+      }
+    } catch {
+      // optimistic update retained
+    }
   };
 
   const calendarItems: CalendarItem[] = useMemo(() => {
@@ -130,25 +228,52 @@ export default function ScheduleView() {
     });
   }, [events]);
 
-  const handleTriggerCronJob = (id: string) => {
+  const handleTriggerCronJob = async (id: string) => {
     cyberAudio.play("click");
     setRunningJobId(id);
-    setTimeout(() => {
-      setEvents((prev) =>
-        prev.map((e) =>
-          e.id === id
-            ? { ...e, lastRun: new Date().toLocaleTimeString("en-US", { hour12: false }) }
-            : e
-        )
+    try {
+      const res = await fetch(`/api/hermes/cron/${encodeURIComponent(id)}/run`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        const result = (await res.json()) as { message?: string };
+        setCronDaemons((prev) =>
+          prev.map((c) =>
+            c.id === id
+              ? {
+                  ...c,
+                  status: "SUCCESS",
+                  last_run: Date.now() / 1000,
+                  last_result: result.message || "Executed successfully",
+                }
+              : c
+          )
+        );
+        cyberAudio.play("chime");
+      } else {
+        setCronDaemons((prev) =>
+          prev.map((c) => (c.id === id ? { ...c, status: "FAILED" } : c))
+        );
+      }
+    } catch {
+      setCronDaemons((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, status: "TRIGGERED" } : c))
       );
+    } finally {
       setRunningJobId(null);
-      cyberAudio.play("chime");
-    }, 1200);
+    }
   };
 
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = async (id: string) => {
     cyberAudio.play("error");
     setEvents((prev) => prev.filter((e) => e.id !== id));
+    if (!id.startsWith("evt-")) {
+      try {
+        await fetch(`/api/calendar/${id}`, { method: "DELETE" });
+      } catch {
+        // non-blocking
+      }
+    }
   };
 
   // Calendar Grid Days Calculation
@@ -451,20 +576,21 @@ export default function ScheduleView() {
             </div>
 
             <div className="space-y-2 text-xs font-mono">
-              {[
-                { id: "cron-1", name: "Postgres Snapshot", cron: "0 4 * * *", next: "In 7h 24m" },
-                { id: "cron-2", name: "Vector Index Rebuild", cron: "0 2 * * 0", next: "In 3d 5h" },
-                { id: "cron-3", name: "SSL Cert Validation", cron: "0 0 1 * *", next: "In 5d 12h" },
-                { id: "cron-4", name: "Node Telemetry Rollup", cron: "*/15 * * * *", next: "In 9m" },
-              ].map((cron) => (
+              {cronDaemons.map((cron) => (
                 <div key={cron.id} className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-white/5 gap-2">
                   <div className="flex flex-col min-w-0">
                     <span className="font-bold text-[#F1F3F9] text-xs truncate">{cron.name}</span>
-                    <span className="text-[9px] text-[#4F536E] font-mono">{cron.cron}</span>
+                    <div className="flex items-center gap-2 mt-0.5 text-[9px] text-[#4F536E]">
+                      <span>{cron.schedule}</span>
+                      {cron.status && (
+                        <span className={`px-1 rounded font-bold ${cron.status === "SUCCESS" ? "text-[#00FF41]" : "text-[#00F0FF]"}`}>
+                          [{cron.status}]
+                        </span>
+                      )}
+                    </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[#00F0FF] font-bold">{cron.next}</span>
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => handleTriggerCronJob(cron.id)}
                       disabled={runningJobId === cron.id}
