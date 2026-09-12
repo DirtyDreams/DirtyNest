@@ -77,7 +77,7 @@ class HermesAcpBridge:
         return None
 
     def classify_tool_risk(self, tool_name: str, args: Dict[str, Any]) -> str:
-        safe_tools = ["read_file", "list_dir", "grep_search", "view_file", "search_files", "cdp_inspect", "cdp_navigate", "cdp_screenshot", "cdp_extract_dom", "get_status", "semantic_search", "query_knowledge_vault", "queue_zbiornik_draft", "scan_threat_radar", "docker_ps", "docker_inspect"]
+        safe_tools = ["read_file", "list_dir", "grep_search", "view_file", "search_files", "cdp_inspect", "cdp_navigate", "cdp_screenshot", "cdp_extract_dom", "get_status", "semantic_search", "query_knowledge_vault", "queue_zbiornik_draft", "scan_threat_radar", "docker_ps", "docker_inspect", "delegate_minion_task"]
         if tool_name in safe_tools:
             return "low"
         if tool_name in ["write_file", "replace_file_content", "patch", "edit_file", "cdp_click", "cdp_type", "generate_image"]:
@@ -227,6 +227,7 @@ class HermesAcpBridge:
             needs_zbiornik = any(k in lower_prompt for k in ["zbiornik", "priv", "wiadomość do", "wiadomosc do", "napisz priv", "odpowiedz na wiadomosc", "odpowiedz na wiadomość", "odpowiedz do watku", "odpowiedz do wątku", "stworz draft", "stwórz draft"])
             needs_threat_radar = any(k in lower_prompt for k in ["threat", "cve", "kev", "vulnerability", "vulnerabilities", "port scan", "security audit", "threat radar", "mesh scan", "zero-day", "zeroday", "exploit"])
             needs_docker = any(k in lower_prompt for k in ["docker", "container", "kontener", "docker ps", "docker stats", "kontenery", "kontenerów"])
+            needs_delegate_minion = any(k in lower_prompt for k in ["minion", "delegate", "subordinate", "subtask", "oddeleguj", "zleć minion", "aegis", "cypher", "nexus", "chronos"])
 
             if needs_browser:
                 target_url = "http://localhost:3000"
@@ -411,6 +412,34 @@ class HermesAcpBridge:
                         stats_str = f" | CPU: {c['cpu_perc']} | MEM: {c.get('mem_usage', 'N/A')}"
                     summary_lines.append(f"  * [{c.get('state', 'unknown').upper()}] {c.get('name')} ({c.get('image')}){stats_str}")
                 result_text = "\n".join(summary_lines)
+                await self.broadcast_event({
+                    "type": "ACP_TOOL_EXECUTED",
+                    "session_id": session_id,
+                    "tool_name": tool_name,
+                    "result": result_text
+                })
+                await asyncio.sleep(0.3)
+
+            elif needs_delegate_minion:
+                from minions_service import minions_service
+                tool_name = "delegate_minion_task"
+                target_minion = "minion-01"
+                if any(k in lower_prompt for k in ["code", "ast", "refactor", "kod", "cypher"]):
+                    target_minion = "minion-02"
+                elif any(k in lower_prompt for k in ["social", "creative", "post", "content", "nexus"]):
+                    target_minion = "minion-03"
+                elif any(k in lower_prompt for k in ["cron", "health", "schedul", "chronos"]):
+                    target_minion = "minion-04"
+
+                task = await minions_service.dispatch_task(
+                    minion_id=target_minion,
+                    name="Hermes Delegated Subtask",
+                    directive=prompt,
+                    simulate_duration=1.5,
+                )
+                node = minions_service.nodes.get(target_minion)
+                node_name = node.name if node else target_minion
+                result_text = f"Subtask delegated to subordinate node {node_name} (Task ID: {task.id}). Status: EXECUTING. Subordinate worker engaged."
                 await self.broadcast_event({
                     "type": "ACP_TOOL_EXECUTED",
                     "session_id": session_id,

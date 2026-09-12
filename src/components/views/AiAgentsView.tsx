@@ -12,6 +12,8 @@ import {
   GitMerge,
   ShieldCheck,
   Users,
+  Send,
+  RotateCw,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { useHermesStore } from "@/lib/hermes/hermesStore";
@@ -24,6 +26,7 @@ import ToolPermissionMatrix from "./agents/ToolPermissionMatrix";
 import AgentDetailDrawer, { SwarmAgent } from "./agents/AgentDetailDrawer";
 import SwarmDagPipelineModal from "./agents/SwarmDagPipelineModal";
 import PaperclipCompanyControlPlane from "./agents/PaperclipCompanyControlPlane";
+import MinionDispatchModal from "./ai_agents/MinionDispatchModal";
 import { BorderBeam } from "@/components/ui/animated/border-beam";
 import NumberFlow from "@number-flow/react";
 import { Badge } from "@/components/ui/badge";
@@ -167,7 +170,37 @@ export default function AiAgentsView() {
   const [selectedDetailAgent, setSelectedDetailAgent] = useState<Agent | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [showDagModal, setShowDagModal] = useState(false);
+  const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
+  const [dispatchMinionId, setDispatchMinionId] = useState<string>("minion-01");
   const [activeSubTab, setActiveSubTab] = useState<AgentsSubTab>("fleet");
+
+  const handleNodeControl = async (agentId: string, action: "pause" | "resume" | "restart") => {
+    try {
+      cyberAudio.play("click");
+      const res = await fetch(`/api/minions/${agentId}/control`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        cyberAudio.play("success");
+        setAgents((prev) =>
+          prev.map((a) => {
+            if (a.id === agentId) {
+              return {
+                ...a,
+                status: action === "pause" ? "paused" : "idle",
+                cpuUsage: action === "pause" ? 0 : 12,
+              };
+            }
+            return a;
+          })
+        );
+      }
+    } catch (e) {
+      console.error("Failed to control minion node", e);
+    }
+  };
   const [logs, setLogs] = useState<LogEntry[]>([
     { id: "l-1", time: "23:40:10", agent: "SENTINEL-01", level: "PASS", message: "Port 3000 boundary isolation verified. Zero open vulnerabilities." },
     { id: "l-2", time: "23:40:15", agent: "SCRAPER-INTEL", level: "INFO", message: "Fetched 12 new articles from Next.js 16 Edge Stream." },
@@ -374,6 +407,19 @@ export default function AiAgentsView() {
             type="button"
             onClick={() => {
               cyberAudio.play("click");
+              setDispatchMinionId("minion-01");
+              setDispatchModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-400 font-bold text-xs hover:bg-purple-500/30 transition-all cursor-pointer shadow-[0_0_12px_rgba(191,64,255,0.2)]"
+          >
+            <Send size={14} />
+            <span>DISPATCH MINION</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              cyberAudio.play("click");
               setShowDagModal(true);
             }}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 font-bold text-xs hover:bg-cyan-500/30 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,240,255,0.2)]"
@@ -564,7 +610,7 @@ export default function AiAgentsView() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center justify-between pt-1" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-between pt-1 gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -572,13 +618,48 @@ export default function AiAgentsView() {
                           className="h-7 px-2 text-[10px] text-[#00F0FF] hover:bg-[#00F0FF]/10 font-bold"
                         >
                           <Database size={11} className="mr-1" />
-                          <span>INSPECT HUD</span>
+                          <span>HUD</span>
                         </Button>
+
+                        {agent.id.startsWith("minion-") && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                cyberAudio.play("click");
+                                setDispatchMinionId(agent.id);
+                                setDispatchModalOpen(true);
+                              }}
+                              className="h-7 px-2 bg-purple-500/10 border-purple-500/30 hover:bg-purple-500/20 text-[10px] text-purple-400 font-bold"
+                              title="Dispatch Subtask to Minion"
+                            >
+                              <Send size={11} className="mr-1" />
+                              <span>TASK</span>
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleNodeControl(agent.id, "restart")}
+                              className="h-7 px-1.5 text-[10px] text-amber-400 hover:bg-amber-400/10"
+                              title="Restart Node Process"
+                            >
+                              <RotateCw size={11} />
+                            </Button>
+                          </>
+                        )}
 
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => toggleAgentStatus(agent.id)}
+                          onClick={() => {
+                            if (agent.id.startsWith("minion-")) {
+                              handleNodeControl(agent.id, agent.status === "paused" ? "resume" : "pause");
+                            } else {
+                              toggleAgentStatus(agent.id);
+                            }
+                          }}
                           className="h-7 px-2.5 bg-white/5 border-white/10 hover:bg-white/10 text-[10px] text-[#F1F3F9] font-bold"
                         >
                           {agent.status === "paused" ? "RESUME" : "PAUSE"}
@@ -682,6 +763,28 @@ export default function AiAgentsView() {
           onClose={() => setShowDagModal(false)}
         />
       )}
+
+      {/* Minion Subordinate Task Dispatch Modal */}
+      <MinionDispatchModal
+        isOpen={dispatchModalOpen}
+        onClose={() => setDispatchModalOpen(false)}
+        initialMinionId={dispatchMinionId}
+        minions={
+          agents
+            .filter((a) => a.id.startsWith("minion-"))
+            .map((a) => ({
+              id: a.id,
+              name: a.name,
+              role: a.role,
+              model: a.type,
+              status: a.status,
+              color: a.color,
+            }))
+        }
+        onTaskDispatched={() => {
+          // Re-fetch or refresh agents
+        }}
+      />
     </div>
   );
 }

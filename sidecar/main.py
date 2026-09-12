@@ -27,6 +27,7 @@ from intel_service import intel_service
 from comfyui_service import comfyui_engine
 from social_scheduler import social_scheduler
 from missions_service import missions_service
+from minions_service import minions_service
 from automations import (
     EngagementManager,
     TopicManager,
@@ -108,43 +109,21 @@ ecosystem_status = {
     "recent_logs": []
 }
 
-# Minion Registry (Mock / Live Synced)
-minions_registry = [
-    {"id": "minion-01", "name": "Aegis-Alpha", "role": "Security & CVE Patrol", "status": "IDLE", "model": "hermes-3-llama-3.1-8b", "load": 12, "last_ping": "now"},
-    {"id": "minion-02", "name": "Cypher-Beta", "role": "Code Synthesis & AST", "status": "ACTIVE", "model": "qwen2.5-coder-32b", "load": 68, "last_ping": "now"},
-    {"id": "minion-03", "name": "Nexus-Gamma", "role": "Social & Engagement", "status": "IDLE", "model": "mistral-nemo-12b", "load": 5, "last_ping": "now"},
-    {"id": "minion-04", "name": "Chronos-Delta", "role": "Cron & Health Orchestrator", "status": "ACTIVE", "model": "hermes-3-llama-3.1-8b", "load": 41, "last_ping": "now"},
-]
-MINIONS_MASTER_URL = os.environ.get("MINIONS_MASTER_URL", "http://localhost:6969")
+# Minion Registry (Managed by MinionsService with Embedded Swarm Controller fallback)
+def get_current_minions() -> List[Dict[str, Any]]:
+    return minions_service.get_all_minions()
 
-
-async def sync_minions_registry() -> None:
-    """Best-effort sync with the Minions master (:6969). On failure, mark the
-    static registry as unreachable with a last-seen timestamp instead of
-    failing startup."""
-    global minions_registry
-    try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            res = await client.get(f"{MINIONS_MASTER_URL}/api/minions")
-            if res.status_code == 200:
-                live = res.json()
-                if isinstance(live, list) and live:
-                    minions_registry = live
-                    logger.info(f"Minions registry synced from {MINIONS_MASTER_URL} ({len(live)} minions).")
-                    return
-    except Exception as exc:  # noqa: BLE001 - best-effort sync
-        logger.warning(f"Minions master unreachable at {MINIONS_MASTER_URL}: {exc}")
-    # Mark the static registry as unreachable with a last-seen timestamp.
-    now = datetime.utcnow().isoformat(timespec="seconds")
-    for m in minions_registry:
-        m["status"] = "UNREACHABLE"
-        m["last_ping"] = now
-
+# Backwards compatibility alias
+minions_registry = minions_service.get_all_minions()
 
 async def minions_sync_loop() -> None:
+    """Periodic heartbeat tick for the Minions Swarm Controller."""
     while True:
-        await sync_minions_registry()
-        await asyncio.sleep(60)
+        try:
+            await minions_service.heartbeat_tick()
+        except Exception as exc:
+            logger.debug(f"Minions heartbeat tick exception: {exc}")
+        await asyncio.sleep(5)
 
 cron_jobs_registry = [
     {"name": "dirtydaily-daily-health", "schedule": "0 6 * * *", "script": "daily-health.sh", "status": "SUCCESS", "last_run": "2026-08-27 07:00:00"},
@@ -221,7 +200,7 @@ async def background_telemetry_prober():
                 "host": ecosystem_status["host"],
                 "services": ecosystem_status["services"],
                 "acp": ecosystem_status["acp"],
-                "minions": minions_registry,
+                "minions": minions_service.get_all_minions(),
                 "active_tasks_count": len(ecosystem_status["active_tasks"]),
             }
 
@@ -237,6 +216,7 @@ async def lifespan(app: FastAPI):
     acp_bridge.add_listener(manager.broadcast)
     cron_manager.set_broadcast_callback(manager.broadcast)
     missions_service.add_listener(manager.broadcast)
+    minions_service.add_listener(manager.broadcast)
 
     # Startup: Launch background probe, cron scheduler, and minions sync tasks
     probe_task = asyncio.create_task(background_telemetry_prober())
@@ -501,12 +481,58 @@ async def cdp_interact_endpoint(req: CdpInteractRequest):
         raise HTTPException(status_code=400, detail="Invalid interaction parameters.")
     return {"status": "success", "result": res}
 
+class MinionDispatchPayload(BaseModel):
+    name: str = Field(..., description="Short task summary")
+    directive: str = Field(..., description="Operational directive details")
+    duration: float = Field(2.0, description="Execution duration in seconds")
+
+class MinionControlPayload(BaseModel):
+    action: str = Field(..., description="Node action: pause, resume, restart")
+
 @app.get("/api/hermes/minions")
 def get_minions():
+    nodes = minions_service.get_all_minions()
     return {
         "status": "success",
-        "count": len(minions_registry),
-        "minions": minions_registry
+        "count": len(nodes),
+        "minions": nodes
+    }
+
+@app.get("/api/hermes/minions/{minion_id}")
+def get_minion(minion_id: str):
+    node = minions_service.get_minion(minion_id)
+    if not node:
+        raise HTTPException(status_code=404, detail=f"Minion '{minion_id}' not found.")
+    return {"status": "success", "minion": node}
+
+@app.post("/api/hermes/minions/{minion_id}/dispatch")
+async def dispatch_minion_task(minion_id: str, payload: MinionDispatchPayload):
+    try:
+        from dataclasses import asdict
+        task = await minions_service.dispatch_task(
+            minion_id=minion_id,
+            name=payload.name,
+            directive=payload.directive,
+            simulate_duration=payload.duration,
+        )
+        return {"status": "success", "task": asdict(task)}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/hermes/minions/{minion_id}/control")
+async def control_minion_node(minion_id: str, payload: MinionControlPayload):
+    try:
+        res = await minions_service.control_node(minion_id, payload.action)
+        return {"status": "success", "result": res}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/hermes/minions/{minion_id}/tasks")
+def get_minion_tasks(minion_id: str):
+    return {
+        "status": "success",
+        "minion_id": minion_id,
+        "tasks": minions_service.get_task_history(minion_id)
     }
 
 @app.get("/api/hermes/cron")
