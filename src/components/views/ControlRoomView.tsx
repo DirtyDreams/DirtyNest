@@ -20,6 +20,7 @@ import HermesSkillBrowser from "./control_room/HermesSkillBrowser";
 import HermesMemoryInspector from "./control_room/HermesMemoryInspector";
 import HitlApprovalModal, { PendingApproval } from "./control_room/HitlApprovalModal";
 import MultiFeedCyberStreamGrid from "./control_room/MultiFeedCyberStreamGrid";
+import AutonomousMissionsCard from "./missions/AutonomousMissionsCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -409,6 +410,9 @@ export default function ControlRoomView() {
           </button>
         </div>
       )}
+
+      {/* AUTONOMOUS SWARM MISSIONS CARD */}
+      <AutonomousMissionsCard />
 
       {/* CONTROL ROOM SUB-NAVIGATION TABS */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">

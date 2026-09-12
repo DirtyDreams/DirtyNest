@@ -26,6 +26,7 @@ from docker_service import docker_engine
 from intel_service import intel_service
 from comfyui_service import comfyui_engine
 from social_scheduler import social_scheduler
+from missions_service import missions_service
 from automations import (
     EngagementManager,
     TopicManager,
@@ -235,6 +236,7 @@ async def lifespan(app: FastAPI):
     # Hook ACP bridge & Cron events to WebSocket broadcast
     acp_bridge.add_listener(manager.broadcast)
     cron_manager.set_broadcast_callback(manager.broadcast)
+    missions_service.add_listener(manager.broadcast)
 
     # Startup: Launch background probe, cron scheduler, and minions sync tasks
     probe_task = asyncio.create_task(background_telemetry_prober())
@@ -1169,6 +1171,30 @@ async def get_intel_ports(host: str = "127.0.0.1"):
 async def get_intel_summary():
     return await intel_service.get_threat_radar_summary()
 
+
+@app.get("/api/missions")
+async def get_missions():
+    missions = missions_service.get_all_missions()
+    return {"missions": missions, "count": len(missions), "timestamp": time.time()}
+
+
+@app.post("/api/missions/{mission_id}/trigger")
+async def trigger_mission_endpoint(mission_id: str):
+    try:
+        res = await missions_service.trigger_mission(mission_id)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/missions/{mission_id}/toggle")
+async def toggle_mission_endpoint(mission_id: str):
+    updated = await missions_service.toggle_mission(mission_id)
+    if not updated:
+        raise HTTPException(status_code=404, detail=f"Mission '{mission_id}' not found.")
+    return {"ok": True, "mission": updated}
 
 
 if __name__ == "__main__":

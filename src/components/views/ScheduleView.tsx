@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import AutonomousMissionsCard from "./missions/AutonomousMissionsCard";
 
 interface CronDaemon {
   id: string;
@@ -417,6 +418,9 @@ export default function ScheduleView() {
           ))}
         </div>
       </div>
+
+      {/* AUTONOMOUS SWARM MISSIONS CARD */}
+      <AutonomousMissionsCard className="mb-1" />
 
       {/* VIEW: GANTT TIMELINE */}
       {viewMode === "gantt" && (

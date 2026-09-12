@@ -81,6 +81,32 @@ class RedisCronManager:
                 "runs_count": 0,
                 "last_duration_ms": 0,
                 "last_result": "Pending initial execution cycle. Read-only: items land in the HITL queue, never published."
+            },
+            "security_sentinel": {
+                "id": "security_sentinel",
+                "name": "Cyber Security Sentinel — CISA KEV & Mesh Audit",
+                "schedule": "Every 6 hours",
+                "interval_seconds": 21600,
+                "category": "security",
+                "last_run": None,
+                "next_run": time.time() + 180,
+                "status": "SCHEDULED",
+                "runs_count": 0,
+                "last_duration_ms": 0,
+                "last_result": "Pending initial execution cycle."
+            },
+            "content_synthesizer": {
+                "id": "content_synthesizer",
+                "name": "Knowledge & Social Content Synthesizer",
+                "schedule": "Every 12 hours",
+                "interval_seconds": 43200,
+                "category": "creative",
+                "last_run": None,
+                "next_run": time.time() + 300,
+                "status": "SCHEDULED",
+                "runs_count": 0,
+                "last_duration_ms": 0,
+                "last_result": "Pending initial execution cycle."
             }
         }
         self.broadcast_callback: Optional[Callable[[Dict[str, Any]], Any]] = None
@@ -120,6 +146,14 @@ class RedisCronManager:
                 result_str = await self._exec_mesh_heartbeat()
             elif job_id == "zbiornik_poll":
                 result_str = await self._exec_zbiornik_poll()
+            elif job_id == "security_sentinel":
+                from missions_service import missions_service
+                summary, _ = await missions_service._run_security_sentinel()
+                result_str = summary
+            elif job_id == "content_synthesizer":
+                from missions_service import missions_service
+                summary, _ = await missions_service._run_content_synthesizer()
+                result_str = summary
             else:
                 result_str = f"Executed generic job {job_id}."
 
