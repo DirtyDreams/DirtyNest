@@ -320,6 +320,36 @@ function MarkdownContent({
                 );
               }
 
+              // Markdown Image Detection: ![alt](url)
+              const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+              if (imgMatch) {
+                const alt = imgMatch[1] || "Generated Asset";
+                const src = imgMatch[2];
+                return (
+                  <div
+                    key={pIdx}
+                    className="my-3 rounded-2xl border border-[#00FF41]/40 bg-black/60 p-3 shadow-[0_0_25px_rgba(0,255,65,0.15)] flex flex-col gap-2 max-w-xl"
+                  >
+                    <div className="flex items-center justify-between text-[10px] text-[#00FF41] font-mono font-bold uppercase">
+                      <span>⚡ NEURAL ASSET PREVIEW // {alt}</span>
+                      <a
+                        href={src}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline flex items-center gap-1 text-[#00F0FF]"
+                      >
+                        VIEW FULL
+                      </a>
+                    </div>
+                    <img
+                      src={src}
+                      alt={alt}
+                      className="w-full max-h-96 object-contain rounded-xl border border-white/10"
+                    />
+                  </div>
+                );
+              }
+
               // Regular paragraph with inline bold / code parsing
               return (
                 <p key={pIdx} className="leading-relaxed text-slate-200">
@@ -478,10 +508,11 @@ export default function HermesMessageBlock({
             }
 
             if (seg.type === "tool_call") {
+              const isImage = seg.content.includes("generate_image");
               return (
                 <ToolCallCard
                   key={idx}
-                  toolName="FUNCTION INVOCATION"
+                  toolName={isImage ? "COMFYUI // NEURAL TXT2IMG" : "HERMES ACTION DISPATCH"}
                   args={seg.content}
                   status="running"
                 />
@@ -489,10 +520,11 @@ export default function HermesMessageBlock({
             }
 
             if (seg.type === "tool_response") {
+              const isImage = seg.content.includes("/api/comfy") || seg.content.includes(".png") || seg.content.includes(".jpg");
               return (
                 <ToolCallCard
                   key={idx}
-                  toolName="TOOL RESPONSE"
+                  toolName={isImage ? "COMFYUI // RENDER COMPLETED" : "TOOL EXECUTION RESULT"}
                   args=""
                   result={seg.content}
                   status="success"

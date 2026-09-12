@@ -82,6 +82,39 @@ export async function PATCH(
   }
 }
 
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const { role = "user", content = "", reasoning_trace = null } = body || {};
+    const nowIso = new Date().toISOString();
+
+    const msgId = `msg-${role.slice(0, 3)}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    await db.insert(hermesMessages).values({
+      id: msgId,
+      session_id: id,
+      role,
+      content,
+      reasoning_trace,
+      created_at: nowIso,
+    });
+
+    await db
+      .update(hermesSessions)
+      .set({ updated_at: nowIso })
+      .where(eq(hermesSessions.id, id));
+
+    return Response.json({ status: "success", message_id: msgId }, { status: 201 });
+  } catch (err: unknown) {
+    const error = err as { message?: string };
+    console.error("Error inserting message into session:", error);
+    return Response.json({ error: error?.message || "Failed to add message" }, { status: 500 });
+  }
+}
+
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }

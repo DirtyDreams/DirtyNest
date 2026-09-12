@@ -2,13 +2,19 @@ import { db } from "@/lib/db";
 import { hermesSessions, hermesMessages } from "@/lib/schema";
 import { desc, eq } from "drizzle-orm";
 
+export const HERMES_PROFILES = [
+  { id: "default", name: "Default Gateway", model: "glm-5.3-flash", desc: "Fast general tactical reasoning & tool calling" },
+  { id: "dirtyimage", name: "Dirty Image Generator", model: "deepseek-v4-flash", desc: "Creative neural diffusion & prompt matrix dispatch" },
+  { id: "agents", name: "Autonomous Swarm", model: "deepseek-v4-flash", desc: "Multi-agent coding, subagent delegation & audits" },
+];
+
 export async function GET() {
   try {
     const sessions = await db
       .select()
       .from(hermesSessions)
       .orderBy(desc(hermesSessions.updated_at));
-    return Response.json({ status: "success", sessions });
+    return Response.json({ status: "success", sessions, profiles: HERMES_PROFILES });
   } catch (err: unknown) {
     const error = err as { message?: string };
     console.error("Error fetching ACP sessions:", error);
@@ -19,10 +25,12 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const reqProfile = body?.profile || "default";
+    const defaultModelForProfile = reqProfile === "dirtyimage" || reqProfile === "agents" ? "deepseek-v4-flash" : "glm-5.3-flash";
     const {
       name = `Hermes-ACP-Session-${Date.now().toString().slice(-4)}`,
-      profile = "dirtydaily",
-      model = "Nous-Hermes-3-Llama-3.1-8B",
+      profile = reqProfile,
+      model = body?.model || defaultModelForProfile,
       cwd = process.cwd(),
     } = body || {};
 
@@ -55,7 +63,7 @@ export async function POST(request: Request) {
       .where(eq(hermesSessions.id, sessionId))
       .limit(1);
 
-    return Response.json({ status: "success", session: newSession[0] }, { status: 201 });
+    return Response.json({ status: "success", session: newSession[0], profiles: HERMES_PROFILES }, { status: 201 });
   } catch (err: unknown) {
     const error = err as { message?: string };
     console.error("Error creating ACP session:", error);

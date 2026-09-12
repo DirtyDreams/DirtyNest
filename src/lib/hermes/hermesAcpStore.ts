@@ -63,10 +63,25 @@ export interface AcpBrowserState {
   isLoading: boolean;
 }
 
+export interface HermesProfileMeta {
+  id: string;
+  name: string;
+  model: string;
+  desc: string;
+}
+
+export const DEFAULT_HERMES_PROFILES: HermesProfileMeta[] = [
+  { id: "default", name: "Default Gateway", model: "glm-5.3-flash", desc: "Fast general tactical reasoning & tool calling" },
+  { id: "dirtyimage", name: "Dirty Image Generator", model: "deepseek-v4-flash", desc: "Creative neural diffusion & prompt matrix dispatch" },
+  { id: "agents", name: "Autonomous Swarm", model: "deepseek-v4-flash", desc: "Multi-agent coding, subagent delegation & audits" },
+];
+
 interface HermesAcpStoreState {
   activeSessionId: string | null;
   sessions: AcpSessionItem[];
   messages: AcpMessageItem[];
+  availableProfiles: HermesProfileMeta[];
+  activeProfile: string;
   currentReasoningTrace: string;
   activeToolExecutions: AcpToolExecutionItem[];
   pendingGate: AcpGateItem | null;
@@ -78,6 +93,7 @@ interface HermesAcpStoreState {
   isMemoryLoading: boolean;
 
   // Actions
+  setActiveProfile: (profile: string) => void;
   fetchSessions: () => Promise<void>;
   createSession: (name?: string, profile?: string, model?: string) => Promise<AcpSessionItem | null>;
   selectSession: (sessionId: string) => Promise<void>;
@@ -104,6 +120,8 @@ export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
   activeSessionId: null,
   sessions: [],
   messages: [],
+  availableProfiles: DEFAULT_HERMES_PROFILES,
+  activeProfile: "default",
   currentReasoningTrace: "",
   activeToolExecutions: [],
   pendingGate: null,
@@ -122,6 +140,8 @@ export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
   isLoading: false,
   isMemoryLoading: false,
 
+  setActiveProfile: (profile: string) => set({ activeProfile: profile }),
+
   fetchSessions: async () => {
     try {
       set({ isLoading: true });
@@ -129,7 +149,8 @@ export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
       if (res.ok) {
         const data = await res.json();
         const sessions: AcpSessionItem[] = data.sessions || [];
-        set({ sessions, isLoading: false });
+        const profiles: HermesProfileMeta[] = data.profiles || get().availableProfiles;
+        set({ sessions, availableProfiles: profiles, isLoading: false });
         if (!get().activeSessionId && sessions.length > 0) {
           get().selectSession(sessions[0].id);
         }
@@ -141,12 +162,14 @@ export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
     }
   },
 
-  createSession: async (name, profile = "dirtydaily", model = "Nous-Hermes-3-Llama-3.1-8B") => {
+  createSession: async (name, profile, model) => {
+    const prof = profile || get().activeProfile || "default";
+    const mod = model || (prof === "dirtyimage" || prof === "agents" ? "deepseek-v4-flash" : "glm-5.3-flash");
     try {
       const res = await fetch("/api/hermes/acp/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, profile, model }),
+        body: JSON.stringify({ name, profile: prof, model: mod }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -154,6 +177,7 @@ export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
         set((state) => ({
           sessions: [newSession, ...state.sessions],
           activeSessionId: newSession.id,
+          activeProfile: newSession.profile || prof,
           messages: [],
           currentReasoningTrace: "",
           activeToolExecutions: [],
@@ -228,6 +252,18 @@ export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
       isStreaming: true,
       currentReasoningTrace: `[ACP ENGINE INITIALIZING // SESSION ${sesId}]`,
     }));
+
+    // Persist user message to PostgreSQL
+    try {
+      fetch(`/api/hermes/acp/sessions/${sesId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: "user",
+          content: promptText.trim(),
+        }),
+      }).catch(() => {});
+    } catch {}
 
     // Send command via WebSocket
     const sentViaWs = hermesSocket.send("ACP_PROMPT", {
@@ -474,18 +510,31 @@ export const useHermesAcpStore = create<HermesAcpStoreState>((set, get) => ({
       const finalMsg = (event.final_message as string) || (event.result as string) || "Completed.";
       const { activeSessionId } = get();
       if (activeSessionId) {
+        const trace = get().currentReasoningTrace;
         const agentMsg: AcpMessageItem = {
           id: `msg-agy-${Date.now()}`,
           session_id: activeSessionId,
           role: "agent",
           content: finalMsg,
-          reasoning_trace: get().currentReasoningTrace,
+          reasoning_trace: trace,
           created_at: new Date().toISOString(),
         };
         set((state) => ({
           messages: [...state.messages, agentMsg],
           isStreaming: false,
         }));
+        // Persist agent message to PostgreSQL
+        try {
+          fetch(`/api/hermes/acp/sessions/${activeSessionId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              role: "agent",
+              content: finalMsg,
+              reasoning_trace: trace,
+            }),
+          }).catch(() => {});
+        } catch {}
       } else {
         set({ isStreaming: false });
       }

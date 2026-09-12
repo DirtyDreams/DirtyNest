@@ -116,6 +116,11 @@ export default function ChatbotView() {
     sendPromptDirective,
     isStreaming: acpIsStreaming,
     currentReasoningTrace,
+    pendingGate,
+    resolveGateClearance,
+    availableProfiles,
+    activeProfile,
+    setActiveProfile,
   } = useHermesAcpStore();
 
   const [activeMode, setActiveMode] = useState<ChatMode>("standard");
@@ -194,7 +199,12 @@ export default function ChatbotView() {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [activePersona, setActivePersona] = useState<AgentPersona>(AGENT_PERSONAS[0]);
   const [showPersonaModal, setShowPersonaModal] = useState<boolean>(false);
-  const isAcpMode = activeMode === "standard" || activeMode === "reasoning";
+  const isAcpMode = true;
+
+  const currentModelDisplay = useMemo(() => {
+    const matched = availableProfiles.find((p) => p.name === activeProfile);
+    return matched ? `${matched.name} (${matched.model})` : "Nous-Hermes-3-70B";
+  }, [availableProfiles, activeProfile]);
 
   useEffect(() => {
     if (isAcpMode) {
@@ -209,14 +219,14 @@ export default function ChatbotView() {
       title: s.name,
       personaId: "hermes-master",
       personaName: "Hermes Master",
-      model: s.model || "Nous-Hermes-3-70B",
+      model: s.model || currentModelDisplay,
       messageCount: 0,
       lastMessageSnippet: s.status,
       updatedAt: s.updated_at ? new Date(s.updated_at).toLocaleTimeString("en-US", { hour12: false }) : "just now",
       isPinned: false,
       folderId: undefined,
     }));
-  }, [isAcpMode, sessions, acpSessions]);
+  }, [isAcpMode, sessions, acpSessions, currentModelDisplay]);
 
   const displayActiveSessionId = isAcpMode ? (acpActiveSessionId || "") : activeSessionId;
   const [attachments, setAttachments] = useState<{ id: string; name: string; type: "image" | "video" | "file"; size: string }[]>([
@@ -254,27 +264,34 @@ Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator powerin
   const displayMessages = useMemo(() => {
     if (!isAcpMode) return messages;
 
-    const mapped: Message[] = acpMessages.map((m) => ({
-      id: m.id,
-      sender: m.role === "user" ? "user" : m.role === "system" ? "system" : "ai",
-      text: m.content,
-      timestamp: m.created_at ? new Date(m.created_at).toLocaleTimeString("en-US", { hour12: false }) : new Date().toLocaleTimeString("en-US", { hour12: false }),
-      model: "Nous-Hermes-3-70B",
-      thinkingTrace: m.reasoning_trace || undefined,
-    }));
+    const mapped: Message[] = acpMessages.map((m) => {
+      let text = m.content;
+      if (m.reasoning_trace && !text.includes("<thought>")) {
+        text = `<thought>\n${m.reasoning_trace}\n</thought>\n\n${text}`;
+      }
+      return {
+        id: m.id,
+        sender: m.role === "user" ? "user" : m.role === "system" ? "system" : "ai",
+        text,
+        timestamp: m.created_at ? new Date(m.created_at).toLocaleTimeString("en-US", { hour12: false }) : new Date().toLocaleTimeString("en-US", { hour12: false }),
+        model: currentModelDisplay,
+        thinkingTrace: m.reasoning_trace || undefined,
+      };
+    });
 
     if (acpIsStreaming && currentReasoningTrace) {
       mapped.push({
         id: "streaming-thought-trace",
         sender: "ai",
-        text: "Hermes is computing response...",
+        text: `<thought>\n${currentReasoningTrace}\n</thought>\n\n*Hermes neural computation in progress...*`,
         timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
+        model: currentModelDisplay,
         thinkingTrace: currentReasoningTrace,
       });
     }
 
     return mapped;
-  }, [isAcpMode, messages, acpMessages, acpIsStreaming, currentReasoningTrace]);
+  }, [isAcpMode, messages, acpMessages, acpIsStreaming, currentReasoningTrace, currentModelDisplay]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
@@ -354,249 +371,35 @@ Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator powerin
     const textToSend = customPrompt || input;
     if (!textToSend.trim()) return;
 
-    if (isAcpMode) {
-      if (acpIsStreaming) return;
-      if (!customPrompt) setInput("");
-      cyberAudio.play("click");
-
-      let sId = acpActiveSessionId;
-      if (!sId) {
-        const newSession = await acpCreateSession(`Hermes Thread - ${textToSend.slice(0, 20)}...`);
-        if (newSession) {
-          sId = newSession.id;
-        }
-      }
-
-      if (sId) {
-        await sendPromptDirective(textToSend);
-      }
-      return;
-    }
-
-    if (isGenerating) return;
-
-    const timeStr = new Date().toLocaleTimeString("en-US", { hour12: false });
-    const userMsg: Message = {
-      id: `usr-${Date.now()}`,
-      sender: "user",
-      text: textToSend,
-      timestamp: timeStr,
-      mode: activeMode,
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
+    if (acpIsStreaming || isGenerating) return;
     if (!customPrompt) setInput("");
-    setIsGenerating(true);
     cyberAudio.play("click");
 
-    const activeAiModel = AI_MODELS.find((m) => m.id === selectedModel);
+    let sId = acpActiveSessionId;
+    if (!sId) {
+      const newSession = await acpCreateSession(`Hermes Thread - ${textToSend.slice(0, 20)}...`);
+      if (newSession) {
+        sId = newSession.id;
+      }
+    }
 
-    // Deep Research Multi-Phase Simulation (kept simulated for complex UI logic)
-    if (activeMode === "deep_research") {
-      const researchMsgId = `ai-research-${Date.now()}`;
-      
-      const subQueries = [
-        `Deconstruct core mechanisms of: ${textToSend.slice(0, 50)}`,
-        `Empirical benchmarks & arXiv research papers on ${textToSend.slice(0, 35)}`,
-        `Production implementation patterns and security trade-offs`,
-        `Obsidian Vault cross-reference: CyberVault/Zero_Trust.md & BPE_Tokenizer.md`,
-      ];
-
-      const mockSources: ResearchSource[] = [
-        {
-          title: "arXiv:2403.18921 - Deep Neural Synthesis & Kernel Acceleration",
-          url: "https://arxiv.org/abs/2403.18921",
-          sourceType: "arxiv",
-          snippet: "Demonstrates 4.2x speedup in token generation using localized SIMD kernels and low-latency cache locality.",
-          relevanceScore: 98,
-        },
-        {
-          title: "Obsidian Vault // Skills/Karpathy/BPE_Tokenizer.md",
-          url: "obsidian://open?vault=CyberVault&file=Skills/Karpathy/BPE_Tokenizer.md",
-          sourceType: "obsidian",
-          snippet: "Algorithmic pair merges, UTF-8 byte mappings, and vocabulary metrics from scratch.",
-          relevanceScore: 95,
-        },
-        {
-          title: "GitHub - dirtynest-core/ebpf-packet-gateway",
-          url: "https://github.com/dirtynest/ebpf-gateway",
-          sourceType: "github",
-          snippet: "eBPF zero-trust filter daemon with XDP driver hook and 0.2ms latency SLA.",
-          relevanceScore: 92,
-        },
-        {
-          title: "Cloud Native Computing Foundation - Modern Security Spec 2026",
-          url: "https://cncf.io/reports/security-mesh-2026",
-          sourceType: "web",
-          snippet: "Comparative survey of kernel isolation vs user-space sandbox isolation in distributed microservices.",
-          relevanceScore: 89,
-        },
-      ];
-
-      setActiveResearchSources(mockSources);
-
-      const isCodeRequest = textToSend.toLowerCase().includes("code") || textToSend.toLowerCase().includes("component") || textToSend.toLowerCase().includes("react") || textToSend.toLowerCase().includes("sandbox");
-
-      const finalReport = isCodeRequest
-        ? `<thought>
-Synthesizing requested full-stack React UI component with Tailwind CSS cyber styling.
-Testing syntax validity, props contract, and animation hooks...
-</thought>
-
-### 💻 OPERATIONAL ARTIFACT GENERATED
-
-Here is the requested high-throughput reactive component implementation:
-
-\`\`\`tsx
-import React, { useState } from 'react';
-import { Shield, Zap, Terminal, Activity } from 'lucide-react';
-
-export default function CyberTelemetryWidget() {
-  const [active, setActive] = useState(true);
-  const [load, setLoad] = useState(42);
-
-  return (
-    <div className="p-4 rounded-2xl bg-[#080A16] border border-[#00FF41]/40 text-white font-mono shadow-[0_0_25px_rgba(0,255,65,0.15)] space-y-3">
-      <div className="flex items-center justify-between pb-2 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Shield size={16} className="text-[#00FF41] animate-pulse" />
-          <span className="font-bold text-xs tracking-wider">NEURAL NODE #84</span>
-        </div>
-        <span className="text-[10px] px-2 py-0.5 rounded bg-[#00FF41]/20 text-[#00FF41] font-bold">ACTIVE</span>
-      </div>
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="p-2 rounded-lg bg-white/5">
-          <span className="text-[#4F536E] text-[9px] block">THROUGHPUT</span>
-          <span className="font-bold text-[#00F0FF]">14.8 GB/s</span>
-        </div>
-        <div className="p-2 rounded-lg bg-white/5">
-          <span className="text-[#4F536E] text-[9px] block">SYSTEM LOAD</span>
-          <span className="font-bold text-[#FFB800]">{load}%</span>
-        </div>
-      </div>
-      <button 
-        onClick={() => setLoad(Math.floor(Math.random() * 60) + 30)}
-        className="w-full py-2 rounded-xl bg-[#00FF41] text-black font-black text-xs hover:bg-[#00FF41]/90 transition-all cursor-pointer"
-      >
-        CYCLE KERNEL TELEMETRY
-      </button>
-    </div>
-  );
-}
-\`\`\`
-
-- **Zero-Trust Memory Guard**: Component adheres to containerized eBPF isolation standards.
-- Click **\`RUN IN LIVE CANVAS\`** above to mount and interact with this component in the live split-screen sandbox.`
-        : `<thought>
-Phase 1: Deep crawling arXiv (2403.18921), Obsidian Vault, and GitHub telemetry.
-Phase 2: Extracting cross-domain parameter vectors and zero-trust benchmarks.
-Phase 3: Synthesizing comparative matrix and executable directives.
-</thought>
-
-### 📄 DEEP RESEARCH EXECUTIVE REPORT: ${textToSend.toUpperCase()}
-
-#### 1. Executive Summary & Core Findings
-Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vault, and GitHub telemetry), this architectural analysis reveals three critical paradigms:
-- **Low-Latency Kernel Offloading**: Leveraging eBPF XDP filters achieves sub-millisecond packet routing without user-space context switches.
-- **Vector Tokenization Efficiency**: Byte-level fallback mitigates out-of-vocabulary anomalies while preserving dense compression.
-- **Zero-Trust Memory Isolation**: Enforcing capability-based permissions ensures resilience against unauthorized socket traversal.
-
----
-
-#### 2. Comparative Technology Matrix
-| Architecture Axis | Legacy Implementation | Modern Grounded Paradigm | Performance Multiplier |
-| :--- | :--- | :--- | :--- |
-| **Ingress Filtering** | User-space iptables | Kernel eBPF Hook | **4.2x Throughput** |
-| **Token Representation** | Character BPE | Byte-Fallback BPE | **32% Memory Gain** |
-| **Vector Indexing** | Flat Euclidean Scan | HNSW / SIMD Vector Pool | **18x Search Velocity** |
-
----
-
-#### 3. Verified Citation Index
-- **[1] [arXiv:2403.18921](https://arxiv.org/abs/2403.18921)** — *Deep Neural Synthesis & Kernel Acceleration* (Relevance: 98%)
-- **[2] [[Skills/Karpathy/BPE_Tokenizer.md]]** — *Local Obsidian Vault Cognitive Core* (Relevance: 95%)
-- **[3] [dirtynest-core/ebpf-gateway](https://github.com/dirtynest/ebpf-gateway)** — *eBPF Daemon Implementation* (Relevance: 92%)
-- **[4] [CNCF Security Report 2026](https://cncf.io)** — *Microservice Isolation Standards* (Relevance: 89%)
-
----
-
-#### 4. Recommended Action Directives
-1. Deploy the compiled eBPF filter rule to \`dirtynest-auth-proxy\` container.
-2. Ingest the newly resolved citations into the **DataCore SQLite-Vec** vector store.
-3. Save this research dossier directly to the **Obsidian Vault** for automated backlink resolution.`;
-
-      const initialAiMsg: Message = {
-        id: researchMsgId,
-        sender: "ai",
-        text: "",
-        timestamp: new Date().toLocaleTimeString("en-US", { hour12: false }),
-        model: activeAiModel?.name || "Nous-Hermes-3-70B",
-        tokens: 0,
-        citations: mockSources,
-      };
-
-      setMessages((prev) => [...prev, initialAiMsg]);
-
-      const words = finalReport.split(" ");
-      let currentWordIdx = 0;
-      let streamedAccumulator = "";
-
-      const streamTimer = setInterval(() => {
-        if (currentWordIdx < words.length) {
-          streamedAccumulator += (currentWordIdx === 0 ? "" : " ") + words[currentWordIdx];
-          currentWordIdx++;
-          const currentTokens = Math.floor(currentWordIdx * 1.3);
-
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === researchMsgId
-                ? {
-                    ...msg,
-                    text: streamedAccumulator,
-                    tokens: currentTokens,
-                  }
-                : msg
-            )
-          );
-        } else {
-          clearInterval(streamTimer);
-          setIsGenerating(false);
-          cyberAudio.play("chime");
-        }
-      }, 16);
-    } else {
-      // ADR-0014: legacy /api/chat (Gemini proxy) retired. code_interpreter mode
-      // rides the same Hermes ACP path as standard/reasoning (agents are the
-      // fallback, not a second LLM proxy).
-      if (acpIsStreaming || isGenerating) return;
-      if (!customPrompt) setInput("");
-      cyberAudio.play("click");
-
-      const userMsg: Message = {
-        id: `usr-${Date.now()}`,
-        sender: "user",
-        text: textToSend,
-        timestamp: timeStr,
-        mode: activeMode,
-      };
-      setMessages((prev) => [...prev, userMsg]);
+    if (sId) {
       setIsGenerating(true);
-
-      let sId = acpActiveSessionId;
-      if (!sId) {
-        const newSession = await acpCreateSession(`Hermes Thread - ${textToSend.slice(0, 20)}...`);
-        if (newSession) {
-          sId = newSession.id;
+      try {
+        let directive = textToSend;
+        if (activeMode === "deep_research") {
+          directive = `[DIRECTIVE: DEEP RESEARCH & CITATION AUDIT]\n${textToSend}`;
+        } else if (activeMode === "code_interpreter") {
+          directive = `[DIRECTIVE: CODE SANDBOX & ARTIFACT IMPLEMENTATION]\n${textToSend}`;
+        } else if (activeMode === "reasoning") {
+          directive = `[DIRECTIVE: EXTENDED THINKING & STEP-BY-STEP REASONING]\n${textToSend}`;
         }
-      }
-
-      if (sId) {
-        await sendPromptDirective(textToSend);
+        await sendPromptDirective(directive);
+      } finally {
         setIsGenerating(false);
-      } else {
-        setIsGenerating(false);
-        toast.error("NO ACP SESSION", "Could not create a Hermes session. Check sidecar status.");
       }
+    } else {
+      toast.error("NO ACP SESSION", "Could not create a Hermes session. Check sidecar status.");
     }
   };
 
@@ -794,6 +597,26 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
               <Bot size={13} />
               <span>{activePersona.name.split(" ")[0].toUpperCase()}</span>
             </button>
+
+            {/* Hermes ACP Profile Selector */}
+            <div className="relative">
+              <select
+                value={activeProfile}
+                onChange={(e) => {
+                  cyberAudio.play("click");
+                  setActiveProfile(e.target.value);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#00FF41]/10 border border-[#00FF41]/40 text-xs font-bold text-[#00FF41] hover:bg-[#00FF41]/20 transition-all cursor-pointer font-mono appearance-none pr-7 shadow-[0_0_10px_rgba(0,255,65,0.15)]"
+                title="Select Hermes ACP Agent Profile & Neural Model"
+              >
+                {availableProfiles.map((p) => (
+                  <option key={p.name} value={p.name} className="bg-[#080A16] text-[#00FF41]">
+                    PROFILE: {p.name.toUpperCase()} ({p.model})
+                  </option>
+                ))}
+              </select>
+              <Cpu size={11} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#00FF41] pointer-events-none" />
+            </div>
 
             {/* Branching Thread Selector */}
             <button
@@ -1155,6 +978,54 @@ Based on synthesis across **4 authoritative sources** (arXiv, local Obsidian Vau
                   <ChevronDown size={13} className="animate-bounce" />
                   <span>LATEST MESSAGES</span>
                 </button>
+              </div>
+            )}
+
+            {/* Floating HITL Clearance Banner */}
+            {pendingGate && (
+              <div className="w-full max-w-[88%] 2xl:max-w-[80%] mx-auto mb-3 pointer-events-auto">
+                <div className="p-4 rounded-2xl bg-[#0F0814]/95 border-2 border-[#FF0055] shadow-[0_0_30px_rgba(255,0,85,0.35)] backdrop-blur-xl animate-pulse font-mono">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#FF0055]/30">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#FF0055] animate-ping" />
+                      <span className="text-xs font-black text-[#FF0055] tracking-widest uppercase">
+                        [HITL CLEARANCE GATE] TOOL EXECUTION APPROVAL REQUIRED
+                      </span>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-[#FF0055]/20 text-[#FF0055] font-bold border border-[#FF0055]/40 uppercase">
+                      LEVEL: {pendingGate.risk_level}
+                    </span>
+                  </div>
+                  <div className="py-2.5 text-xs text-white">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[#9499B3]">ACTION:</span>
+                      <span className="font-bold text-[#00F0FF]">{pendingGate.tool_name}</span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-black/60 border border-white/10 text-[11px] text-[#9499B3] overflow-x-auto max-h-24">
+                      <code>{JSON.stringify(pendingGate.parameters, null, 2)}</code>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
+                    <button
+                      onClick={() => resolveGateClearance(pendingGate.request_id, "DENY")}
+                      className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/20 text-[#FF0055] hover:bg-[#FF0055]/20 text-xs font-bold transition-all cursor-pointer"
+                    >
+                      DENY ACTION
+                    </button>
+                    <button
+                      onClick={() => resolveGateClearance(pendingGate.request_id, "ALLOW_SESSION")}
+                      className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/20 text-[#FFB800] hover:bg-[#FFB800]/20 text-xs font-bold transition-all cursor-pointer"
+                    >
+                      ALLOW FOR SESSION
+                    </button>
+                    <button
+                      onClick={() => resolveGateClearance(pendingGate.request_id, "ALLOW_ONCE")}
+                      className="px-4 py-1.5 rounded-xl bg-[#00FF41] text-black hover:bg-[#00FF41]/90 text-xs font-black transition-all shadow-[0_0_15px_rgba(0,255,65,0.4)] cursor-pointer"
+                    >
+                      CLEAR DIRECTIVE (ALLOW ONCE)
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
