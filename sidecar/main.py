@@ -11,7 +11,7 @@ import base64
 import hashlib
 import hmac
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import httpx
@@ -24,6 +24,7 @@ from cdp_service import cdp_engine
 from cron_service import cron_manager
 from docker_service import docker_engine
 from intel_service import intel_service
+from comfyui_service import comfyui_engine
 from automations import (
     EngagementManager,
     TopicManager,
@@ -983,6 +984,76 @@ async def websocket_docker_logs(websocket: WebSocket, container_id: str):
             except Exception:
                 pass
 
+# --------------------------------------------------------------------------
+# ComfyUI Image Studio Endpoints
+# --------------------------------------------------------------------------
+
+class ComfyGenerateRequest(BaseModel):
+    prompt: str
+    negative_prompt: str = "ugly, blurry, lowres, bad anatomy, deformed, watermark"
+    checkpoint: Optional[str] = None
+    steps: int = 25
+    cfg: float = 7.0
+    width: int = 768
+    height: int = 768
+    seed: Optional[int] = None
+    sampler_name: str = "euler"
+    scheduler: str = "normal"
+
+
+@app.get("/api/comfy/stats")
+async def get_comfy_stats():
+    return await comfyui_engine.get_system_stats()
+
+
+@app.get("/api/comfy/checkpoints")
+async def get_comfy_checkpoints():
+    ckpts = await comfyui_engine.get_checkpoints()
+    return {"checkpoints": ckpts, "count": len(ckpts)}
+
+
+@app.get("/api/comfy/queue")
+async def get_comfy_queue():
+    return await comfyui_engine.get_queue_status()
+
+
+@app.post("/api/comfy/generate")
+async def generate_comfy_image(req: ComfyGenerateRequest):
+    result = await comfyui_engine.generate_txt2img_full(
+        prompt=req.prompt,
+        negative_prompt=req.negative_prompt,
+        checkpoint=req.checkpoint,
+        steps=req.steps,
+        cfg=req.cfg,
+        width=req.width,
+        height=req.height,
+        seed=req.seed,
+        sampler_name=req.sampler_name,
+        scheduler=req.scheduler,
+    )
+    return result
+
+
+@app.get("/api/comfy/history")
+async def get_comfy_history(limit: int = 20):
+    items = await comfyui_engine.get_recent_history(limit=limit)
+    return {"history": items, "count": len(items)}
+
+
+@app.get("/api/comfy/image/{filename}")
+async def get_comfy_image(filename: str, subfolder: str = "", type: str = "output"):
+    content = await comfyui_engine.fetch_image_bytes(filename=filename, subfolder=subfolder, folder_type=type)
+    if content is None:
+        raise HTTPException(status_code=404, detail="Image not found")
+    media_type = "image/png"
+    if filename.endswith(".jpg") or filename.endswith(".jpeg"):
+        media_type = "image/jpeg"
+    elif filename.endswith(".webp"):
+        media_type = "image/webp"
+    return Response(content=content, media_type=media_type)
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+

@@ -9,14 +9,15 @@ from pydantic import BaseModel, Field
 
 from memory_service import memory_engine
 from cdp_service import cdp_engine
+from comfyui_service import comfyui_engine
 
 logger = logging.getLogger("hermes-acp-bridge")
 
 class AcpSession(BaseModel):
     id: str
     name: str
-    profile: str = "dirtydaily"
-    model: str = "Nous-Hermes-3-Llama-3.1-8B"
+    profile: str = "default"
+    model: str = "glm-5.3-flash"
     cwd: str = Field(default_factory=os.getcwd)
     status: str = "IDLE"  # IDLE, RUNNING, WAITING_CLEARANCE, ERROR, COMPLETED
     created_at: float = Field(default_factory=time.time)
@@ -65,6 +66,7 @@ class HermesAcpBridge:
         
         local_app_data = os.environ.get("LOCALAPPDATA", "")
         custom_paths = [
+            os.path.join(local_app_data, "hermes", "bin", "hermes.exe"),
             os.path.join(local_app_data, "hermes", "hermes-agent", "bin", "hermes.exe"),
             os.path.join(local_app_data, "hermes", "hermes-agent", "bin", "hermes"),
             os.path.join(local_app_data, "hermes", "node", "hermes.cmd"),
@@ -78,18 +80,24 @@ class HermesAcpBridge:
         safe_tools = ["read_file", "list_dir", "grep_search", "view_file", "search_files", "cdp_inspect", "cdp_navigate", "cdp_screenshot", "cdp_extract_dom", "get_status"]
         if tool_name in safe_tools:
             return "low"
-        if tool_name in ["write_file", "replace_file_content", "patch", "edit_file", "cdp_click", "cdp_type"]:
+        if tool_name in ["write_file", "replace_file_content", "patch", "edit_file", "cdp_click", "cdp_type", "generate_image"]:
             return "medium"
         if tool_name in ["run_command", "exec_command", "terminal", "bash", "delete_file", "docker_restart", "cdp_eval"]:
             return "critical"
         return "medium"
 
-    async def start_session(self, name: str = "Hermes-ACP-Mission", profile: str = "dirtydaily", cwd: Optional[str] = None, session_id: Optional[str] = None) -> AcpSession:
+    async def start_session(self, name: str = "Hermes-ACP-Mission", profile: str = "default", cwd: Optional[str] = None, session_id: Optional[str] = None, model: Optional[str] = None) -> AcpSession:
         session_id = session_id or f"acp-{int(time.time()*1000)}"
+        if not model:
+            if profile in ["dirtyimage", "agents"]:
+                model = "deepseek-v4-flash"
+            else:
+                model = "glm-5.3-flash"
         session = AcpSession(
             id=session_id,
             name=name,
             profile=profile,
+            model=model,
             cwd=cwd or os.getcwd(),
             status="IDLE"
         )
@@ -212,6 +220,7 @@ class HermesAcpBridge:
 
             lower_prompt = prompt.lower()
             needs_browser = "browse" in lower_prompt or "cdp" in lower_prompt or "web" in lower_prompt or "scrape" in lower_prompt or "screenshot" in lower_prompt or "http" in lower_prompt
+            needs_image = "image" in lower_prompt or "draw" in lower_prompt or "generate image" in lower_prompt or "comfy" in lower_prompt or "picture" in lower_prompt or "artwork" in lower_prompt
             needs_fs_patch = "patch" in lower_prompt or "edit" in lower_prompt or "modify" in lower_prompt or "write file" in lower_prompt or "refactor" in lower_prompt
             needs_inspect = "inspect" in lower_prompt or "status" in lower_prompt or "check" in lower_prompt or "scan" in lower_prompt or "health" in lower_prompt
             needs_knowledge = "knowledge" in lower_prompt or "vault" in lower_prompt or "semantic search" in lower_prompt or "rag" in lower_prompt or "find in the knowledge" in lower_prompt or "search the knowledge" in lower_prompt
@@ -250,6 +259,34 @@ class HermesAcpBridge:
                     "port": cdp_engine.cdp_port
                 })
                 await asyncio.sleep(0.4)
+
+            elif needs_image:
+                tool_name = "generate_image"
+                await self.broadcast_event({
+                    "type": "ACP_TOOL_EXECUTED",
+                    "session_id": session_id,
+                    "tool_name": tool_name,
+                    "result": f"Directing prompt to ComfyUI (127.0.0.1:8188) on NVIDIA RTX 3060..."
+                })
+                img_res = await comfyui_engine.generate_txt2img_full(prompt=prompt)
+                if img_res.get("ok"):
+                    images = img_res.get("images", [])
+                    first_img = images[0] if images else {}
+                    img_url = first_img.get("url", "")
+                    await self.broadcast_event({
+                        "type": "ACP_TOOL_EXECUTED",
+                        "session_id": session_id,
+                        "tool_name": tool_name,
+                        "result": f"Image successfully rendered via ComfyUI: {first_img.get('filename')} (view: {img_url})"
+                    })
+                else:
+                    await self.broadcast_event({
+                        "type": "ACP_TOOL_EXECUTED",
+                        "session_id": session_id,
+                        "tool_name": tool_name,
+                        "result": f"ComfyUI notice: {img_res.get('error', 'Generation queued')}"
+                    })
+                await asyncio.sleep(0.3)
 
             elif needs_fs_patch:
                 tool_name = "patch"

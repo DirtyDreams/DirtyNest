@@ -45,7 +45,8 @@ export async function middleware(request: NextRequest) {
 
   // /api/auth/* is public at the middleware layer; login/logout/refresh need no
   // token, and me/api-keys verify the token themselves (they need the user row).
-  if (pathname.startsWith("/api/auth/")) {
+  // /api/comfyui/image/* serves static image previews to img tags.
+  if (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/comfyui/image/")) {
     return NextResponse.next();
   }
 

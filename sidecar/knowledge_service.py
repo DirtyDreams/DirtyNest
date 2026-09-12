@@ -31,7 +31,7 @@ class KnowledgeService:
     def _init_engine(self):
         try:
             logger.info(f"Connecting to Qdrant at {self.qdrant_url}...")
-            self.client = QdrantClient(url=self.qdrant_url, timeout=10)
+            self.client = QdrantClient(url=self.qdrant_url, timeout=10, check_compatibility=False)
             existing = [c.name for c in self.client.get_collections().collections]
             if COLLECTION_NAME not in existing:
                 logger.info(f"Creating Qdrant collection '{COLLECTION_NAME}' (dim={VECTOR_DIM}, Cosine)...")

@@ -29,6 +29,8 @@ export default function LatentDiffusionStudioModal({
   const [seed, setSeed] = useState(84920194);
   const [isSampling, setIsSampling] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [outputImageUrl, setOutputImageUrl] = useState<string | null>(null);
+  const [sampleNotice, setSampleNotice] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -37,13 +39,44 @@ export default function LatentDiffusionStudioModal({
     setSeed(Math.floor(Math.random() * 99999999));
   };
 
-  const handleRunSampling = () => {
+  const handleRunSampling = async () => {
     cyberAudio.play("warp");
     setIsSampling(true);
-    setTimeout(() => {
-      setIsSampling(false);
+    setSampleNotice(null);
+
+    try {
+      const res = await fetch("/api/comfyui", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          negative_prompt: negativePrompt,
+          steps,
+          cfg: cfgScale,
+          seed,
+          sampler_name: sampler.toLowerCase().includes("euler") ? "euler" : "dpmpp_2m",
+          scheduler: sampler.toLowerCase().includes("karras") ? "karras" : "normal",
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.ok && data.images && data.images.length > 0) {
+        const img = data.images[0];
+        const proxyUrl = `/api/comfyui/image/${img.filename}?subfolder=${encodeURIComponent(img.subfolder || "")}&type=${encodeURIComponent(img.type || "output")}`;
+        setOutputImageUrl(proxyUrl);
+        setSampleNotice(`Latent rendered in ${data.duration ?? 0}s`);
+        cyberAudio.play("chime");
+      } else {
+        setSampleNotice(data.error ? `ComfyUI notice: ${data.error}` : "Sampling complete (latent saved)");
+        cyberAudio.play("chime");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSampleNotice(`ComfyUI notice: ${msg}`);
       cyberAudio.play("chime");
-    }, 1200);
+    } finally {
+      setIsSampling(false);
+    }
   };
 
   const handleCopyParams = () => {
@@ -194,6 +227,23 @@ export default function LatentDiffusionStudioModal({
               🎲 RANDOMIZE SEED
             </button>
           </div>
+
+          {sampleNotice && (
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px]">
+              {sampleNotice}
+            </div>
+          )}
+
+          {outputImageUrl && (
+            <div className="p-3 bg-black/60 rounded-xl border border-[#00FF41]/30 flex flex-col gap-2">
+              <span className="text-[10px] text-[#00FF41] font-bold uppercase">GENERATED LATENT OUTPUT PREVIEW</span>
+              <img
+                src={outputImageUrl}
+                alt="Latent Output"
+                className="w-full max-h-64 object-contain rounded-lg border border-white/10"
+              />
+            </div>
+          )}
         </div>
 
         {/* Footer */}

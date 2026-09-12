@@ -191,6 +191,46 @@ export default function GeneratedAssetsGallery({
       const savedAssets = localStorage.getItem("dirtynest_vault_assets");
       if (savedAssets) setAssets(JSON.parse(savedAssets));
     } catch (e) {}
+
+    // Also load recent ComfyUI outputs
+    async function loadComfyHistory() {
+      try {
+        const res = await fetch("/api/comfyui?action=history&limit=25");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.history && Array.isArray(data.history) && data.history.length > 0) {
+            const comfyAssets: AssetItem[] = data.history.map((h: {
+              prompt_id?: string;
+              filename: string;
+              subfolder?: string;
+              type?: string;
+              prompt?: string;
+            }) => ({
+              id: `comfy-${h.prompt_id || "gen"}-${h.filename}`,
+              title: h.filename,
+              url: `/api/comfyui/image/${h.filename}?subfolder=${encodeURIComponent(h.subfolder || "")}&type=${encodeURIComponent(h.type || "output")}`,
+              prompt: h.prompt || "ComfyUI Neural Output",
+              style: "ComfyUI RTX",
+              aspectRatio: "1:1",
+              seed: 42,
+              steps: 25,
+              albumId: "all",
+              isFavorite: true,
+              created: "ComfyUI Active Vault",
+            }));
+
+            setAssets((prev) => {
+              const existingIds = new Set(prev.map((a) => a.id));
+              const newItems = comfyAssets.filter((item) => !existingIds.has(item.id));
+              return [...newItems, ...prev];
+            });
+          }
+        }
+      } catch {
+        // ComfyUI may be offline
+      }
+    }
+    loadComfyHistory();
   }, []);
 
   // Save persistence

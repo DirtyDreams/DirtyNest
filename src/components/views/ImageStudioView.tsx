@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Wand2,
   Sparkles,
@@ -9,6 +9,7 @@ import {
   Wrench,
   Paintbrush,
   Zap,
+  AlertCircle,
 } from "lucide-react";
 import PromptMatrixGenerator, { GenerationParams } from "./image_studio/PromptMatrixGenerator";
 import ImageCanvasPreview from "./image_studio/ImageCanvasPreview";
@@ -29,25 +30,147 @@ export default function ImageStudioView() {
   const [showLatentModal, setShowLatentModal] = useState(false);
   const [showShaderModal, setShowShaderModal] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<"generator" | "editor" | "glitch" | "gallery" | "toolbox">("generator");
+  const [comfyStatus, setComfyStatus] = useState<{
+    online: boolean;
+    device?: string;
+    vramFreeGb?: number;
+    vramTotalGb?: number;
+  }>({ online: false });
+  const [checkpoints, setCheckpoints] = useState<string[]>([]);
+  const [generationNotice, setGenerationNotice] = useState<string | null>(null);
 
-  const handleGenerate = (params: GenerationParams) => {
+  useEffect(() => {
+    let mounted = true;
+    async function fetchComfyTelemetry() {
+      try {
+        const statsRes = await fetch("/api/comfyui?action=stats");
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          if (mounted && statsData.online) {
+            setComfyStatus({
+              online: true,
+              device: statsData.device_name || "NVIDIA GPU",
+              vramFreeGb: statsData.vram_free_gb,
+              vramTotalGb: statsData.vram_total_gb,
+            });
+          }
+        }
+        const ckptRes = await fetch("/api/comfyui?action=checkpoints");
+        if (ckptRes.ok) {
+          const ckptData = await ckptRes.json();
+          if (mounted && ckptData.checkpoints && Array.isArray(ckptData.checkpoints)) {
+            setCheckpoints(ckptData.checkpoints);
+          }
+        }
+      } catch {
+        // Keep offline fallback state
+      }
+    }
+    fetchComfyTelemetry();
+    const interval = setInterval(fetchComfyTelemetry, 15000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const handleGenerate = async (params: GenerationParams) => {
     setIsGenerating(true);
-    setTimeout(() => {
-      cyberAudio.play("chime");
-      setIsGenerating(false);
-      const newAsset: AssetItem = {
+    setGenerationNotice(null);
+    cyberAudio.play("toggle");
+
+    // Dimension calculation from ratio
+    let width = 768;
+    let height = 768;
+    if (params.aspectRatio === "16:9") {
+      width = 1024;
+      height = 576;
+    } else if (params.aspectRatio === "9:16") {
+      width = 576;
+      height = 1024;
+    } else if (params.aspectRatio === "4:5") {
+      width = 768;
+      height = 960;
+    }
+
+    try {
+      const res = await fetch("/api/comfyui", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: params.prompt,
+          negative_prompt: params.negativePrompt,
+          checkpoint: params.model,
+          steps: params.steps,
+          cfg: params.cfgScale,
+          seed: params.seed,
+          width,
+          height,
+          sampler_name: params.sampler?.includes("euler") ? "euler" : "dpmpp_2m",
+          scheduler: params.sampler?.includes("karras") ? "karras" : "normal",
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.ok && data.images && data.images.length > 0) {
+        const img = data.images[0];
+        const newAsset: AssetItem = {
+          id: `comfy-${data.prompt_id || Date.now()}`,
+          title: params.prompt.substring(0, 36) + "...",
+          url: `/api/comfyui/image/${img.filename}?subfolder=${encodeURIComponent(img.subfolder || "")}&type=${encodeURIComponent(img.type || "output")}`,
+          prompt: params.prompt,
+          negativePrompt: params.negativePrompt,
+          style: params.stylePreset,
+          aspectRatio: params.aspectRatio,
+          seed: params.seed,
+          steps: params.steps,
+          cfgScale: params.cfgScale,
+          model: data.checkpoint || params.model,
+          created: new Date().toISOString().replace("T", " ").substring(0, 16),
+        };
+        setActiveAsset(newAsset);
+        setGenerationNotice(`Neural generation rendered via ComfyUI in ${data.duration ?? 0}s`);
+        cyberAudio.play("chime");
+      } else {
+        // Fallback preview
+        const fallbackAsset: AssetItem = {
+          id: `img-${Date.now()}`,
+          title: params.prompt.substring(0, 36) + "...",
+          url: SAMPLE_ASSETS[Math.floor(Math.random() * SAMPLE_ASSETS.length)].url,
+          prompt: params.prompt,
+          negativePrompt: params.negativePrompt,
+          style: params.stylePreset,
+          aspectRatio: params.aspectRatio,
+          seed: params.seed,
+          steps: params.steps,
+          created: new Date().toISOString().replace("T", " ").substring(0, 16),
+        };
+        setActiveAsset(fallbackAsset);
+        if (data.error) {
+          setGenerationNotice(`ComfyUI Notice: ${data.error} (Simulator preview loaded)`);
+        }
+        cyberAudio.play("chime");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setGenerationNotice(`ComfyUI Notice: ${msg} (Simulator preview loaded)`);
+      const fallbackAsset: AssetItem = {
         id: `img-${Date.now()}`,
         title: params.prompt.substring(0, 36) + "...",
         url: SAMPLE_ASSETS[Math.floor(Math.random() * SAMPLE_ASSETS.length)].url,
         prompt: params.prompt,
+        negativePrompt: params.negativePrompt,
         style: params.stylePreset,
         aspectRatio: params.aspectRatio,
         seed: params.seed,
         steps: params.steps,
         created: new Date().toISOString().replace("T", " ").substring(0, 16),
       };
-      setActiveAsset(newAsset);
-    }, 2400);
+      setActiveAsset(fallbackAsset);
+      cyberAudio.play("chime");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -61,10 +184,10 @@ export default function ImageStudioView() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-black tracking-tight text-[#F1F3F9]">
-                IMAGE STUDIO PRO // <span className="text-[#00FF41]">NEURAL CANVAS & INPAINT</span>
+                IMAGE STUDIO PRO // <span className="text-[#00FF41]">NEURAL CANVAS & COMFYUI</span>
               </h2>
               <Badge variant="outline" className="text-[10px] bg-[#00FF41]/10 text-[#00FF41] border-[#00FF41]/30">
-                SDXL TURBO + INPAINT V2
+                {comfyStatus.online ? "COMFYUI // ONLINE" : "COMFYUI // OFFLINE"}
               </Badge>
             </div>
             <p className="text-xs text-[#9499B3]">
@@ -98,11 +221,35 @@ export default function ImageStudioView() {
             <span>LATENT WORKBENCH</span>
           </Button>
 
-          <Badge variant="outline" className="text-[10px] font-bold text-[#00FF41] bg-[#00FF41]/10 border-[#00FF41]/30 h-9 px-2.5">
-            RTX 4090 VRAM: 18.2 GB FREE
+          <Badge
+            variant="outline"
+            className={`text-[10px] font-bold h-9 px-2.5 ${
+              comfyStatus.online
+                ? "text-[#00FF41] bg-[#00FF41]/10 border-[#00FF41]/30"
+                : "text-amber-400 bg-amber-500/10 border-amber-500/30"
+            }`}
+          >
+            {comfyStatus.online
+              ? `${comfyStatus.device?.toUpperCase() || "GPU"} // ${comfyStatus.vramFreeGb ?? 0}GB FREE`
+              : "COMFYUI // SIMULATOR MODE"}
           </Badge>
         </div>
       </div>
+
+      {generationNotice && (
+        <div className="cyber-card p-3 border-[#00FF41]/30 bg-[#00FF41]/5 flex items-center justify-between text-xs text-[#00FF41]">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={14} />
+            <span>{generationNotice}</span>
+          </div>
+          <button
+            onClick={() => setGenerationNotice(null)}
+            className="text-[10px] text-zinc-400 hover:text-white uppercase"
+          >
+            DISMISS
+          </button>
+        </div>
+      )}
 
       {/* Sub-Navigation Tabs */}
       <Tabs value={activeSubTab} onValueChange={(val) => setActiveSubTab(val as any)} className="w-full flex flex-col gap-4">
@@ -136,6 +283,7 @@ export default function ImageStudioView() {
               <PromptMatrixGenerator
                 onGenerate={handleGenerate}
                 isGenerating={isGenerating}
+                checkpoints={checkpoints}
               />
             </div>
 

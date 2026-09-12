@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sparkles,
   Sliders,
@@ -132,9 +132,10 @@ export interface GenerationParams {
 interface Props {
   onGenerate: (params: GenerationParams) => void;
   isGenerating: boolean;
+  checkpoints?: string[];
 }
 
-export default function PromptMatrixGenerator({ onGenerate, isGenerating }: Props) {
+export default function PromptMatrixGenerator({ onGenerate, isGenerating, checkpoints = [] }: Props) {
   const [prompt, setPrompt] = useState(
     "Cinematic shot of an autonomous AI sentinel patrolling a neon-lit cyberpunk metropolis, rain reflections, volumetric laser fog"
   );
@@ -150,7 +151,9 @@ export default function PromptMatrixGenerator({ onGenerate, isGenerating }: Prop
 
   // Pro Mode Advanced Settings
   const [showProMode, setShowProMode] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("sdxl_turbo");
+  const [selectedModel, setSelectedModel] = useState(
+    checkpoints && checkpoints.length > 0 ? checkpoints[0] : "sdxl_turbo"
+  );
   const [selectedSampler, setSelectedSampler] = useState("dpmpp_2m_karras");
   const [clipSkip, setClipSkip] = useState<1 | 2>(1);
   const [selectedVae, setSelectedVae] = useState("auto");
@@ -158,6 +161,12 @@ export default function PromptMatrixGenerator({ onGenerate, isGenerating }: Prop
   const [hiresUpscaler, setHiresUpscaler] = useState("R-ESRGAN 4x+");
   const [hiresDenoising, setHiresDenoising] = useState(0.35);
   const [batchCount, setBatchCount] = useState<1 | 2 | 4>(1);
+
+  useEffect(() => {
+    if (checkpoints && checkpoints.length > 0 && selectedModel === "sdxl_turbo") {
+      setSelectedModel(checkpoints[0]);
+    }
+  }, [checkpoints, selectedModel]);
 
   const handleEnhancePrompt = () => {
     cyberAudio.play("toggle");
@@ -452,14 +461,27 @@ export default function PromptMatrixGenerator({ onGenerate, isGenerating }: Prop
                   onChange={(e) => setSelectedModel(e.target.value)}
                   className="w-full p-2 rounded-xl bg-black/80 border border-white/15 text-xs text-[#F1F3F9] font-mono outline-none focus:border-[#00FF41] cursor-pointer"
                 >
-                  {MODELS.map((m) => (
-                    <option key={m.id} value={m.id} className="bg-black text-white">
-                      {m.name} ({m.vram})
-                    </option>
-                  ))}
+                  {checkpoints.length > 0 && (
+                    <optgroup label="⚡ COMFYUI ACTIVE CHECKPOINTS">
+                      {checkpoints.map((ck) => (
+                        <option key={ck} value={ck} className="bg-black text-[#00FF41]">
+                          {ck} (LOCAL VRAM)
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <optgroup label="PRESET ARCHITECTURES">
+                    {MODELS.map((m) => (
+                      <option key={m.id} value={m.id} className="bg-black text-white">
+                        {m.name} ({m.vram})
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
                 <span className="text-[9px] text-[#4F536E] mt-1 block">
-                  {MODELS.find((m) => m.id === selectedModel)?.desc}
+                  {checkpoints.includes(selectedModel)
+                    ? `Live ComfyUI Model Checkpoint (${selectedModel})`
+                    : MODELS.find((m) => m.id === selectedModel)?.desc}
                 </span>
               </div>
 

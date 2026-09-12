@@ -22,7 +22,7 @@ class QdrantMemoryEngine:
     def _init_engine(self):
         try:
             logger.info(f"Connecting to Qdrant at {self.qdrant_url}...")
-            self.client = QdrantClient(url=self.qdrant_url, timeout=10)
+            self.client = QdrantClient(url=self.qdrant_url, timeout=10, check_compatibility=False)
             
             # Ensure collection exists
             collections_res = self.client.get_collections().collections
