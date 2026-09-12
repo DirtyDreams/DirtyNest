@@ -48,7 +48,17 @@ const PLATFORM_COLORS: Record<string, string> = {
 
 function mapApiPostToScheduledPost(p: ApiSocialPost): ScheduledPost {
   const status: ScheduledPost["status"] =
-    p.status === "published" ? "published" : p.status === "failed" ? "failed" : p.status === "draft" ? "draft" : "scheduled";
+    p.status === "published"
+      ? "published"
+      : p.status === "failed"
+      ? "failed"
+      : p.status === "draft"
+      ? "draft"
+      : p.status === "awaiting_hitl"
+      ? "awaiting_hitl"
+      : p.status === "approved"
+      ? "approved"
+      : "scheduled";
   const when = p.scheduled_time ?? p.published_time ?? p.created_at;
   return {
     id: String(p.id),
@@ -67,6 +77,8 @@ export default function SocialMediaView() {
     "composer" | "automations" | "calendar" | "thread" | "inbox" | "listening" | "copywriter" | "queue" | "radar"
   >("automations");
   const [injectedText, setInjectedText] = useState<string | null>(null);
+  const [cdpConnected, setCdpConnected] = useState<boolean>(false);
+  const [isLaunchingCdp, setIsLaunchingCdp] = useState<boolean>(false);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -83,54 +95,70 @@ export default function SocialMediaView() {
     }
   }, []);
 
+  const fetchCdpStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/social/cdp");
+      if (res.ok) {
+        const data = (await res.json()) as { connected?: boolean };
+        setCdpConnected(Boolean(data.connected));
+      }
+    } catch {
+      // fallback
+    }
+  }, []);
+
   useEffect(() => {
     fetchPosts();
-  }, [fetchPosts]);
+    fetchCdpStatus();
+    const iv = setInterval(fetchCdpStatus, 15000);
+    return () => clearInterval(iv);
+  }, [fetchPosts, fetchCdpStatus]);
 
-  const handleSchedulePost = (newPost: { platform: SocialPlatform; text: string; hasMedia: boolean }) => {
+  const handleLaunchCdp = async () => {
+    cyberAudio.play("click");
+    setIsLaunchingCdp(true);
+    try {
+      await fetch("/api/social/cdp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "launch", port: 9333 }),
+      });
+      setTimeout(fetchCdpStatus, 2000);
+    } catch {
+      // ignored
+    } finally {
+      setIsLaunchingCdp(false);
+    }
+  };
+
+  const handleSchedulePost = (newPost: {
+    platform: SocialPlatform;
+    text: string;
+    hasMedia: boolean;
+    mediaUrls?: string[];
+    status?: "approved" | "awaiting_hitl" | "scheduled" | "draft";
+  }) => {
+    const status = newPost.status ?? "scheduled";
     const postItem: ScheduledPost = {
       id: `post-${Date.now()}`,
-      platform:
-        newPost.platform === "twitter"
-          ? "X / Twitter"
-          : newPost.platform === "discord"
-          ? "Discord Announce"
-          : newPost.platform === "telegram"
-          ? "Telegram Channel"
-          : newPost.platform === "linkedin"
-          ? "LinkedIn Tech"
-          : "Reddit /r/Cyberpunk",
-      platformColor:
-        newPost.platform === "twitter"
-          ? "#1DA1F2"
-          : newPost.platform === "discord"
-          ? "#5865F2"
-          : newPost.platform === "telegram"
-          ? "#0088CC"
-          : newPost.platform === "linkedin"
-          ? "#0A66C2"
-          : "#FF4500",
+      platform: newPost.platform.toUpperCase(),
+      platformColor: PLATFORM_COLORS[newPost.platform] ?? "#00F0FF",
       scheduledTime: "Today in 15 mins",
       copy: newPost.text,
-      status: "scheduled",
+      status,
       hasMedia: newPost.hasMedia,
     };
     setPosts((prev) => [postItem, ...prev]);
 
-    // Best-effort persist to the real API (F5). On failure the post stays in
-    // the local queue so the UI never blocks on the backend.
-    const apiPlatform =
-      newPost.platform === "discord"
-        ? "twitter"
-        : newPost.platform === "telegram"
-        ? "facebook"
-        : newPost.platform === "linkedin"
-        ? "instagram"
-        : newPost.platform;
     fetch("/api/social/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ platform: apiPlatform, text: newPost.text, status: "draft" }),
+      body: JSON.stringify({
+        platform: newPost.platform,
+        text: newPost.text,
+        status,
+        media_urls: newPost.mediaUrls ?? [],
+      }),
     })
       .then((res) => (res.ok ? fetchPosts() : undefined))
       .catch(() => undefined);
@@ -155,23 +183,42 @@ export default function SocialMediaView() {
                 </span>
               </div>
               <p className="text-xs text-[#9499B3]">
-                Synchronized publication matrix across X, Discord, Telegram, LinkedIn & Reddit with viral hook optimizer
+                Synchronized publication matrix across X, Instagram, TikTok, Facebook & Reddit via CDP automation
               </p>
             </div>
           </div>
 
-          <span className="text-[10px] font-bold text-[#00FF41] px-2.5 py-1 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
-            TOTAL REACH: 38,670 OPERATIVES
-          </span>
+          <div className="flex items-center gap-2">
+            {cdpConnected ? (
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#00FF41] px-2.5 py-1 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-pulse" />
+                CDP CHROME :9333 ONLINE
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLaunchCdp}
+                disabled={isLaunchingCdp}
+                className="flex items-center gap-1.5 text-[10px] font-bold text-[#FFB800] px-2.5 py-1 rounded bg-[#FFB800]/10 border border-[#FFB800]/30 hover:bg-[#FFB800]/20 transition-all cursor-pointer disabled:opacity-50"
+                title="Launch headless/interactive Chrome with remote CDP port 9333"
+              >
+                <Radio size={11} className={isLaunchingCdp ? "animate-pulse" : ""} />
+                {isLaunchingCdp ? "LAUNCHING CDP..." : "LAUNCH CDP CHROME"}
+              </button>
+            )}
+            <span className="text-[10px] font-bold text-[#00FF41] px-2.5 py-1 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
+              TOTAL REACH: 49,630 OPERATIVES
+            </span>
+          </div>
         </div>
 
         {/* Live Channel Metrics Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-2 border-t border-white/5">
           {[
             { name: "X / Twitter", handle: "@DirtyNestAI", count: "18.4K", color: "#1DA1F2", status: "ONLINE" },
-            { name: "Discord", handle: "#announcements", count: "6.8K", color: "#5865F2", status: "ONLINE" },
-            { name: "Telegram", handle: "@dirtynest_ops", count: "9.2K", color: "#0088CC", status: "ONLINE" },
-            { name: "LinkedIn", handle: "DirtyNest Systems", count: "3.1K", color: "#0A66C2", status: "ONLINE" },
+            { name: "Instagram", handle: "@dirtynest_cyber", count: "12.5K", color: "#E1306C", status: "ONLINE" },
+            { name: "TikTok", handle: "@dirtynest_ops", count: "8.4K", color: "#00F0FF", status: "ONLINE" },
+            { name: "Facebook", handle: "DirtyNest Ops", count: "6.1K", color: "#1877F2", status: "ONLINE" },
             { name: "Reddit", handle: "r/Cyberpunk", count: "4.2K", color: "#FF4500", status: "ONLINE" },
           ].map((ch) => (
             <div
@@ -239,7 +286,10 @@ export default function SocialMediaView() {
 
       {activeSubTab === "composer" && (
         <div className="animate-fade-in">
-          <MultiPlatformComposer onSchedulePost={handleSchedulePost} />
+          <MultiPlatformComposer
+            onSchedulePost={handleSchedulePost}
+            initialText={injectedText ?? undefined}
+          />
         </div>
       )}
 
@@ -280,7 +330,7 @@ export default function SocialMediaView() {
 
       {activeSubTab === "queue" && (
         <div className="animate-fade-in">
-          <SocialScheduledQueue posts={posts} />
+          <SocialScheduledQueue posts={posts} onRefresh={fetchPosts} />
         </div>
       )}
 

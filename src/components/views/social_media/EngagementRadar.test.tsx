@@ -102,8 +102,9 @@ describe("EngagementRadar", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
-    const refreshBtn = container.querySelector("button");
-    expect(refreshBtn).not.toBeNull();
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const refreshBtn = buttons.find((b) => b.textContent?.includes("REFRESH"));
+    expect(refreshBtn).toBeDefined();
 
     await act(async () => {
       refreshBtn?.click();

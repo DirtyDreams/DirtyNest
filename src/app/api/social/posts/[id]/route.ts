@@ -8,8 +8,8 @@ import { getCurrentUserId } from "@/lib/auth/currentUser";
 const updatePostSchema = z.object({
   text: z.string().trim().min(1).max(10000).optional(),
   account_id: z.number().int().positive().nullable().optional(),
-  media_urls: z.array(z.string().url()).max(10).optional(),
-  status: z.enum(["draft", "scheduled", "cancelled"]).optional(),
+  media_urls: z.array(z.string()).max(10).optional(),
+  status: z.enum(["draft", "scheduled", "cancelled", "awaiting_hitl", "approved"]).optional(),
   scheduled_time: z.string().nullable().optional(),
   cron_expression: z.string().nullable().optional(),
   repeat_until: z.string().nullable().optional(),

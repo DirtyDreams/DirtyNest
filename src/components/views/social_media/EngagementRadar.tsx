@@ -45,12 +45,48 @@ const DEFAULT_CHANNELS: ChannelStat[] = [
   {
     key: "twitter",
     channel: "X / Twitter",
-    color: "#00F0FF",
+    color: "#1DA1F2",
     followers: 18420,
     growthPct: 14.8,
     impressions7d: 142000,
     engagementPct: 6.4,
     sentimentPct: 94.2,
+    status: "awaiting",
+    postsCount: 0,
+  },
+  {
+    key: "instagram",
+    channel: "Instagram",
+    color: "#E1306C",
+    followers: 12500,
+    growthPct: 19.4,
+    impressions7d: 98000,
+    engagementPct: 9.1,
+    sentimentPct: 95.8,
+    status: "awaiting",
+    postsCount: 0,
+  },
+  {
+    key: "tiktok",
+    channel: "TikTok",
+    color: "#00F0FF",
+    followers: 8400,
+    growthPct: 24.2,
+    impressions7d: 87000,
+    engagementPct: 12.8,
+    sentimentPct: 91.0,
+    status: "awaiting",
+    postsCount: 0,
+  },
+  {
+    key: "facebook",
+    channel: "Facebook",
+    color: "#1877F2",
+    followers: 6100,
+    growthPct: 5.6,
+    impressions7d: 45000,
+    engagementPct: 4.8,
+    sentimentPct: 88.2,
     status: "awaiting",
     postsCount: 0,
   },
@@ -66,30 +102,6 @@ const DEFAULT_CHANNELS: ChannelStat[] = [
     status: "awaiting",
     postsCount: 0,
   },
-  {
-    key: "discord",
-    channel: "Discord Community",
-    color: "#BF40FF",
-    followers: 6840,
-    growthPct: 22.4,
-    impressions7d: 89000,
-    engagementPct: 18.2,
-    sentimentPct: 98.6,
-    status: "awaiting",
-    postsCount: 0,
-  },
-  {
-    key: "telegram",
-    channel: "Telegram Channel",
-    color: "#00FF41",
-    followers: 9200,
-    growthPct: 8.9,
-    impressions7d: 64000,
-    engagementPct: 11.5,
-    sentimentPct: 92.0,
-    status: "awaiting",
-    postsCount: 0,
-  },
 ];
 
 export default function EngagementRadar() {
@@ -99,6 +111,7 @@ export default function EngagementRadar() {
   const [avgEngagement, setAvgEngagement] = useState<number>(11.2);
   const [isLive, setIsLive] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isScraping, setIsScraping] = useState<boolean>(false);
 
   const fetchAnalytics = useCallback(async () => {
     setIsLoading(true);
@@ -160,6 +173,19 @@ export default function EngagementRadar() {
     fetchAnalytics();
   };
 
+  const handleScrapeMetrics = async () => {
+    cyberAudio.play("click");
+    setIsScraping(true);
+    try {
+      await fetch("/api/social/metrics/refresh", { method: "POST" });
+      await fetchAnalytics();
+    } catch {
+      // Graceful fallback
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
   return (
     <div className="cyber-card p-4 sm:p-5 flex flex-col gap-4 font-mono select-none">
       {/* Header */}
@@ -190,8 +216,17 @@ export default function EngagementRadar() {
 
         <div className="flex items-center gap-2">
           <button
+            onClick={handleScrapeMetrics}
+            disabled={isScraping || isLoading}
+            className="flex items-center gap-1.5 text-[10px] font-bold text-[#00FF41] px-2.5 py-1 rounded bg-[#00FF41]/10 border border-[#00FF41]/30 hover:bg-[#00FF41]/20 transition-all cursor-pointer disabled:opacity-50"
+            title="Scrape live telemetry across connected platforms"
+          >
+            <Radio size={11} className={isScraping ? "animate-pulse text-[#00FF41]" : ""} />
+            {isScraping ? "SCRAPING CDP..." : "SCRAPE METRICS"}
+          </button>
+          <button
             onClick={handleRefresh}
-            disabled={isLoading}
+            disabled={isLoading || isScraping}
             className="flex items-center gap-1.5 text-[10px] font-bold text-[#00F0FF] px-2.5 py-1 rounded bg-[#00F0FF]/10 border border-[#00F0FF]/30 hover:bg-[#00F0FF]/20 transition-all cursor-pointer disabled:opacity-50"
             title="Refresh social analytics"
           >

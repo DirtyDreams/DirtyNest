@@ -25,6 +25,7 @@ from cron_service import cron_manager
 from docker_service import docker_engine
 from intel_service import intel_service
 from comfyui_service import comfyui_engine
+from social_scheduler import social_scheduler
 from automations import (
     EngagementManager,
     TopicManager,
@@ -1051,6 +1052,40 @@ async def get_comfy_image(filename: str, subfolder: str = "", type: str = "outpu
     elif filename.endswith(".webp"):
         media_type = "image/webp"
     return Response(content=content, media_type=media_type)
+
+
+# --------------------------------------------------------------------------
+# Social Media Command & CDP Automation Endpoints
+# --------------------------------------------------------------------------
+
+class CdpLaunchRequest(BaseModel):
+    port: Optional[int] = 9333
+
+
+@app.get("/api/cdp/status")
+async def get_cdp_status():
+    return await cdp_engine.get_status()
+
+
+@app.post("/api/cdp/launch")
+async def launch_cdp_browser(req: Optional[CdpLaunchRequest] = None):
+    port = req.port if req and req.port else 9333
+    return cdp_engine.launch_browser(port=port)
+
+
+@app.post("/api/social/publish-due")
+async def publish_due_social_posts():
+    return await social_scheduler.publish_due()
+
+
+@app.post("/api/social/metrics/refresh")
+async def refresh_social_metrics():
+    return await social_scheduler.collect_metrics()
+
+
+@app.get("/api/social/adapters")
+async def get_social_adapters():
+    return {"adapters": list_adapters()}
 
 
 if __name__ == "__main__":

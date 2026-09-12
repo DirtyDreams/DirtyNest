@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Send,
   Image as ImageIcon,
@@ -15,11 +15,14 @@ import {
   CheckCircle2,
   RefreshCw,
   FolderOpen,
+  Sparkles,
+  Cpu,
+  Loader2,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
 import { SAMPLE_ASSETS } from "../image_studio/GeneratedAssetsGallery";
 
-export type SocialPlatform = "twitter" | "discord" | "telegram" | "linkedin" | "reddit";
+export type SocialPlatform = "twitter" | "instagram" | "tiktok" | "facebook" | "reddit";
 
 interface PlatformDef {
   id: SocialPlatform;
@@ -32,50 +35,60 @@ interface PlatformDef {
 }
 
 const PLATFORMS: PlatformDef[] = [
-  { id: "twitter", name: "X / Twitter", badge: "X", color: "#1DA1F2", maxChars: 280, handle: "@DirtyNestAI", channelName: "DirtyNest" },
-  { id: "discord", name: "Discord", badge: "DISCORD", color: "#5865F2", maxChars: 2000, handle: "DirtyNest Bot#0001", channelName: "#announcements" },
-  { id: "telegram", name: "Telegram", badge: "TG", color: "#0088CC", maxChars: 4096, handle: "@dirtynest_ops", channelName: "DirtyNest Operations" },
-  { id: "linkedin", name: "LinkedIn", badge: "IN", color: "#0A66C2", maxChars: 3000, handle: "DirtyNest Systems Inc.", channelName: "Corporate Feed" },
-  { id: "reddit", name: "Reddit", badge: "REDDIT", color: "#FF4500", maxChars: 4000, handle: "u/DirtyNest_Bot", channelName: "r/Cyberpunk" },
+  { id: "twitter", name: "X / Twitter", badge: "X", color: "#1DA1F2", maxChars: 280, handle: "@DirtyNestAI", channelName: "x.com" },
+  { id: "instagram", name: "Instagram", badge: "IG", color: "#E1306C", maxChars: 2200, handle: "@dirtynest_cyber", channelName: "Feed & Reels" },
+  { id: "tiktok", name: "TikTok", badge: "TIKTOK", color: "#00F0FF", maxChars: 4000, handle: "@dirtynest_ops", channelName: "Video Feed" },
+  { id: "facebook", name: "Facebook", badge: "FB", color: "#1877F2", maxChars: 5000, handle: "DirtyNest Operations", channelName: "Page Feed" },
+  { id: "reddit", name: "Reddit", badge: "REDDIT", color: "#FF4500", maxChars: 40000, handle: "u/DirtyNest_Bot", channelName: "r/Cyberpunk" },
 ];
 
 const QUICK_EMOJIS = ["🚀", "⚡", "🤖", "🛡️", "💎", "🔥", "📊", "👁️", "🧠", "🎯"];
 const QUICK_HASHTAGS = ["#Cyberpunk", "#AutonomousAI", "#NextJS", "#WebAudio", "#AgenticAI", "#DirtyNest"];
 
 interface Props {
-  onSchedulePost: (post: { platform: SocialPlatform; text: string; hasMedia: boolean }) => void;
+  onSchedulePost: (post: { platform: SocialPlatform; text: string; hasMedia: boolean; mediaUrls?: string[]; status?: "approved" | "awaiting_hitl" | "scheduled" | "draft" }) => void;
+  initialText?: string;
 }
 
-export default function MultiPlatformComposer({ onSchedulePost }: Props) {
+export default function MultiPlatformComposer({ onSchedulePost, initialText }: Props) {
   const [selectedPreviewPlatform, setSelectedPreviewPlatform] = useState<SocialPlatform>("twitter");
-  const [activeBroadcasts, setActiveBroadcasts] = useState<SocialPlatform[]>(["twitter", "discord", "telegram", "linkedin", "reddit"]);
+  const [activeBroadcasts, setActiveBroadcasts] = useState<SocialPlatform[]>(["twitter", "instagram", "tiktok", "facebook", "reddit"]);
 
   // Editing Tab: "master" or a specific platform
   const [activeEditTab, setActiveEditTab] = useState<"master" | SocialPlatform>("master");
 
   // Master Text
   const [masterText, setMasterText] = useState(
+    initialText ??
     "🚀 DirtyNest v3.5 is officially live!\n\nFeaturing:\n⚡ 100% Hermes Agent Autonomous Master Brain\n🛡️ Zero-Trust Socket Interceptors & Audit Logs\n🎙️ Real-time Web Audio DSP Voice Synthesizer & Soundboard\n\nTry the interactive cyber dashboard now: https://dirtynest.ai\n\n#Cyberpunk #HermesAgent #Nextjs #AI"
   );
+
+  useEffect(() => {
+    if (initialText) {
+      setMasterText(initialText);
+    }
+  }, [initialText]);
 
   // Per-Platform Customized Texts
   const [platformTexts, setPlatformTexts] = useState<Record<SocialPlatform, string>>({
     twitter: "🚀 DirtyNest v3.5 is live! Autonomous cybernetic command center with Hermes Master Brain, Web Audio 96kHz DSP soundboard & local multi-layer canvas studio.\n\nTry it now: https://dirtynest.ai\n\n#Cyberpunk #NextJS #AI",
-    discord: "**🚀 @everyone DirtyNest v3.5 is officially live!**\n\n> ⚡ Hermes Autonomous Brain\n> 🎙️ Web Audio DSP Soundboard\n> 🎨 Multi-Layer Canvas Pro\n\nJoin the discussion & clone the repo at https://dirtynest.ai",
-    telegram: "⚡ <b>DIRTYNEST v3.5 DEPLOYED</b>\n\nFull autonomous AI operating system with realtime telemetry, local neural voice synthesis, and multi-network broadcast command.\n\n🔗 Link: https://dirtynest.ai",
-    linkedin: "We are thrilled to announce the release of DirtyNest Systems v3.5.\n\nDesigned for next-generation engineering teams building autonomous agentic architectures with sub-millisecond local telemetry and cybernetic UI interfaces.\n\nRead the full release breakdown: https://dirtynest.ai\n\n#SoftwareEngineering #AgenticAI #NextJS",
+    instagram: "Visual transmission from DirtyNest Cyber Command. Local neural rendering via ComfyUI (RTX 3060) & autonomous Hermes agents.\n\nLink in bio.\n\n#Cyberpunk #AIGenerated #ComfyUI #CyberAesthetics",
+    tiktok: "Cyberpunk Command Center setup! ⚡ 100% autonomous agentic workflow with local GPU acceleration and real-time DSP soundboard.\n\n#Cyberpunk #TechTok #AgenticAI #Coding",
+    facebook: "DirtyNest Systems update: Deploying full local AI workstation control with real-time process telemetry and container sandboxes.\n\nCheck out our GitHub release at https://dirtynest.ai",
     reddit: "DirtyNest v3.5 is an open-source cyberpunk command center built with Next.js Turbopack, Web Audio API DSP synthesis, and local multi-layer canvas inpainting. Check out the live demo and let us know what features you want next!",
   });
 
   // Reddit Specific Title
   const [redditTitle, setRedditTitle] = useState("Showcase: Built a complete Cyberpunk Command Center with Web Audio Synth & AI Studio");
 
-  // Media Attachments
-  const [attachedImages, setAttachedImages] = useState<string[]>([
-    "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1200&auto=format&fit=crop&q=80",
-  ]);
+  // Media Attachments & ComfyUI Studio
+  const [attachedImages, setAttachedImages] = useState<string[]>([]);
   const [showVaultPicker, setShowVaultPicker] = useState(false);
+  const [autoApprove, setAutoApprove] = useState(true);
   const [scheduledStatus, setScheduledStatus] = useState<string | null>(null);
+  const [comfyHistoryImages, setComfyHistoryImages] = useState<string[]>([]);
+  const [comfyPromptInput, setComfyPromptInput] = useState("");
+  const [isGeneratingComfy, setIsGeneratingComfy] = useState(false);
 
   // Get current active editing text
   const currentEditText = activeEditTab === "master" ? masterText : platformTexts[activeEditTab];
@@ -157,6 +170,8 @@ export default function MultiPlatformComposer({ onSchedulePost }: Props) {
         platform: plat,
         text: plat === "reddit" ? `[${redditTitle}]\n\n${textToUse}` : textToUse,
         hasMedia: attachedImages.length > 0,
+        mediaUrls: attachedImages,
+        status: autoApprove ? "approved" : "awaiting_hitl",
       });
     });
 
@@ -418,10 +433,17 @@ export default function MultiPlatformComposer({ onSchedulePost }: Props) {
           </div>
 
           {/* Action Footer */}
-          <div className="pt-2 flex items-center justify-between border-t border-white/10">
-            <span className="text-[10px] text-[#4F536E]">
-              Ready to broadcast to {activeBroadcasts.length} channels
-            </span>
+          <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/10">
+            <label className="flex items-center gap-2 text-[10px] text-[#9499B3] hover:text-white cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={autoApprove}
+                onChange={(e) => setAutoApprove(e.target.checked)}
+                className="w-3.5 h-3.5 rounded bg-black/60 border-white/20 text-[#00FF41] focus:ring-0 cursor-pointer"
+              />
+              <span className="font-bold text-[#00FF41]">HITL PRE-APPROVAL:</span>
+              <span>Enable live broadcast without secondary queue clearance</span>
+            </label>
 
             <button
               type="submit"
@@ -515,99 +537,131 @@ export default function MultiPlatformComposer({ onSchedulePost }: Props) {
               </div>
             )}
 
-            {/* Discord Simulator */}
-            {selectedPreviewPlatform === "discord" && (
-              <div className="p-3.5 rounded-2xl bg-[#313338] text-white text-xs flex flex-col gap-2 font-sans border border-[#5865F2]/40">
-                <div className="flex items-center justify-between pb-1 border-b border-white/10 text-[10px] text-[#949BA4]">
-                  <span>#announcements · Discord Server</span>
-                  <span className="text-[#5865F2] font-bold">DISCORD</span>
-                </div>
-
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center text-white font-bold text-xs shrink-0">
-                    DN
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-white text-xs">DirtyNest Bot</span>
-                      <span className="text-[9px] bg-[#5865F2] text-white px-1 rounded font-bold">BOT</span>
-                      <span className="text-[10px] text-[#949BA4]">Today at 17:50</span>
-                    </div>
-
-                    <p className="text-[#DBDEE1] text-xs mt-1 leading-relaxed whitespace-pre-line font-mono">
-                      {previewText}
-                    </p>
-
-                    {attachedImages.length > 0 && (
-                      <div className="mt-2 relative aspect-video max-w-sm rounded-lg overflow-hidden border border-white/10">
-                        <div
-                          className="absolute inset-0 bg-cover bg-center"
-                          style={{ backgroundImage: `url(${attachedImages[0]})` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Telegram Simulator */}
-            {selectedPreviewPlatform === "telegram" && (
-              <div className="p-3.5 rounded-2xl bg-[#17212B] text-white text-xs flex flex-col gap-2 font-sans border border-[#0088CC]/40">
-                <div className="flex items-center justify-between pb-1 border-b border-white/10 text-[10px] text-[#6C7883]">
-                  <span>DirtyNest Operations · 9.2K subscribers</span>
-                  <span className="text-[#0088CC] font-bold">TELEGRAM</span>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-[#242F3D] text-white self-start max-w-full flex flex-col gap-2">
-                  {attachedImages.length > 0 && (
-                    <div className="relative aspect-video rounded-lg overflow-hidden">
-                      <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${attachedImages[0]})` }}
-                      />
-                    </div>
-                  )}
-
-                  <p className="text-white text-xs leading-relaxed whitespace-pre-line">
-                    {previewText}
-                  </p>
-
-                  <div className="text-right text-[9px] text-[#6C7883]">
-                    17:50 · 4.8K views
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* LinkedIn Simulator */}
-            {selectedPreviewPlatform === "linkedin" && (
-              <div className="p-3.5 rounded-2xl bg-[#1B1F23] text-white text-xs flex flex-col gap-2.5 font-sans border border-[#0A66C2]/40">
-                <div className="flex items-center justify-between">
+            {/* Instagram Simulator */}
+            {selectedPreviewPlatform === "instagram" && (
+              <div className="p-3.5 rounded-2xl bg-black text-white text-xs flex flex-col gap-2.5 font-sans border border-[#E1306C]/40">
+                <div className="flex items-center justify-between pb-1 border-b border-white/10 text-[10px]">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#0A66C2] flex items-center justify-center text-white font-bold text-xs">
-                      in
+                    <div className="w-7 h-7 rounded-full p-[1.5px] bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF]">
+                      <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-[10px] font-bold text-[#E1306C]">
+                        DN
+                      </div>
                     </div>
                     <div>
-                      <span className="font-bold text-white text-xs block">DirtyNest Systems Inc.</span>
-                      <span className="text-[9px] text-[#8C8C8C]">3,120 followers · Promoted</span>
+                      <span className="font-bold text-white text-xs block">dirtynest_cyber</span>
+                      <span className="text-[9px] text-[#A8A8A8]">Original audio</span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold text-[#0A66C2]">LINKEDIN</span>
+                  <span className="text-[#E1306C] font-bold text-[10px]">INSTAGRAM</span>
                 </div>
 
-                <p className="text-white text-xs leading-relaxed whitespace-pre-line">
-                  {previewText}
-                </p>
-
                 {attachedImages.length > 0 && (
-                  <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10">
+                  <div className="relative aspect-square max-h-64 rounded-xl overflow-hidden border border-white/10 bg-black">
                     <div
                       className="absolute inset-0 bg-cover bg-center"
                       style={{ backgroundImage: `url(${attachedImages[0]})` }}
                     />
                   </div>
                 )}
+
+                <div className="flex items-center justify-between pt-1 text-sm text-white">
+                  <div className="flex items-center gap-3">
+                    <span className="hover:text-[#E1306C] cursor-pointer"><Heart size={16} /></span>
+                    <span className="hover:text-[#00F0FF] cursor-pointer"><MessageCircle size={16} /></span>
+                    <span className="hover:text-[#00FF41] cursor-pointer"><Send size={15} /></span>
+                  </div>
+                  <span className="text-[10px] text-[#A8A8A8]">1,420 likes</span>
+                </div>
+
+                <p className="text-[#F1F3F9] text-xs leading-relaxed whitespace-pre-line font-sans">
+                  <span className="font-bold mr-1.5 text-white">dirtynest_cyber</span>
+                  {previewText}
+                </p>
+                <span className="text-[9px] text-[#737373] uppercase">2 hours ago</span>
+              </div>
+            )}
+
+            {/* TikTok Simulator */}
+            {selectedPreviewPlatform === "tiktok" && (
+              <div className="p-3.5 rounded-2xl bg-[#010101] text-white text-xs flex flex-col gap-2.5 font-sans border border-[#00F0FF]/40">
+                <div className="flex items-center justify-between pb-1 border-b border-white/10 text-[10px] text-[#8A8B91]">
+                  <span>TikTok Video Transmission</span>
+                  <span className="text-[#00F0FF] font-bold">TIKTOK</span>
+                </div>
+
+                <div className="relative aspect-video max-h-60 rounded-xl overflow-hidden border border-white/10 bg-[#121212] flex flex-col justify-end p-3">
+                  {attachedImages.length > 0 && (
+                    <div
+                      className="absolute inset-0 bg-cover bg-center opacity-80"
+                      style={{ backgroundImage: `url(${attachedImages[0]})` }}
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+                  {/* Floating Action Column */}
+                  <div className="absolute right-2 bottom-3 flex flex-col items-center gap-2.5 z-10">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="w-7 h-7 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-rose-500">
+                        <Heart size={14} />
+                      </div>
+                      <span className="text-[9px] font-bold text-white">18.4K</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="w-7 h-7 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-white">
+                        <MessageCircle size={14} />
+                      </div>
+                      <span className="text-[9px] font-bold text-white">524</span>
+                    </div>
+                  </div>
+
+                  {/* Caption & Account */}
+                  <div className="relative z-10 pr-10">
+                    <span className="font-bold text-white text-xs block mb-1">@dirtynest_ops</span>
+                    <p className="text-white text-[11px] leading-snug line-clamp-3">
+                      {previewText}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-2 text-[10px] text-[#00F0FF]">
+                      <Radio size={11} className="animate-pulse" />
+                      <span>♫ DirtyNest Cyber Synth (Original Audio)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Facebook Simulator */}
+            {selectedPreviewPlatform === "facebook" && (
+              <div className="p-3.5 rounded-2xl bg-[#18191A] text-white text-xs flex flex-col gap-2.5 font-sans border border-[#1877F2]/40">
+                <div className="flex items-center justify-between pb-1 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[#1877F2] flex items-center justify-center text-white font-bold text-xs">
+                      f
+                    </div>
+                    <div>
+                      <span className="font-bold text-white text-xs block">DirtyNest Systems</span>
+                      <span className="text-[9px] text-[#B0B3B8]">Public · Just now</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-[#1877F2]">FACEBOOK</span>
+                </div>
+
+                <p className="text-[#E4E6EB] text-xs leading-relaxed whitespace-pre-line">
+                  {previewText}
+                </p>
+
+                {attachedImages.length > 0 && (
+                  <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10">
+                    <div
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${attachedImages[0]})` }}
+                    />
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-1.5 border-t border-white/10 text-[10px] text-[#B0B3B8]">
+                  <span className="flex items-center gap-1 text-[#1877F2]">👍 142 Likes</span>
+                  <span>28 Comments · 14 Shares</span>
+                </div>
               </div>
             )}
 
@@ -651,38 +705,84 @@ export default function MultiPlatformComposer({ onSchedulePost }: Props) {
 
       {/* Image Studio Vault Selector Modal */}
       {showVaultPicker && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in font-mono">
-          <div className="w-full max-w-2xl rounded-2xl border border-white/15 p-5 flex flex-col gap-4 shadow-2xl relative bg-black/95 max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in font-mono">
+          <div className="w-full max-w-3xl rounded-2xl border border-white/15 p-5 flex flex-col gap-4 shadow-2xl relative bg-[#090C19] max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <FolderOpen size={16} className="text-[#00FF41]" />
+                <Cpu size={16} className="text-[#00FF41]" />
                 <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                  SELECT ARTIFACT FROM IMAGE STUDIO VAULT
+                  COMFYUI NEURAL STUDIO & ARTIFACT VAULT
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowVaultPicker(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-white cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
+            {/* Quick Generator on RTX 3060 */}
+            <div className="p-3 rounded-xl bg-black/50 border border-[#00FF41]/30 flex flex-col gap-2">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-[#00FF41] font-bold flex items-center gap-1.5">
+                  <Sparkles size={12} />
+                  <span>RENDER NEW ARTWORK VIA COMFYUI (RTX 3060)</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={comfyPromptInput}
+                  onChange={(e) => setComfyPromptInput(e.target.value)}
+                  placeholder="Enter visual prompt (e.g. cybernetic hacker terminal neon green)..."
+                  className="flex-1 px-3 py-2 rounded-lg bg-black/60 border border-white/15 text-xs text-white placeholder:text-[#4F536E] focus:outline-none focus:border-[#00FF41]"
+                />
+                <button
+                  type="button"
+                  disabled={isGeneratingComfy || !comfyPromptInput.trim()}
+                  onClick={async () => {
+                    setIsGeneratingComfy(true);
+                    cyberAudio.play("warp");
+                    try {
+                      const res = await fetch("/api/comfyui", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ prompt: comfyPromptInput, width: 768, height: 768 }),
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        if (data.images && data.images[0]) {
+                          handleSelectVaultImage(data.images[0]);
+                        }
+                      }
+                    } catch {}
+                    setIsGeneratingComfy(false);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-[#00FF41] text-black font-black text-xs hover:bg-[#00cc34] transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1.5 shrink-0"
+                >
+                  {isGeneratingComfy ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                  <span>{isGeneratingComfy ? "RENDERING..." : "RENDER"}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="text-[10px] text-[#9499B3] font-bold">CLICK ASSET TO ATTACH:</div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {SAMPLE_ASSETS.map((asset) => (
+              {[...comfyHistoryImages, ...SAMPLE_ASSETS.map((a) => a.url)].map((imgUrl, idx) => (
                 <div
-                  key={asset.id}
-                  onClick={() => handleSelectVaultImage(asset.url)}
+                  key={idx}
+                  onClick={() => handleSelectVaultImage(imgUrl)}
                   className="group relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10 hover:border-[#00FF41] cursor-pointer transition-all flex flex-col justify-end p-2"
                 >
                   <div
                     className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform"
-                    style={{ backgroundImage: `url(${asset.url})` }}
+                    style={{ backgroundImage: `url(${imgUrl})` }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <span className="relative text-[10px] font-bold text-white truncate z-10">
-                    {asset.title}
+                    Artifact #{idx + 1}
                   </span>
                 </div>
               ))}
@@ -692,7 +792,7 @@ export default function MultiPlatformComposer({ onSchedulePost }: Props) {
               <button
                 type="button"
                 onClick={() => setShowVaultPicker(false)}
-                className="px-4 py-1.5 rounded-xl text-xs text-[#9499B3] hover:text-white"
+                className="px-4 py-1.5 rounded-xl text-xs text-[#9499B3] hover:text-white cursor-pointer"
               >
                 CLOSE
               </button>

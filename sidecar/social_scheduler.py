@@ -44,9 +44,9 @@ class SocialScheduler:
         async with pool.acquire() as conn:
             rows = await conn.fetch(
                 """
-                SELECT id, platform, text, media_urls, account_id, scheduled_time
+                SELECT id, platform, text, media_urls, account_id, scheduled_time, status
                 FROM social_posts
-                WHERE status = 'scheduled'
+                WHERE status IN ('scheduled', 'approved')
                   AND scheduled_time IS NOT NULL
                   AND scheduled_time <= now()
                 ORDER BY scheduled_time ASC

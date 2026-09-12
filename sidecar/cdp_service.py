@@ -178,5 +178,35 @@ class ChromeCdpEngine:
             return {"result": {"value": f"[SIMULATED EVAL] Executed: {expr[:60]}"}}
         return {}
 
+    def launch_browser(self, port: Optional[int] = None) -> Dict[str, Any]:
+        """Spawn Chrome with --remote-debugging-port for social CDP automation."""
+        target_port = port or self.cdp_port
+        user_data_dir = os.path.join(os.path.expanduser("~"), ".dirtynest", "social-cdp")
+        os.makedirs(user_data_dir, exist_ok=True)
+        import subprocess
+
+        binary = (
+            os.environ.get("SOCIAL_CDP_BINARY") or (
+                r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+                if os.name == "nt"
+                else "chromium"
+            )
+        )
+        cmd = [
+            binary,
+            f"--remote-debugging-port={target_port}",
+            f"--user-data-dir={user_data_dir}",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "about:blank",
+        ]
+        try:
+            subprocess.Popen(cmd)
+            return {"ok": True, "port": target_port, "user_data_dir": user_data_dir}
+        except Exception as e:
+            logger.exception(f"Failed to launch Chrome: {e}")
+            return {"ok": False, "error": str(e), "port": target_port}
+
+
 # Global Singleton
 cdp_engine = ChromeCdpEngine()

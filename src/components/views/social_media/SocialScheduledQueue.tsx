@@ -10,7 +10,7 @@ export interface ScheduledPost {
   platformColor: string;
   scheduledTime: string;
   copy: string;
-  status: "scheduled" | "published" | "draft" | "failed";
+  status: "scheduled" | "published" | "draft" | "failed" | "awaiting_hitl" | "approved";
   hasMedia: boolean;
 }
 
@@ -18,7 +18,7 @@ export const INITIAL_SCHEDULE: ScheduledPost[] = [
   {
     id: "post-01",
     platform: "X / Twitter",
-    platformColor: "#00F0FF",
+    platformColor: "#1DA1F2",
     scheduledTime: "Today at 18:00 (Prime Dev Hour)",
     copy: "⚡ How we achieved sub-10ms persistent memory recall with SQLite FTS5 in DirtyNest. Full architectural breakdown inside 🧵👇 #DevOps #SQLite #Hermes",
     status: "scheduled",
@@ -26,26 +26,26 @@ export const INITIAL_SCHEDULE: ScheduledPost[] = [
   },
   {
     id: "post-02",
-    platform: "Discord Announce",
-    platformColor: "#BF40FF",
-    scheduledTime: "Today at 20:30 (Community Hangout)",
-    copy: "🎙️ Stream Alert: KIRA is going live with real-time DSP voice synthesis! Join the voice channel to test the audio matrix.",
-    status: "scheduled",
+    platform: "Instagram",
+    platformColor: "#E1306C",
+    scheduledTime: "Today at 20:30 (Visual Reel)",
+    copy: "Visual transmission from DirtyNest Cyber Command. Local neural rendering via ComfyUI (RTX 3060) & autonomous Hermes agents.",
+    status: "approved",
     hasMedia: true,
   },
   {
     id: "post-03",
-    platform: "LinkedIn Tech",
-    platformColor: "#00FF41",
-    scheduledTime: "Tomorrow at 09:00 (Enterprise Feed)",
+    platform: "TikTok",
+    platformColor: "#00F0FF",
+    scheduledTime: "Tomorrow at 09:00 (TechTok Feed)",
     copy: "Why zero-trust socket clearance interceptors are replacing static API gateways in modern AI microservices.",
-    status: "draft",
+    status: "awaiting_hitl",
     hasMedia: false,
   },
   {
     id: "post-04",
     platform: "Reddit /r/Cyberpunk",
-    platformColor: "#FFB800",
+    platformColor: "#FF4500",
     scheduledTime: "Yesterday at 22:00",
     copy: "Showcasing our CRT scanline terminal dashboard with binaural focus soundboard and Matrix rain zen canvas.",
     status: "published",
@@ -55,27 +55,50 @@ export const INITIAL_SCHEDULE: ScheduledPost[] = [
 
 interface Props {
   posts: ScheduledPost[];
+  onRefresh?: () => void;
 }
 
-export default function SocialScheduledQueue({ posts }: Props) {
+export default function SocialScheduledQueue({ posts, onRefresh }: Props) {
   const [schedule, setSchedule] = useState<ScheduledPost[]>(posts.length > 0 ? posts : INITIAL_SCHEDULE);
-
 
   // Sync when the parent refreshes posts from the real API (F5).
   useEffect(() => {
     if (posts.length > 0) setSchedule(posts);
   }, [posts]);
 
-  const handlePublishNow = (id: string) => {
+  const handleApprove = async (id: string) => {
+    cyberAudio.play("warp");
+    setSchedule((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, status: "approved" } : p))
+    );
+    try {
+      const res = await fetch(`/api/social/posts/${id}/approve`, { method: "POST" });
+      if (res.ok && onRefresh) onRefresh();
+    } catch {}
+  };
+
+  const handlePublishNow = async (id: string) => {
     cyberAudio.play("chime");
     setSchedule((prev) =>
       prev.map((p) => (p.id === id ? { ...p, status: "published" } : p))
     );
+    try {
+      const res = await fetch(`/api/social/posts/${id}/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approved: true }),
+      });
+      if (res.ok && onRefresh) onRefresh();
+    } catch {}
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     cyberAudio.play("click");
     setSchedule((prev) => prev.filter((p) => p.id !== id));
+    try {
+      const res = await fetch(`/api/social/posts/${id}`, { method: "DELETE" });
+      if (res.ok && onRefresh) onRefresh();
+    } catch {}
   };
 
   return (
@@ -97,7 +120,7 @@ export default function SocialScheduledQueue({ posts }: Props) {
         </div>
 
         <span className="text-[10px] font-bold text-[#00FF41] px-2.5 py-1 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
-          {schedule.filter((p) => p.status === "scheduled").length} QUEUED
+          {schedule.filter((p) => p.status === "scheduled" || p.status === "approved").length} QUEUED
         </span>
       </div>
 
@@ -120,8 +143,12 @@ export default function SocialScheduledQueue({ posts }: Props) {
                   className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase ${
                     p.status === "published"
                       ? "bg-[#00FF41]/10 text-[#00FF41] border-[#00FF41]/30"
+                      : p.status === "approved"
+                      ? "bg-[#FFB800]/15 text-[#FFB800] border-[#FFB800]/40 shadow-[0_0_8px_rgba(255,184,0,0.2)]"
+                      : p.status === "awaiting_hitl"
+                      ? "bg-[#FF0055]/15 text-[#FF0055] border-[#FF0055]/40 animate-pulse"
                       : p.status === "scheduled"
-                      ? "bg-[#00F0FF]/10 text-[#00F0FF] border-[#00F0FF]/30 animate-pulse"
+                      ? "bg-[#00F0FF]/10 text-[#00F0FF] border-[#00F0FF]/30"
                       : "bg-white/5 text-[#9499B3] border-white/10"
                   }`}
                 >
@@ -140,11 +167,20 @@ export default function SocialScheduledQueue({ posts }: Props) {
                 </span>
 
                 <div className="flex items-center gap-2">
+                  {(p.status === "awaiting_hitl" || p.status === "draft") && (
+                    <button
+                      type="button"
+                      onClick={() => handleApprove(p.id)}
+                      className="px-3 py-1 rounded bg-[#00FF41] text-black font-extrabold hover:bg-[#00cc34] cursor-pointer shadow-[0_0_10px_rgba(0,255,65,0.3)]"
+                    >
+                      APPROVE BROADCAST
+                    </button>
+                  )}
                   {p.status !== "published" && (
                     <button
                       type="button"
                       onClick={() => handlePublishNow(p.id)}
-                      className="px-3 py-1 rounded bg-[#00FF41]/15 text-[#00FF41] font-bold hover:bg-[#00FF41]/25 cursor-pointer"
+                      className="px-3 py-1 rounded bg-[#00F0FF]/15 text-[#00F0FF] font-bold hover:bg-[#00F0FF]/25 cursor-pointer"
                     >
                       PUBLISH NOW
                     </button>
