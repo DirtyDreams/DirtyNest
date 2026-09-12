@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-export type HarnessId = "hermes" | "pi" | "opencode";
+export type HarnessId = "hermes" | "pi" | "codex" | "opencode";
 
 interface HarnessMeta {
   id: HarnessId;
@@ -66,6 +66,19 @@ const HARNESSES: HarnessMeta[] = [
     temperature: 0.7,
     runtime: "V8 Isolate",
     defaultPrompt: "You are Pi Code Synthesis Worker. You operate as a specialized sub-harness under Hermes Master Brain.",
+  },
+  {
+    id: "codex",
+    name: "Codex Engine",
+    codename: "CODEX-CLOUD-SYNTH",
+    model: "Claude-3.7-Sonnet",
+    tagline: "Dedicated cloud synthesis sub-harness for complex diff generation and multi-file patches",
+    color: "#00F0FF",
+    accentHex: "rgba(0, 240, 255, 0.2)",
+    contextWindow: "200k Tokens",
+    temperature: 0.2,
+    runtime: "Cloud Multi-Agent RPC",
+    defaultPrompt: "You are Codex Engine. You synthesize accurate, minimal, high-leverage code patches under Hermes dispatch.",
   },
   {
     id: "opencode",
