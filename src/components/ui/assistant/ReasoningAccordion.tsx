@@ -56,7 +56,7 @@ export function ReasoningAccordion({
             />
 
             <span className="font-mono font-bold text-[#E9D5FF] text-[11px] tracking-wider truncate">
-              {isThinking ? "THINKING // ACTIVE" : "COGNITIVE TRACE // RESOLVED"}
+              {isThinking ? "THINKING // ACTIVE" : "AI THOUGHT PROCESS // COGNITIVE TRACE"}
             </span>
           </div>
 

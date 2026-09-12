@@ -48,7 +48,7 @@ test("HITL: hitl_gate event surfaces approval card and approval resolves via POS
   });
 
   await page.goto("/#control_room");
-  await expect(page.getByText("CONTROL ROOM", { exact: false }).first()).toBeVisible();
+  await expect(page.locator("main").getByText("CONTROL ROOM", { exact: false }).first()).toBeVisible();
 
   // HitlApprovalQueue lives under the "DAG Topology & HITL Approvals" sub-tab
   // (default sub-tab is "trace").
