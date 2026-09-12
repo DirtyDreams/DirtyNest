@@ -83,7 +83,43 @@ def test_get_container_logs(monkeypatch):
     assert "sample log line 1" in logs
 
 
+def test_list_images_parses_output(monkeypatch):
+    out = (
+        '{"ID":"86c79eed8a6b","Repository":"redis","Tag":"7-alpine","Size":"57.8MB","CreatedSince":"3 weeks ago","Containers":"1"}\n'
+        '{"ID":"dd76bf4f745b","Repository":"qdrant/qdrant","Tag":"v1.9.7","Size":"270MB","CreatedSince":"2 months ago","Containers":"0"}'
+    )
+    eng = _engine_with(monkeypatch, 0, out)
+    images = asyncio_run(eng.list_images())
+    assert len(images) == 2
+    assert images[0]["repository"] == "redis"
+    assert images[0]["in_use"] is True
+    assert images[1]["in_use"] is False
+
+
+def test_pull_image_success(monkeypatch):
+    eng = _engine_with(monkeypatch, 0, "Status: Downloaded newer image for alpine:latest")
+    res = asyncio_run(eng.pull_image("alpine:latest"))
+    assert res["status"] == "success"
+    assert res["image"] == "alpine:latest"
+
+
+def test_prune_system_success(monkeypatch):
+    eng = _engine_with(monkeypatch, 0, "Total reclaimed space: 1.2GB")
+    res = asyncio_run(eng.prune_system())
+    assert res["status"] == "success"
+    assert "reclaimed" in res["output"]
+
+
+def test_manage_compose_stack_action(monkeypatch):
+    eng = _engine_with(monkeypatch, 0, "")
+    res = asyncio_run(eng.manage_compose_stack("dirtynest-core", "restart"))
+    assert res["status"] == "success"
+    assert res["stack"] == "dirtynest-core"
+    assert res["action"] == "restart"
+
+
 def asyncio_run(coro):
     import asyncio
 
     return asyncio.run(coro)
+

@@ -605,9 +605,12 @@ async def execute_swarm_dag(req: SwarmDagExecuteRequest):
 class DockerActionRequest(BaseModel):
     action: str = "restart"
 
+class DockerPullRequest(BaseModel):
+    image: str
+
 @app.get("/api/docker/containers")
-async def get_docker_containers():
-    containers = await docker_engine.list_containers()
+async def get_docker_containers(stats: bool = True):
+    containers = await docker_engine.list_containers(include_stats=stats)
     return {"containers": containers, "count": len(containers), "timestamp": time.time()}
 
 @app.post("/api/docker/containers/{container_id}/action")
@@ -620,15 +623,31 @@ async def get_docker_container_logs(container_id: str, tail: int = 150):
     logs = await docker_engine.get_container_logs(container_id, tail=tail)
     return {"container_id": container_id, "logs": logs, "tail": tail, "timestamp": time.time()}
 
+@app.get("/api/docker/images")
+async def get_docker_images():
+    images = await docker_engine.list_images()
+    return {"images": images, "count": len(images), "timestamp": time.time()}
+
+@app.post("/api/docker/pull")
+async def post_docker_pull(req: DockerPullRequest):
+    result = await docker_engine.pull_image(req.image)
+    return result
+
+@app.post("/api/docker/prune")
+async def post_docker_prune():
+    result = await docker_engine.prune_system()
+    return result
+
 @app.get("/api/docker/stacks")
 async def get_docker_stacks():
     stacks = await docker_engine.list_stacks()
     return {"stacks": stacks, "count": len(stacks), "timestamp": time.time()}
 
-@app.get("/api/intel/cve")
-async def get_intel_cve(force: bool = False):
-    cves = await intel_service.fetch_cve_feed(force=force)
-    return {"cves": cves, "count": len(cves), "timestamp": time.time()}
+@app.post("/api/docker/stacks/{stack_name}/action")
+async def post_docker_stack_action(stack_name: str, req: DockerActionRequest):
+    result = await docker_engine.manage_compose_stack(stack_name, req.action)
+    return result
+
 
 @app.post("/api/chat")
 async def chat_endpoint(req: PromptRequest):

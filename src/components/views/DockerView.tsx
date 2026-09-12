@@ -263,11 +263,39 @@ export default function DockerView() {
             setComposeStacks(mapped);
           }
         }
-      } catch {
-        // graceful demo fallback
-      }
+      } catch {}
     };
     fetchStacks();
+
+    const fetchImages = async () => {
+      try {
+        const res = await fetch("/api/docker/images");
+        if (res.ok) {
+          const data = (await res.json()) as {
+            images?: Array<{
+              id: string;
+              repository: string;
+              tag: string;
+              size: string;
+              created: string;
+              in_use: boolean;
+            }>;
+          };
+          if (active && data.images && data.images.length > 0) {
+            const mapped: DockerImageItem[] = data.images.map((img) => ({
+              id: img.id,
+              repository: img.repository,
+              tag: img.tag,
+              size: img.size,
+              created: img.created,
+              inUse: img.in_use,
+            }));
+            setImages(mapped);
+          }
+        }
+      } catch {}
+    };
+    fetchImages();
 
     return () => {
       active = false;
@@ -304,6 +332,24 @@ export default function DockerView() {
     }
   };
 
+  const handleStackAction = async (stackName: string, action: "restart" | "stop" | "up" | "down") => {
+    cyberAudio.play("click");
+    try {
+      const res = await fetch(`/api/docker/stacks/${encodeURIComponent(stackName)}/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        cyberAudio.play("chime");
+      } else {
+        cyberAudio.play("error");
+      }
+    } catch {
+      cyberAudio.play("error");
+    }
+  };
+
   const handleExecuteCli = (e: React.FormEvent) => {
     e.preventDefault();
     if (!cliInput.trim()) return;
@@ -313,38 +359,102 @@ export default function DockerView() {
     setCliInput("");
   };
 
-  const handlePullImage = () => {
+  const handlePullImage = async () => {
     if (!pullImageInput.trim()) return;
     cyberAudio.play("click");
     setIsPulling(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/docker/pull", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: pullImageInput.trim() }),
+      });
+      if (res.ok) {
+        cyberAudio.play("chime");
+        setShowPullModal(false);
+        const imgRes = await fetch("/api/docker/images");
+        if (imgRes.ok) {
+          const data = (await imgRes.json()) as {
+            images?: Array<{
+              id: string;
+              repository: string;
+              tag: string;
+              size: string;
+              created: string;
+              in_use: boolean;
+            }>;
+          };
+          if (data.images && data.images.length > 0) {
+            setImages(
+              data.images.map((img) => ({
+                id: img.id,
+                repository: img.repository,
+                tag: img.tag,
+                size: img.size,
+                created: img.created,
+                inUse: img.in_use,
+              }))
+            );
+          }
+        }
+      } else {
+        cyberAudio.play("error");
+      }
+    } catch {
+      cyberAudio.play("error");
+    } finally {
       setIsPulling(false);
-      setShowPullModal(false);
-      setImages((prev) => [
-        {
-          id: `sha256:${Math.random().toString(36).slice(2, 11)}`,
-          repository: pullImageInput.split(":")[0] || pullImageInput,
-          tag: pullImageInput.split(":")[1] || "latest",
-          size: "64 MB",
-          created: "Just now",
-          inUse: false,
-        },
-        ...prev,
-      ]);
-      cyberAudio.play("chime");
-    }, 2000);
+    }
   };
 
-  const handlePruneSystem = () => {
+  const handlePruneSystem = async () => {
     cyberAudio.play("click");
     setIsPruning(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/docker/prune", { method: "POST" });
+      if (res.ok) {
+        cyberAudio.play("chime");
+        setShowPruneModal(false);
+        const [cRes, iRes] = await Promise.all([
+          fetch("/api/docker/containers"),
+          fetch("/api/docker/images"),
+        ]);
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          if (cData.containers) setContainers(cData.containers);
+        }
+        if (iRes.ok) {
+          const iData = (await iRes.json()) as {
+            images?: Array<{
+              id: string;
+              repository: string;
+              tag: string;
+              size: string;
+              created: string;
+              in_use: boolean;
+            }>;
+          };
+          if (iData.images) {
+            setImages(
+              iData.images.map((img) => ({
+                id: img.id,
+                repository: img.repository,
+                tag: img.tag,
+                size: img.size,
+                created: img.created,
+                inUse: img.in_use,
+              }))
+            );
+          }
+        }
+      } else {
+        cyberAudio.play("error");
+      }
+    } catch {
+      cyberAudio.play("error");
+    } finally {
       setIsPruning(false);
-      setShowPruneModal(false);
-      setImages((prev) => prev.filter((img) => img.inUse));
-      setContainers((prev) => prev.filter((c) => c.status === "running"));
-      cyberAudio.play("chime");
-    }, 1500);
+    }
   };
 
   const selectedContainer = containers.find((c) => c.id === selectedContainerId) || containers[0];
@@ -849,8 +959,18 @@ export default function DockerView() {
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[10px]">
-                <button className="text-[#00FF41] hover:underline font-bold cursor-pointer">RESTART STACK</button>
-                <button className="text-[#FF2A6D] hover:underline cursor-pointer">DOWN</button>
+                <button
+                  onClick={() => handleStackAction(stack.name, "restart")}
+                  className="text-[#00FF41] hover:underline font-bold cursor-pointer"
+                >
+                  RESTART STACK
+                </button>
+                <button
+                  onClick={() => handleStackAction(stack.name, "down")}
+                  className="text-[#FF2A6D] hover:underline cursor-pointer"
+                >
+                  DOWN
+                </button>
               </div>
             </div>
           ))}

@@ -77,7 +77,7 @@ class HermesAcpBridge:
         return None
 
     def classify_tool_risk(self, tool_name: str, args: Dict[str, Any]) -> str:
-        safe_tools = ["read_file", "list_dir", "grep_search", "view_file", "search_files", "cdp_inspect", "cdp_navigate", "cdp_screenshot", "cdp_extract_dom", "get_status", "semantic_search", "query_knowledge_vault", "queue_zbiornik_draft", "scan_threat_radar"]
+        safe_tools = ["read_file", "list_dir", "grep_search", "view_file", "search_files", "cdp_inspect", "cdp_navigate", "cdp_screenshot", "cdp_extract_dom", "get_status", "semantic_search", "query_knowledge_vault", "queue_zbiornik_draft", "scan_threat_radar", "docker_ps", "docker_inspect"]
         if tool_name in safe_tools:
             return "low"
         if tool_name in ["write_file", "replace_file_content", "patch", "edit_file", "cdp_click", "cdp_type", "generate_image"]:
@@ -226,6 +226,7 @@ class HermesAcpBridge:
             needs_knowledge = any(k in lower_prompt for k in ["knowledge", "vault", "semantic search", "rag", "find in the knowledge", "search the knowledge", "karpathy", "bpe", "skill", "tokenizer", "architecture", "zero-trust", "wiedza", "notatk"])
             needs_zbiornik = any(k in lower_prompt for k in ["zbiornik", "priv", "wiadomość do", "wiadomosc do", "napisz priv", "odpowiedz na wiadomosc", "odpowiedz na wiadomość", "odpowiedz do watku", "odpowiedz do wątku", "stworz draft", "stwórz draft"])
             needs_threat_radar = any(k in lower_prompt for k in ["threat", "cve", "kev", "vulnerability", "vulnerabilities", "port scan", "security audit", "threat radar", "mesh scan", "zero-day", "zeroday", "exploit"])
+            needs_docker = any(k in lower_prompt for k in ["docker", "container", "kontener", "docker ps", "docker stats", "kontenery", "kontenerów"])
 
             if needs_browser:
                 target_url = "http://localhost:3000"
@@ -389,6 +390,27 @@ class HermesAcpBridge:
                     f"DirtyNest Mesh Health: {ports_up} core services online.\n"
                     f"Top Priority CVEs: {top_threat_ids}"
                 )
+                await self.broadcast_event({
+                    "type": "ACP_TOOL_EXECUTED",
+                    "session_id": session_id,
+                    "tool_name": tool_name,
+                    "result": result_text
+                })
+                await asyncio.sleep(0.3)
+
+            elif needs_docker:
+                from docker_service import docker_engine
+                tool_name = "docker_ps"
+                containers = docker_engine.list_containers(include_stats=True)
+                running_count = sum(1 for c in containers if c.get("state") == "running")
+                total_count = len(containers)
+                summary_lines = [f"Docker Daemon Telemetry // Containers: {running_count}/{total_count} running:"]
+                for c in containers[:8]:
+                    stats_str = ""
+                    if c.get("cpu_perc") and c.get("cpu_perc") != "N/A":
+                        stats_str = f" | CPU: {c['cpu_perc']} | MEM: {c.get('mem_usage', 'N/A')}"
+                    summary_lines.append(f"  * [{c.get('state', 'unknown').upper()}] {c.get('name')} ({c.get('image')}){stats_str}")
+                result_text = "\n".join(summary_lines)
                 await self.broadcast_event({
                     "type": "ACP_TOOL_EXECUTED",
                     "session_id": session_id,
