@@ -4,6 +4,7 @@ Scans social_posts for due scheduled posts and publishes them through the
 platform adapters, then records engagement metrics into social_metrics. Runs as
 a cron job in cron_service. Reads DATABASE_URL (same PG the Next.js app owns).
 """
+import asyncio
 import json
 import logging
 import os
@@ -78,12 +79,24 @@ class SocialScheduler:
             if adapter is None:
                 results.append({"post_id": post["id"], "ok": False, "error": f"no adapter for {post['platform']}"})
                 continue
-            result = adapter.publish(post["text"])
+            # Strict HITL: only approved posts execute dry_run=False
+            is_approved = post.get("status") == "approved"
+            dry_run = not is_approved
+            try:
+                res_candidate = adapter.publish(post["text"], dry_run=dry_run)
+            except TypeError:
+                res_candidate = adapter.publish(post["text"])
+
+            if asyncio.iscoroutine(res_candidate) or hasattr(res_candidate, "__await__"):
+                result = await res_candidate
+            else:
+                result = res_candidate
+
             ok = bool(result.get("ok"))
             pid = result.get("platform_post_id")
             error = result.get("error")
             await self._mark_published(post["id"], ok, pid, error)
-            results.append({"post_id": post["id"], "ok": ok, "platform_post_id": pid, "error": error})
+            results.append({"post_id": post["id"], "ok": ok, "platform_post_id": pid, "error": error, "dry_run": dry_run})
         return {"due": len(due), "results": results}
 
     async def collect_metrics(self) -> Dict[str, Any]:
@@ -99,7 +112,11 @@ class SocialScheduler:
             adapter = get_adapter(post["platform"])
             if adapter is None:
                 continue
-            m = adapter.metrics(post["platform_post_id"])
+            m_candidate = adapter.metrics(post["platform_post_id"])
+            if asyncio.iscoroutine(m_candidate) or hasattr(m_candidate, "__await__"):
+                m = await m_candidate
+            else:
+                m = m_candidate
             async with pool.acquire() as conn:
                 await conn.execute(
                     "INSERT INTO social_metrics (post_id, platform, reach, engagement, likes, comments, shares, collected_at) "

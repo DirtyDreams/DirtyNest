@@ -56,17 +56,64 @@ def test_find_due_posts_returns_rows():
     assert due == [{"id": 1, "platform": "twitter", "text": "hi"}]
 
 
-def test_publish_due_marks_published_on_success():
-    conn = FakeConn(fetch_result=[{"id": 1, "platform": "twitter", "text": "hi"}])
+def test_publish_due_marks_published_on_success(monkeypatch):
+    calls = []
+
+    class MockAdapter:
+        def publish(self, text, dry_run=True):
+            calls.append({"text": text, "dry_run": dry_run})
+            return {"ok": True, "platform_post_id": "tw_123", "error": None}
+
+    monkeypatch.setattr("social_scheduler.get_adapter", lambda p: MockAdapter())
+
+    conn = FakeConn(fetch_result=[{"id": 1, "platform": "twitter", "text": "hi", "status": "approved"}])
     s = make_scheduler(conn)
     result = asyncio.run(s.publish_due())
     assert result["due"] == 1
     assert result["results"][0]["ok"] is True
+    assert result["results"][0]["dry_run"] is False
+    assert calls == [{"text": "hi", "dry_run": False}]
+
     # one UPDATE executed for the published post
     assert len(conn.executed) == 1
     query, args = conn.executed[0]
     assert "status='published'" in query
     assert args[0] == 1
+
+
+def test_publish_due_enforces_dry_run_for_unapproved_posts(monkeypatch):
+    calls = []
+
+    class MockAdapter:
+        def publish(self, text, dry_run=True):
+            calls.append({"text": text, "dry_run": dry_run})
+            return {"ok": True, "platform_post_id": None, "error": None}
+
+    monkeypatch.setattr("social_scheduler.get_adapter", lambda p: MockAdapter())
+
+    conn = FakeConn(fetch_result=[{"id": 1, "platform": "twitter", "text": "hi", "status": "scheduled"}])
+    s = make_scheduler(conn)
+    result = asyncio.run(s.publish_due())
+    assert result["due"] == 1
+    assert result["results"][0]["ok"] is True
+    assert result["results"][0]["dry_run"] is True
+    assert calls == [{"text": "hi", "dry_run": True}]
+
+
+def test_publish_due_async_adapter_coroutine(monkeypatch):
+    class AsyncMockAdapter:
+        async def publish(self, text, dry_run=True):
+            await asyncio.sleep(0)
+            return {"ok": True, "platform_post_id": "async_123", "error": None}
+
+    monkeypatch.setattr("social_scheduler.get_adapter", lambda p: AsyncMockAdapter())
+
+    conn = FakeConn(fetch_result=[{"id": 3, "platform": "twitter", "text": "async text", "status": "approved"}])
+    s = make_scheduler(conn)
+    result = asyncio.run(s.publish_due())
+    assert result["due"] == 1
+    assert result["results"][0]["ok"] is True
+    assert result["results"][0]["platform_post_id"] == "async_123"
 
 
 def test_publish_due_marks_failed_on_unknown_platform():
@@ -87,3 +134,5 @@ def test_collect_metrics_inserts_snapshot():
     query, args = conn.executed[0]
     assert "INSERT INTO social_metrics" in query
     assert args[0] == 1
+
+

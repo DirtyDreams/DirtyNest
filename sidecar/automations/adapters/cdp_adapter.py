@@ -367,22 +367,46 @@ class CdpSocialAdapter(SocialAdapter):
     # ------------------------------------------------------------------
     # In-page evaluation
     # ------------------------------------------------------------------
+    def _run_coro(self, coro: Any) -> Any:
+        """Run an async coroutine synchronously, safely handling existing running event loops."""
+        if not hasattr(coro, "__await__") and not asyncio.iscoroutine(coro):
+            return coro
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            import concurrent.futures
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                try:
+                    return executor.submit(asyncio.run, coro).result()
+                except Exception:
+                    if hasattr(coro, "close"):
+                        coro.close()
+                    raise
+        else:
+            try:
+                return asyncio.run(coro)
+            except Exception:
+                if hasattr(coro, "close"):
+                    coro.close()
+                raise
+
     def _eval(self, ws_url: str, expression: str) -> Any:
         """Runtime.evaluate with returnByValue=True; unwrapped value or None.
 
         Synchronous wrapper around the async WebSocket call; safe to call from
-        sync adapter code and trivially mocked in tests.
+        sync adapter code and from async loops via ThreadPoolExecutor.
         """
-        import asyncio
-
         try:
-            result = asyncio.run(
-                self._cdp_call(
-                    ws_url,
-                    "Runtime.evaluate",
-                    {"expression": expression, "returnByValue": True},
-                )
+            coro = self._cdp_call(
+                ws_url,
+                "Runtime.evaluate",
+                {"expression": expression, "returnByValue": True},
             )
+            result = self._run_coro(coro)
         except Exception:  # noqa: BLE001 — transport/timeout/eval error -> None
             return None
         if not result or result.get("exceptionDetails"):
@@ -493,7 +517,7 @@ class CdpSocialAdapter(SocialAdapter):
                 return self._err(OP_FAILED, "composer box not found; selectors need calibration")
 
             typed_result = self._trusted_click_type(ws_url, composer_sel, text)
-            typed = asyncio.run(typed_result) if hasattr(typed_result, "__await__") else typed_result
+            typed = self._run_coro(typed_result)
             if typed != "TYPED":
                 return self._err(OP_FAILED, f"failed to type into composer ({composer_sel})")
 
@@ -529,7 +553,7 @@ class CdpSocialAdapter(SocialAdapter):
             if not btn_pos:
                 return self._err(OP_FAILED, "publish button covered or not clickable; selectors need calibration")
             clicked = self._trusted_button_click(ws_url, btn_pos)
-            clicked = asyncio.run(clicked) if hasattr(clicked, "__await__") else clicked
+            clicked = self._run_coro(clicked)
             if clicked != "CLICKED":
                 return self._err(OP_FAILED, f"failed to click publish button ({button_sel})")
 
