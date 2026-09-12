@@ -62,8 +62,8 @@ interface ComposeStack {
 const INITIAL_CONTAINERS: DockerContainerItem[] = [
   {
     id: "7f9a12c8b011",
-    name: "dirtynest-core-app",
-    image: "dirtynest/core:v2.4.0",
+    name: "dirtynest-web",
+    image: "dirtynest/web:latest",
     status: "running",
     ports: "0.0.0.0:3000->3000/tcp",
     cpuPercent: 1.8,
@@ -74,62 +74,86 @@ const INITIAL_CONTAINERS: DockerContainerItem[] = [
   },
   {
     id: "2e4b910a7c93",
-    name: "dirtynest-sqlite-vec",
-    image: "sqlite/vec-daemon:v0.1.4",
+    name: "dirtynest-sidecar",
+    image: "dirtynest/sidecar:latest",
     status: "running",
-    ports: "127.0.0.1:8080->8080/tcp",
-    cpuPercent: 3.4,
-    memoryUsage: "420 MB / 16 GB",
-    netIO: "189 MB / 94.1 MB",
-    uptime: "4h 11m",
+    ports: "0.0.0.0:8000->8000/tcp",
+    cpuPercent: 2.1,
+    memoryUsage: "120 MB / 16 GB",
+    netIO: "89 MB / 44 MB",
+    uptime: "4h 12m",
     stack: "dirtynest-core",
   },
   {
     id: "9c104df9081e",
-    name: "dirtynest-redis-mesh",
-    image: "redis:7.2-alpine",
+    name: "dirtynest-postgres",
+    image: "postgres:16-alpine",
     status: "running",
-    ports: "127.0.0.1:6379->6379/tcp",
-    cpuPercent: 0.6,
-    memoryUsage: "64 MB / 16 GB",
+    ports: "127.0.0.1:5432->5432/tcp",
+    cpuPercent: 0.8,
+    memoryUsage: "95 MB / 16 GB",
     netIO: "12.8 MB / 14.5 MB",
     uptime: "4h 12m",
-    stack: "mesh-infra",
+    stack: "data-vector-mesh",
   },
   {
     id: "5a8247bdfa91",
-    name: "dirtynest-auth-proxy",
-    image: "caddy:2.7-alpine",
+    name: "dirtynest-qdrant",
+    image: "qdrant/qdrant:latest",
     status: "running",
-    ports: "0.0.0.0:443->443/tcp",
-    cpuPercent: 0.2,
-    memoryUsage: "28 MB / 16 GB",
+    ports: "127.0.0.1:6333->6333/tcp",
+    cpuPercent: 1.4,
+    memoryUsage: "210 MB / 16 GB",
     netIO: "210 MB / 195 MB",
     uptime: "4h 10m",
-    stack: "mesh-infra",
+    stack: "data-vector-mesh",
+  },
+  {
+    id: "6b9148ace102",
+    name: "dirtynest-redis",
+    image: "redis:7-alpine",
+    status: "running",
+    ports: "127.0.0.1:6379->6379/tcp",
+    cpuPercent: 0.4,
+    memoryUsage: "48 MB / 16 GB",
+    netIO: "18 MB / 12 MB",
+    uptime: "4h 12m",
+    stack: "data-vector-mesh",
+  },
+  {
+    id: "4c810bad3e11",
+    name: "dirtynest-searxng",
+    image: "searxng/searxng:latest",
+    status: "running",
+    ports: "127.0.0.1:8080->8080/tcp",
+    cpuPercent: 0.5,
+    memoryUsage: "110 MB / 16 GB",
+    netIO: "15 MB / 9 MB",
+    uptime: "4h 08m",
+    stack: "ai-research-mesh",
   },
   {
     id: "3d719a82bc04",
-    name: "ollama-deepseek-sandbox",
+    name: "dirtynest-ollama",
     image: "ollama/ollama:latest",
-    status: "stopped",
+    status: "running",
     ports: "127.0.0.1:11434->11434/tcp",
-    cpuPercent: 0.0,
-    memoryUsage: "0 MB / 16 GB",
-    netIO: "0 B / 0 B",
-    uptime: "Stopped 1h ago",
-    stack: "ai-sandbox",
+    cpuPercent: 3.2,
+    memoryUsage: "1.8 GB / 16 GB",
+    netIO: "45 MB / 12 MB",
+    uptime: "4h 05m",
+    stack: "ai-research-mesh",
   },
 ];
 
 const INITIAL_IMAGES: DockerImageItem[] = [
-  { id: "sha256:7f9a12c8b", repository: "dirtynest/core", tag: "v2.4.0", size: "482 MB", created: "2 hours ago", inUse: true },
-  { id: "sha256:2e4b910a7", repository: "sqlite/vec-daemon", tag: "v0.1.4", size: "124 MB", created: "1 day ago", inUse: true },
-  { id: "sha256:9c104df90", repository: "redis", tag: "7.2-alpine", size: "42 MB", created: "5 days ago", inUse: true },
-  { id: "sha256:5a8247bdf", repository: "caddy", tag: "2.7-alpine", size: "38 MB", created: "1 week ago", inUse: true },
-  { id: "sha256:3d719a82b", repository: "ollama/ollama", tag: "latest", size: "3.8 GB", created: "3 days ago", inUse: false },
-  { id: "sha256:1a84f09bd", repository: "node", tag: "20-alpine", size: "178 MB", created: "2 weeks ago", inUse: false },
-  { id: "sha256:8b472e91a", repository: "postgres", tag: "16-alpine", size: "294 MB", created: "3 weeks ago", inUse: false },
+  { id: "sha256:7f9a12c8b", repository: "dirtynest/web", tag: "latest", size: "482 MB", created: "2 hours ago", inUse: true },
+  { id: "sha256:2e4b910a7", repository: "dirtynest/sidecar", tag: "latest", size: "320 MB", created: "2 hours ago", inUse: true },
+  { id: "sha256:9c104df90", repository: "postgres", tag: "16-alpine", size: "294 MB", created: "5 days ago", inUse: true },
+  { id: "sha256:5a8247bdf", repository: "qdrant/qdrant", tag: "latest", size: "148 MB", created: "1 week ago", inUse: true },
+  { id: "sha256:6b9148ace", repository: "redis", tag: "7-alpine", size: "42 MB", created: "1 week ago", inUse: true },
+  { id: "sha256:4c810bad3", repository: "searxng/searxng", tag: "latest", size: "210 MB", created: "2 weeks ago", inUse: true },
+  { id: "sha256:3d719a82b", repository: "ollama/ollama", tag: "latest", size: "3.8 GB", created: "3 days ago", inUse: true },
 ];
 
 const COMPOSE_STACKS: ComposeStack[] = [
@@ -138,21 +162,21 @@ const COMPOSE_STACKS: ComposeStack[] = [
     servicesCount: 2,
     status: "active",
     path: "/app/docker-compose.yml",
-    services: ["dirtynest-core-app", "dirtynest-sqlite-vec"],
+    services: ["dirtynest-web", "dirtynest-sidecar"],
   },
   {
-    name: "mesh-infra",
+    name: "data-vector-mesh",
+    servicesCount: 3,
+    status: "active",
+    path: "/infra/docker-compose.yml",
+    services: ["dirtynest-postgres", "dirtynest-qdrant", "dirtynest-redis"],
+  },
+  {
+    name: "ai-research-mesh",
     servicesCount: 2,
     status: "active",
-    path: "/infra/docker-compose.infra.yml",
-    services: ["dirtynest-redis-mesh", "dirtynest-auth-proxy"],
-  },
-  {
-    name: "ai-sandbox",
-    servicesCount: 1,
-    status: "inactive",
-    path: "/ai/docker-compose.ai.yml",
-    services: ["ollama-deepseek-sandbox"],
+    path: "/ai/docker-compose.yml",
+    services: ["dirtynest-searxng", "dirtynest-ollama"],
   },
 ];
 
@@ -178,12 +202,12 @@ export default function DockerView() {
 
   // Live Logs Simulation
   const [logs, setLogs] = useState<string[]>([
-    "[2026-08-25T05:40:01.102Z] INFO: dirtynest-core daemon started on :3000",
-    "[2026-08-25T05:40:02.341Z] INFO: Connected to sqlite-vec vector mesh at 127.0.0.1:8080",
-    "[2026-08-25T05:40:02.890Z] INFO: Loaded 142 Obsidian Vault embeddings into memory pool",
+    "[2026-08-25T05:40:01.102Z] INFO: dirtynest-web daemon started on :3000",
+    "[2026-08-25T05:40:02.341Z] INFO: Connected to Qdrant vector engine at 127.0.0.1:6333",
+    "[2026-08-25T05:40:02.890Z] INFO: Synchronized Knowledge Vault embeddings into Qdrant collection",
     "[2026-08-25T05:41:15.004Z] DEBUG: Healthcheck ping OK · latency=1.2ms · memory=184MB",
     "[2026-08-25T05:42:30.912Z] INFO: WebSocket client connected from 127.0.0.1:54210",
-    "[2026-08-25T05:43:00.001Z] DEBUG: Swarm agent telemetry heartbeat broadcast (4 nodes synced)",
+    "[2026-08-25T05:43:00.001Z] DEBUG: Hermes ACP agent telemetry heartbeat broadcast (healthy)",
   ]);
   const [cliInput, setCliInput] = useState("");
   const logsEndRef = useRef<HTMLDivElement>(null);
@@ -196,8 +220,7 @@ export default function DockerView() {
     let active = true;
     const fetchContainers = async () => {
       try {
-        const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
-        const res = await fetch(`${sidecarUrl}/api/docker/containers`);
+        const res = await fetch("/api/docker/containers");
         if (res.ok) {
           const data = await res.json();
           if (active && data.containers && data.containers.length > 0) {
@@ -216,7 +239,7 @@ export default function DockerView() {
             setContainers(mapped);
           }
         }
-      } catch (err) {
+      } catch {
         // graceful demo fallback
       }
     };

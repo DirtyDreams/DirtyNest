@@ -55,8 +55,7 @@ export default function DockerLogsStreamModal({
 
     const fetchLogs = async () => {
       try {
-        const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
-        const res = await fetch(`${sidecarUrl}/api/docker/containers/${containerName}/logs?tail=150`);
+        const res = await fetch(`/api/docker/containers/${encodeURIComponent(containerName)}/logs?tail=150`);
         if (res.ok) {
           const data = await res.json();
           if (data.logs && data.logs.trim()) {

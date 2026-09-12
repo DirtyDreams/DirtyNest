@@ -122,4 +122,12 @@ class DockerOrchestratorEngine:
             })
         return stacks
 
+    async def get_container_logs(self, container_id: str, tail: int = 150) -> str:
+        """Fetch latest container logs (read-only snapshot)."""
+        code, out, err = await self._run_docker_cmd("logs", "--tail", str(tail), container_id)
+        if code != 0:
+            logger.warning("Docker logs failed for %s: %s", container_id, err)
+            return err or ""
+        return out
+
 docker_engine = DockerOrchestratorEngine()

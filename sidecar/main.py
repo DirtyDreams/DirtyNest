@@ -602,6 +602,11 @@ async def post_docker_container_action(container_id: str, req: DockerActionReque
     result = await docker_engine.manage_container(container_id, req.action)
     return result
 
+@app.get("/api/docker/containers/{container_id}/logs")
+async def get_docker_container_logs(container_id: str, tail: int = 150):
+    logs = await docker_engine.get_container_logs(container_id, tail=tail)
+    return {"container_id": container_id, "logs": logs, "tail": tail, "timestamp": time.time()}
+
 @app.get("/api/docker/stacks")
 async def get_docker_stacks():
     stacks = await docker_engine.list_stacks()

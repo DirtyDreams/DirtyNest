@@ -77,6 +77,12 @@ def test_manage_container_success(monkeypatch):
     assert result["action"] == "restart"
 
 
+def test_get_container_logs(monkeypatch):
+    eng = _engine_with(monkeypatch, 0, "sample log line 1\nsample log line 2")
+    logs = asyncio_run(eng.get_container_logs("abc123def456", 50))
+    assert "sample log line 1" in logs
+
+
 def asyncio_run(coro):
     import asyncio
 

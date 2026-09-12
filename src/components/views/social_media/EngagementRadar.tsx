@@ -1,8 +1,11 @@
 "use client";
 
-import { TrendingUp } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { TrendingUp, RefreshCw, Radio, CheckCircle2 } from "lucide-react";
+import { cyberAudio } from "@/lib/cyberAudio";
 
 interface ChannelStat {
+  key: string;
   channel: string;
   color: string;
   followers: number;
@@ -10,10 +13,37 @@ interface ChannelStat {
   impressions7d: number;
   engagementPct: number;
   sentimentPct: number;
+  status: "active" | "awaiting";
+  postsCount: number;
 }
 
-const CHANNELS: ChannelStat[] = [
+interface AnalyticsPayload {
+  analytics?: {
+    total_posts: number;
+    by_platform: Record<
+      string,
+      {
+        posts: number;
+        reach: number;
+        engagement: number;
+        likes: number;
+        comments: number;
+        shares: number;
+      }
+    >;
+    totals: {
+      reach?: number;
+      engagement?: number;
+      likes?: number;
+      comments?: number;
+      shares?: number;
+    };
+  };
+}
+
+const DEFAULT_CHANNELS: ChannelStat[] = [
   {
+    key: "twitter",
     channel: "X / Twitter",
     color: "#00F0FF",
     followers: 18420,
@@ -21,8 +51,23 @@ const CHANNELS: ChannelStat[] = [
     impressions7d: 142000,
     engagementPct: 6.4,
     sentimentPct: 94.2,
+    status: "awaiting",
+    postsCount: 0,
   },
   {
+    key: "reddit",
+    channel: "Reddit /r/Cyberpunk",
+    color: "#FF4500",
+    followers: 4210,
+    growthPct: 31.0,
+    impressions7d: 112000,
+    engagementPct: 8.7,
+    sentimentPct: 89.5,
+    status: "awaiting",
+    postsCount: 0,
+  },
+  {
+    key: "discord",
     channel: "Discord Community",
     color: "#BF40FF",
     followers: 6840,
@@ -30,8 +75,11 @@ const CHANNELS: ChannelStat[] = [
     impressions7d: 89000,
     engagementPct: 18.2,
     sentimentPct: 98.6,
+    status: "awaiting",
+    postsCount: 0,
   },
   {
+    key: "telegram",
     channel: "Telegram Channel",
     color: "#00FF41",
     followers: 9200,
@@ -39,19 +87,79 @@ const CHANNELS: ChannelStat[] = [
     impressions7d: 64000,
     engagementPct: 11.5,
     sentimentPct: 92.0,
-  },
-  {
-    channel: "Reddit /r/Cyberpunk",
-    color: "#FFB800",
-    followers: 4210,
-    growthPct: 31.0,
-    impressions7d: 112000,
-    engagementPct: 8.7,
-    sentimentPct: 89.5,
+    status: "awaiting",
+    postsCount: 0,
   },
 ];
 
 export default function EngagementRadar() {
+  const [channels, setChannels] = useState<ChannelStat[]>(DEFAULT_CHANNELS);
+  const [totalPosts, setTotalPosts] = useState<number>(0);
+  const [totalReach, setTotalReach] = useState<number>(0);
+  const [avgEngagement, setAvgEngagement] = useState<number>(11.2);
+  const [isLive, setIsLive] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const fetchAnalytics = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/social/analytics");
+      if (res.ok) {
+        const data = (await res.json()) as AnalyticsPayload;
+        if (data.analytics) {
+          const { by_platform, totals, total_posts } = data.analytics;
+          setTotalPosts(total_posts || 0);
+
+          if (totals && totals.reach !== undefined && totals.reach > 0) {
+            setTotalReach(totals.reach);
+            const engRate =
+              totals.reach > 0
+                ? Number((((totals.engagement || 0) / totals.reach) * 100).toFixed(1))
+                : 0;
+            setAvgEngagement(engRate);
+            setIsLive(true);
+          }
+
+          // Map channel statistics against real platform telemetry
+          setChannels((prev) =>
+            prev.map((ch) => {
+              const platformData = by_platform?.[ch.key];
+              if (platformData && platformData.posts > 0) {
+                const reach = platformData.reach || 0;
+                const eng = platformData.engagement || 0;
+                const engPct = reach > 0 ? Number(((eng / reach) * 100).toFixed(1)) : 0;
+                return {
+                  ...ch,
+                  impressions7d: reach,
+                  engagementPct: engPct,
+                  postsCount: platformData.posts,
+                  status: "active" as const,
+                };
+              }
+              return {
+                ...ch,
+                status: (total_posts > 0 ? "awaiting" : "active") as "active" | "awaiting",
+              };
+            })
+          );
+        }
+      }
+    } catch {
+      // Graceful fallback to initial default metrics
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  const handleRefresh = () => {
+    cyberAudio.play("click");
+    fetchAnalytics();
+  };
+
   return (
     <div className="cyber-card p-4 sm:p-5 flex flex-col gap-4 font-mono select-none">
       {/* Header */}
@@ -61,8 +169,18 @@ export default function EngagementRadar() {
             <TrendingUp size={16} />
           </div>
           <div>
-            <h3 className="text-xs font-black text-[#F1F3F9] tracking-wider uppercase">
-              ENGAGEMENT & AUDIENCE RADAR // <span className="text-[#00FF41]">7-DAY TELEMETRY</span>
+            <h3 className="text-xs font-black text-[#F1F3F9] tracking-wider uppercase flex items-center gap-2">
+              ENGAGEMENT & AUDIENCE RADAR // <span className="text-[#00FF41]">TELEMETRY</span>
+              {isLive ? (
+                <span className="flex items-center gap-1 text-[9px] text-[#00FF41] font-bold px-1.5 py-0.2 rounded bg-[#00FF41]/15 border border-[#00FF41]/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00FF41] animate-pulse" />
+                  LIVE SYNC
+                </span>
+              ) : (
+                <span className="text-[9px] text-[#00F0FF] font-semibold px-1.5 py-0.2 rounded bg-[#00F0FF]/10 border border-[#00F0FF]/30">
+                  STANDBY
+                </span>
+              )}
             </h3>
             <p className="text-[10px] text-[#4F536E]">
               Omnichannel impression reach, engagement ratios & sentiment diagnostics
@@ -70,22 +188,39 @@ export default function EngagementRadar() {
           </div>
         </div>
 
-        <span className="text-[10px] font-bold text-[#00FF41] px-2 py-0.5 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
-          VIRAL COEFFICIENT: 1.84x
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 text-[10px] font-bold text-[#00F0FF] px-2.5 py-1 rounded bg-[#00F0FF]/10 border border-[#00F0FF]/30 hover:bg-[#00F0FF]/20 transition-all cursor-pointer disabled:opacity-50"
+            title="Refresh social analytics"
+          >
+            <RefreshCw size={11} className={isLoading ? "animate-spin" : ""} />
+            REFRESH
+          </button>
+          <span className="hidden sm:inline-block text-[10px] font-bold text-[#00FF41] px-2 py-0.5 rounded bg-[#00FF41]/10 border border-[#00FF41]/30">
+            VIRAL COEFFICIENT: 1.84x
+          </span>
+        </div>
       </div>
 
       {/* KPI Top Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-3 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-1">
           <span className="text-[9px] text-[#4F536E] uppercase">Total Impressions</span>
-          <span className="text-lg font-black text-[#00F0FF]">407,000</span>
-          <span className="text-[9px] text-[#00FF41] font-bold">+18.4% this week</span>
+          <span className="text-lg font-black text-[#00F0FF]">
+            {totalReach > 0 ? totalReach.toLocaleString() : "407,000"}
+          </span>
+          <span className="text-[9px] text-[#00FF41] font-bold">
+            {isLive ? `${totalPosts} tracked posts` : "+18.4% this week"}
+          </span>
         </div>
 
         <div className="p-3 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-1">
           <span className="text-[9px] text-[#4F536E] uppercase">Avg Engagement</span>
-          <span className="text-lg font-black text-[#00FF41]">11.2%</span>
+          <span className="text-lg font-black text-[#00FF41]">
+            {avgEngagement > 0 ? `${avgEngagement}%` : "11.2%"}
+          </span>
           <span className="text-[9px] text-[#00FF41] font-bold">Top 5% in tech</span>
         </div>
 
@@ -112,11 +247,11 @@ export default function EngagementRadar() {
               <th className="py-2.5 px-3">Growth (7d)</th>
               <th className="py-2.5 px-3">Impressions</th>
               <th className="py-2.5 px-3">Engagement</th>
-              <th className="py-2.5 px-3">Sentiment</th>
+              <th className="py-2.5 px-3">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {CHANNELS.map((ch) => (
+            {channels.map((ch) => (
               <tr key={ch.channel} className="hover:bg-white/[0.02] transition-colors">
                 <td className="py-2.5 px-3">
                   <div className="flex items-center gap-2">
@@ -128,7 +263,19 @@ export default function EngagementRadar() {
                 <td className="py-2.5 px-3 text-[#00FF41] font-bold">+{ch.growthPct}%</td>
                 <td className="py-2.5 px-3 text-[#00F0FF]">{ch.impressions7d.toLocaleString()}</td>
                 <td className="py-2.5 px-3 text-[#BF40FF] font-bold">{ch.engagementPct}%</td>
-                <td className="py-2.5 px-3 text-[#00FF41] font-bold">{ch.sentimentPct}% Positive</td>
+                <td className="py-2.5 px-3">
+                  {ch.postsCount > 0 ? (
+                    <span className="text-[9px] text-[#00FF41] font-bold flex items-center gap-1">
+                      <CheckCircle2 size={10} />
+                      {ch.postsCount} POSTS
+                    </span>
+                  ) : (
+                    <span className="text-[9px] text-[#4F536E] font-medium flex items-center gap-1">
+                      <Radio size={9} />
+                      STANDBY
+                    </span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
