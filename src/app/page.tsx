@@ -350,7 +350,7 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
       e.preventDefault();
       lockSession();
     }
-    if (e.altKey && e.key.toLowerCase() === "w" && !isInput) {
+    if (((e.altKey && e.key.toLowerCase() === "w") || (e.shiftKey && e.key.toLowerCase() === "f")) && !isInput) {
       e.preventDefault();
       cyberAudio.play("warp");
       setIsFloatingOsOpen((prev) => !prev);
@@ -401,7 +401,8 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
       if (isLeaderActive) {
         let viewId: NavViewId | null = null;
         switch (e.key) {
-          case "d": viewId = "dashboard"; break;
+          case "d":
+          case "o": viewId = "dashboard"; break;
           case "c": viewId = "chatbot"; break;
           case "r": viewId = "control_room"; break;
           case "a": viewId = "agents"; break;
@@ -409,7 +410,13 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
           case "t": viewId = "tools"; break;
           case "s": viewId = "stats"; break;
           case "l": viewId = "logs"; break;
-          // Settings uses 'g ,' or 'g S' typically, but let's use 'g ,'
+          case "i": viewId = "image_studio"; break;
+          case "v": viewId = "sound_studio"; break;
+          case "m": viewId = "social_media"; break;
+          case "z": viewId = "zbiornik_ops"; break;
+          case "x": viewId = "rss"; break;
+          case "w":
+          case "p": viewId = "docker"; break;
           case ",": viewId = "settings"; break;
         }
 
@@ -596,10 +603,6 @@ const handleSelectView = useCallback((viewId: NavViewId) => {
         onClose={() => setAudioMixerOpen(false)}
       />
       <TerminalDock isOpen={isTerminalOpen} onClose={() => setTerminalOpen(false)} />
-      <CyberWindowManager
-        isOpen={isFloatingOsOpen}
-        onClose={() => setIsFloatingOsOpen(false)}
-      />
 
       {/* Main Responsive Grid Layout */}
       <div className="h-[100dvh] md:h-auto md:min-h-screen bg-[#07070B] text-[#F1F3F9] font-sans antialiased selection:bg-[#00FF41]/20 selection:text-[#00FF41] flex flex-col md:block overflow-hidden md:overflow-visible relative">

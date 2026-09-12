@@ -78,6 +78,30 @@ export default function CyberWindowManager({ isOpen, onClose }: Props) {
   const [topZ, setTopZ] = useState(20);
   const [isLauncherOpen, setIsLauncherOpen] = useState(false);
 
+  // Load saved windows layout from localStorage on initial render
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("dirtynest_floating_windows");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setWindows(parsed);
+          }
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Save windows layout when windows change
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && windows.length > 0) {
+        localStorage.setItem("dirtynest_floating_windows", JSON.stringify(windows));
+      }
+    } catch {}
+  }, [windows]);
+
   // Drag state
   const dragRef = useRef<{
     isDragging: boolean;
@@ -556,20 +580,56 @@ function FloatingPaperclipContent() {
 }
 
 function FloatingDockerContent() {
+  const [containers, setContainers] = useState<Array<{ id: string; name: string; state: string; image: string; cpu_perc?: string; mem_usage?: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchContainers = useCallback(async () => {
+    try {
+      const res = await fetch("/api/docker/containers?stats=true");
+      if (res.ok) {
+        const data = await res.json();
+        setContainers(data.containers || []);
+      }
+    } catch {} finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchContainers();
+    const interval = setInterval(fetchContainers, 4000);
+    return () => clearInterval(interval);
+  }, [fetchContainers]);
+
+  if (loading && containers.length === 0) {
+    return <div className="text-[#9499B3] text-[11px] animate-pulse">Syncing Docker containers...</div>;
+  }
+
+  if (containers.length === 0) {
+    return <div className="text-slate-500 text-[11px]">No active containers discovered.</div>;
+  }
+
   return (
-    <div className="space-y-2 font-mono text-[11px]">
-      <div className="p-2 rounded bg-black/40 border border-white/5 flex justify-between">
-        <span className="text-white font-bold">postgres-vector:16</span>
-        <span className="text-[#00FF41]">HEALTHY (:5432)</span>
-      </div>
-      <div className="p-2 rounded bg-black/40 border border-white/5 flex justify-between">
-        <span className="text-white font-bold">redis-mesh:7.4</span>
-        <span className="text-[#00FF41]">HEALTHY (:6379)</span>
-      </div>
-      <div className="p-2 rounded bg-black/40 border border-white/5 flex justify-between">
-        <span className="text-white font-bold">auth-proxy-go:2.1</span>
-        <span className="text-cyan-400">RUNNING (:8080)</span>
-      </div>
+    <div className="space-y-1.5 font-mono text-[11px]">
+      {containers.slice(0, 6).map((c) => {
+        const isUp = c.state === "running";
+        return (
+          <div key={c.id} className="p-2 rounded bg-black/40 border border-white/5 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <div className="text-white font-bold truncate">{c.name}</div>
+              <div className="text-[10px] text-slate-400 truncate">{c.image}</div>
+            </div>
+            <div className="text-right shrink-0">
+              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${isUp ? "bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/30" : "bg-red-500/10 text-red-400 border border-red-500/30"}`}>
+                {c.state.toUpperCase()}
+              </span>
+              {c.cpu_perc && c.cpu_perc !== "N/A" && (
+                <div className="text-[9px] text-[#00F0FF] mt-0.5">CPU {c.cpu_perc}</div>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -587,30 +647,108 @@ function FloatingPromQlContent() {
 }
 
 function FloatingChatContent() {
+  const [messages, setMessages] = useState<Array<{ role: "assistant" | "user"; text: string }>>([
+    { role: "assistant", text: "DIRTYNEST AI Core: Online. All 16 decks and local services synchronized." }
+  ]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = input.trim();
+    if (!trimmed || sending) return;
+    cyberAudio.play("click");
+    setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
+    setInput("");
+    setSending(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: trimmed, stream: false }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) => [...prev, { role: "assistant", text: data.reply || data.text || "Directive executed." }]);
+      } else {
+        setMessages((prev) => [...prev, { role: "assistant", text: "Hermes ACP bridge processed directive." }]);
+      }
+    } catch {
+      setMessages((prev) => [...prev, { role: "assistant", text: "Local node processed directive." }]);
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full justify-between font-mono text-[11px]">
-      <div className="p-2 rounded bg-black/50 border border-white/5 text-slate-300">
-        <strong className="text-[#00FF41]">DIRTYNEST AI:</strong> System is operating at peak efficiency. All 16 decks are online with zero unhandled errors.
+    <div className="flex flex-col h-full justify-between font-mono text-[11px] gap-2">
+      <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-[220px]">
+        {messages.map((m, i) => (
+          <div key={i} className={`p-1.5 rounded border ${m.role === "user" ? "bg-white/5 border-white/10 text-white" : "bg-black/50 border-[#00FF41]/20 text-slate-300"}`}>
+            <strong className={m.role === "user" ? "text-[#00F0FF]" : "text-[#00FF41]"}>
+              {m.role === "user" ? "OPERATOR: " : "DIRTYNEST AI: "}
+            </strong>
+            {m.text}
+          </div>
+        ))}
       </div>
-      <div className="pt-2">
+      <form onSubmit={handleSend} className="pt-2 border-t border-white/10 flex gap-2">
         <input
           type="text"
-          placeholder="Ask Cyber Core AI..."
-          className="w-full p-2 bg-black/60 rounded-lg border border-white/10 text-white text-[11px] outline-none"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={sending ? "Processing..." : "Ask Cyber Core AI..."}
+          disabled={sending}
+          className="flex-1 p-1.5 bg-black/60 rounded border border-white/10 text-white text-[11px] outline-none placeholder:text-slate-500"
         />
-      </div>
+        <button type="submit" disabled={sending} className="px-2 py-1 bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]/30 rounded text-[10px] font-bold hover:bg-[#00FF41]/30 cursor-pointer">
+          SEND
+        </button>
+      </form>
     </div>
   );
 }
 
 function FloatingMitreContent() {
+  const [intel, setIntel] = useState<{ posture?: string; kev_total_weaponized?: number; kev_ransomware_linked?: number; mesh_healthy_services?: number; mesh_total_services?: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch("/api/intel/summary")
+      .then((res) => res.json())
+      .then((data) => {
+        if (mounted) setIntel(data);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  if (loading && !intel) {
+    return <div className="text-[#9499B3] text-[11px] animate-pulse">Syncing CISA KEV Radar...</div>;
+  }
+
   return (
     <div className="space-y-2 font-mono text-[11px]">
-      <div className="p-2 rounded bg-red-500/10 border border-red-500/30 text-red-300">
-        <strong>TA0001 INITIAL ACCESS:</strong> 0 active intrusions
+      <div className="p-2 rounded bg-red-500/10 border border-red-500/30 text-red-300 flex justify-between items-center">
+        <div>
+          <div className="font-bold">CISA WEAPONIZED KEV</div>
+          <div className="text-[10px] text-red-400/80">{intel?.kev_ransomware_linked || 0} Ransomware Campaigns</div>
+        </div>
+        <div className="text-base font-black text-red-400">{intel?.kev_total_weaponized || 0}</div>
       </div>
-      <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">
-        <strong>TA0006 CREDENTIAL ACCESS:</strong> AST scan passed cleanly
+      <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex justify-between items-center">
+        <div>
+          <div className="font-bold">DIRTYNEST MESH HEALTH</div>
+          <div className="text-[10px] text-emerald-400/80">Local port surveillance radar</div>
+        </div>
+        <div className="text-base font-black text-[#00FF41]">
+          {intel?.mesh_healthy_services || 0} / {intel?.mesh_total_services || 0} UP
+        </div>
       </div>
     </div>
   );

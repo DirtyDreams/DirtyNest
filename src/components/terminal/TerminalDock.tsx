@@ -40,7 +40,7 @@ export default function TerminalDock({
 
   if (!isOpen) return null;
 
-  const handleCommand = (raw: string) => {
+  const handleCommand = async (raw: string) => {
     const trimmed = raw.trim();
     if (!trimmed) return;
 
@@ -59,8 +59,10 @@ export default function TerminalDock({
   uuid                  - Generate RFC 4122 v4 identifier
   b64 <text>            - Base64 encode string
   ping <node>           - Ping cluster service (e.g. ping auth)
+  docker                - Live Docker container telemetry & CPU/Mem stats
+  threat / intel        - CISA KEV weaponized zero-days & port mesh health
   theme <name>          - Switch palette (matrix | cyber2077 | synthwave | amber)
-  drone                 - Toggle ambient focus theta hum
+  drone / audio <track> - Toggle ambient synthesizer (drone | server | rain | synth)
   weather <city>        - Atmospheric telemetry
   time                  - Display synchronized UTC/Local timestamp
   clear                 - Purge terminal console
@@ -243,6 +245,67 @@ export default function TerminalDock({
           type: "output",
           text: `TIMESTAMP: ${new Date().toISOString()} · LOCAL: ${new Date().toLocaleTimeString()}`,
         });
+        break;
+
+      case "docker":
+        try {
+          const res = await fetch("/api/docker/containers?stats=true");
+          if (res.ok) {
+            const data = await res.json();
+            const list = data.containers || [];
+            if (list.length === 0) {
+              newHistory.push({ type: "output", text: "DOCKER: No active containers found." });
+            } else {
+              const lines = [`DOCKER TELEMETRY // ${list.length} CONTAINERS:`];
+              list.forEach((c: { state: string; name: string; image: string; cpu_perc?: string; mem_usage?: string }) => {
+                const stats = c.cpu_perc && c.cpu_perc !== "N/A" ? ` | CPU: ${c.cpu_perc} | MEM: ${c.mem_usage}` : "";
+                lines.push(`  [${c.state.toUpperCase()}] ${c.name} (${c.image})${stats}`);
+              });
+              newHistory.push({ type: "output", text: lines.join("\n") });
+            }
+          } else {
+            newHistory.push({ type: "error", text: "Failed to fetch Docker daemon stats" });
+          }
+        } catch {
+          newHistory.push({ type: "error", text: "Docker endpoint unreachable" });
+        }
+        break;
+
+      case "threat":
+      case "intel":
+        try {
+          const res = await fetch("/api/intel/summary");
+          if (res.ok) {
+            const data = await res.json();
+            newHistory.push({
+              type: "output",
+              text: `CYBER THREAT RADAR // POSTURE: ${data.posture || "ELEVATED"}
+  Active CISA Weaponized KEVs: ${data.kev_total_weaponized || 0}
+  Ransomware-Linked Exploits: ${data.kev_ransomware_linked || 0}
+  Recent NVD CVEs: ${data.recent_cve_count || 0} (Critical: ${data.critical_cve_count || 0})
+  DirtyNest Mesh Health: ${data.mesh_healthy_services || 0}/${data.mesh_total_services || 0} services online`,
+            });
+          } else {
+            newHistory.push({ type: "error", text: "Failed to fetch Threat Radar summary" });
+          }
+        } catch {
+          newHistory.push({ type: "error", text: "Intel endpoint unreachable" });
+        }
+        break;
+
+      case "audio":
+        if (args && ["drone", "server", "rain", "synth"].includes(args.toLowerCase())) {
+          cyberAudio.setTrack(args.toLowerCase() as "drone" | "server" | "rain" | "synth");
+          newHistory.push({ type: "output", text: `AMBIENT AUDIO TRACK SET TO: ${args.toUpperCase()}` });
+        } else {
+          const isPlaying = cyberAudio.toggleDrone();
+          newHistory.push({
+            type: "output",
+            text: isPlaying
+              ? `AMBIENT AUDIO ACTIVE: ${cyberAudio.getCurrentTrack().toUpperCase()}`
+              : "AMBIENT AUDIO MUTED",
+          });
+        }
         break;
 
       default:

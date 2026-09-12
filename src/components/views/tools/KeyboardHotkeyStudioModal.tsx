@@ -22,23 +22,29 @@ export interface HotkeyBinding {
 
 const DEFAULT_BINDINGS: HotkeyBinding[] = [
   // 🕹️ SYSTEM SHORTCUTS
-  { id: "sys_search", keyCombo: "Ctrl + K", actionName: "Omni-Search Spotlight v2.0", category: "SYSTEM", description: "Search across all notes, CVEs, containers, agent swarms & logs" },
+  { id: "sys_search", keyCombo: "Ctrl + K", actionName: "Hermes Master Command Palette", category: "SYSTEM", description: "Search across notes, CVEs, containers, agent swarms & directives" },
   { id: "sys_paperclip", keyCombo: "Ctrl + Shift + P", actionName: "Paperclip Enterprise Control Plane", category: "SYSTEM", description: "Open multi-team agent orchestrator and budget monitor" },
   { id: "sys_terminal", keyCombo: "` (Backtick)", actionName: "Cyber Terminal Dock", category: "SYSTEM", description: "Toggle bottom interactive CLI terminal & session replayer" },
-  { id: "sys_float_os", keyCombo: "Shift + F", actionName: "Float OS Desktop Manager", category: "SYSTEM", description: "Toggle multi-window floating cyberpunk operating system" },
-  { id: "sys_help", keyCombo: "Shift + ?", actionName: "Keyboard Macro & Hotkey Studio", category: "SYSTEM", description: "Open interactive visual mechanical keyboard HUD" },
+  { id: "sys_float_os", keyCombo: "Alt + W / Shift + F", actionName: "Float OS Desktop Manager", category: "SYSTEM", description: "Toggle multi-window floating cyberpunk operating system" },
+  { id: "sys_lock", keyCombo: "Ctrl + L", actionName: "Lock Session Security Gate", category: "SYSTEM", description: "Engage biometric lock screen requiring passphrase clearance" },
+  { id: "sys_help", keyCombo: "? / Shift + /", actionName: "Keyboard Macro & Hotkey Studio", category: "SYSTEM", description: "Open interactive visual mechanical keyboard HUD" },
 
   // 🚀 DECKS NAVIGATION (G + KEY)
-  { id: "deck_overview", keyCombo: "G + O", actionName: "Overview Mission HUD", category: "DECKS", description: "Navigate to Dashboard overview and quick status widgets" },
-  { id: "deck_agents", keyCombo: "G + A", actionName: "Paperclip AI Swarm Matrix", category: "DECKS", description: "Navigate to Agent Control Plane & Team Architecture" },
-  { id: "deck_knowledge", keyCombo: "G + K", actionName: "Knowledge Obsidian Vault", category: "DECKS", description: "Navigate to 2D Graph Visualizer and markdown DataCore" },
-  { id: "deck_docker", keyCombo: "G + D", actionName: "Docker Hub Container Deck", category: "DECKS", description: "Navigate to Docker containers, logs & Compose architect" },
-  { id: "deck_tools", keyCombo: "G + T", actionName: "Developer Tools Suite", category: "DECKS", description: "Navigate to 16+ dev tools, crypto hashers & schema generators" },
+  { id: "deck_overview", keyCombo: "G + D / G + O", actionName: "Overview Mission HUD", category: "DECKS", description: "Navigate to Dashboard overview and quick status widgets" },
   { id: "deck_chat", keyCombo: "G + C", actionName: "AI Tactical Chat Nexus", category: "DECKS", description: "Navigate to Hermes 3 / Gemini multi-agent chat interface" },
-  { id: "deck_sound", keyCombo: "G + V", actionName: "Sound Studio & Voice Matrix", category: "DECKS", description: "Navigate to Web Speech TTS & real-time DSP voice changer" },
-  { id: "deck_image", keyCombo: "G + I", actionName: "Image Studio Neural Canvas", category: "DECKS", description: "Navigate to SDXL Turbo latent workbench & prompt matrix" },
-  { id: "deck_security", keyCombo: "G + X", actionName: "Security Audit Matrix", category: "DECKS", description: "Navigate to CVE vulnerability scanner & MITRE ATT&CK radar" },
-  { id: "deck_stats", keyCombo: "G + S", actionName: "Telemetry & Prometheus PromQL", category: "DECKS", description: "Navigate to hybrid 16-Core CPU matrix & live metrics" },
+  { id: "deck_room", keyCombo: "G + R", actionName: "Control Room Multi-Agent Swarm", category: "DECKS", description: "Navigate to real-time agent stream and HITL approval queue" },
+  { id: "deck_agents", keyCombo: "G + A", actionName: "Paperclip AI Swarm Matrix", category: "DECKS", description: "Navigate to Agent Control Plane & Team Architecture" },
+  { id: "deck_knowledge", keyCombo: "G + K", actionName: "Knowledge Obsidian Vault", category: "DECKS", description: "Navigate to 3D Graph Visualizer and markdown DataCore" },
+  { id: "deck_docker", keyCombo: "G + W / G + P", actionName: "Docker Hub Container Deck", category: "DECKS", description: "Navigate to Docker containers, live stats & Compose stack ops" },
+  { id: "deck_tools", keyCombo: "G + T", actionName: "Developer Tools Suite", category: "DECKS", description: "Navigate to 16+ dev tools, crypto hashers & schema generators" },
+  { id: "deck_sound", keyCombo: "G + V", actionName: "Sound Studio & Voice Matrix", category: "DECKS", description: "Navigate to Web Audio synth, TTS & binaural focus engine" },
+  { id: "deck_image", keyCombo: "G + I", actionName: "Image Studio Neural Canvas", category: "DECKS", description: "Navigate to ComfyUI RTX 3060 latent workbench & checkpoint browser" },
+  { id: "deck_security", keyCombo: "G + X", actionName: "Cyber Threat Intel Radar", category: "DECKS", description: "Navigate to CISA KEV weaponized zero-days & port mesh health" },
+  { id: "deck_social", keyCombo: "G + M", actionName: "Social Media Command Hub", category: "DECKS", description: "Navigate to multi-platform scheduler and Chrome CDP automation" },
+  { id: "deck_zbiornik", keyCombo: "G + Z", actionName: "Zbiornik HITL Console", category: "DECKS", description: "Navigate to supervised portal ops and CDP 9333 runner" },
+  { id: "deck_stats", keyCombo: "G + S", actionName: "Telemetry & Prometheus PromQL", category: "DECKS", description: "Navigate to hybrid CPU matrix & live Prometheus metrics" },
+  { id: "deck_logs", keyCombo: "G + L", actionName: "System Audit Logs", category: "DECKS", description: "Navigate to real-time PostgreSQL operational audit trail" },
+  { id: "deck_settings", keyCombo: "G + ,", actionName: "System Settings & API Keys", category: "DECKS", description: "Configure encrypted credentials and system preferences" },
 ];
 
 // Physical Keyboard Keys layout rows
