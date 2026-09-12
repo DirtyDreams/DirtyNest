@@ -21,6 +21,7 @@ import HermesMemoryInspector from "./control_room/HermesMemoryInspector";
 import HitlApprovalModal, { PendingApproval } from "./control_room/HitlApprovalModal";
 import MultiFeedCyberStreamGrid from "./control_room/MultiFeedCyberStreamGrid";
 import AutonomousMissionsCard from "./missions/AutonomousMissionsCard";
+import VoiceOpsBar from "./control_room/VoiceOpsBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -446,6 +447,9 @@ export default function ControlRoomView() {
           );
         })}
       </div>
+
+      {/* HANDS-FREE VOICE OPERATIONS BAR */}
+      <VoiceOpsBar />
 
       {/* TAB 1: COGNITIVE TRACE & SESSIONS */}
       {activeSubTab === "trace" && (

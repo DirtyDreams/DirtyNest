@@ -35,6 +35,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cyberAudio } from "@/lib/cyberAudio";
+import { cyberSpeech } from "@/lib/cyberSpeech";
 import { useAppStore } from "@/stores/useAppStore";
 import { useToast } from "@/components/common/ToastProvider";
 import ArtifactsCanvas from "./chatbot/ArtifactsCanvas";
@@ -136,6 +137,37 @@ export default function ChatbotView() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeResearchSources, setActiveResearchSources] = useState<ResearchSource[]>([]);
   const [expandedThinkingIds, setExpandedThinkingIds] = useState<Record<string, boolean>>({});
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
+
+  const toggleMicListening = () => {
+    cyberAudio.play("click");
+    if (isVoiceListening) {
+      cyberSpeech.stopListening();
+      setIsVoiceListening(false);
+    } else {
+      const started = cyberSpeech.startListening({
+        continuous: false,
+        onTranscript: (text, isFinal) => {
+          setInput((prev) => (prev ? `${prev} ${text}` : text));
+          if (isFinal) {
+            cyberAudio.play("chime");
+            setIsVoiceListening(false);
+          }
+        },
+        onError: () => {
+          cyberAudio.play("error");
+          setIsVoiceListening(false);
+        },
+        onEnd: () => {
+          setIsVoiceListening(false);
+        },
+      });
+      if (started) {
+        setIsVoiceListening(true);
+        cyberAudio.play("blip");
+      }
+    }
+  };
   
   // Fancy Compositor States
   const [showSlashMenu, setShowSlashMenu] = useState(false);
@@ -1204,6 +1236,21 @@ Greetings, Operator. I am Hermes, the 100% Master AI Neural Orchestrator powerin
                   >
                     <Globe size={12} />
                     <span>WEB</span>
+                  </button>
+
+                  {/* Voice Input Mic Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={toggleMicListening}
+                    title={isVoiceListening ? "Stop Voice Input" : "Start Voice Input (STT)"}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-mono transition-all cursor-pointer ${
+                      isVoiceListening
+                        ? "bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse shadow-[0_0_12px_rgba(255,0,60,0.3)]"
+                        : "hover:bg-white/5 text-[#4F536E] hover:text-[#9499B3]"
+                    }`}
+                  >
+                    <Mic size={12} className={isVoiceListening ? "text-red-400" : ""} />
+                    <span>{isVoiceListening ? "LISTENING..." : "MIC"}</span>
                   </button>
 
                   {/* Live Prompt Token Estimator */}
