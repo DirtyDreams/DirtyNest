@@ -33,6 +33,7 @@ from automations import (
     VerificationService,
     zbiornik_manager,
     zbiornik_monitor,
+    launch_chrome_session,
 )
 from automations.adapters import get_adapter, list_adapters
 
@@ -823,11 +824,12 @@ class ZbiornikPollRequest(BaseModel):
 async def zbiornik_status():
     session = zbiornik_manager.session_status()
     runner_present = session.get("runner_present")
-    snapshot = zbiornik_monitor.public_snapshot() if zbiornik_monitor._last_poll else None
+    snapshot = zbiornik_monitor.public_snapshot()
     return {
+        "ok": True,
         "runner": {"present": runner_present, "cwd": zbiornik_manager.runner_cwd},
         "session": session,
-        "lastPoll": snapshot,
+        "lastPoll": snapshot if snapshot.get("at") else None,
         "timestamp": time.time(),
     }
 
@@ -850,7 +852,7 @@ async def zbiornik_exec(req: ZbiornikExecRequest):
     return {"ok": ok, "result": data}
 
 @app.post("/api/automations/zbiornik/poll")
-async def zbiornik_poll(req: ZbiornikPollRequest):
+async def zbiornik_poll(req: Optional[ZbiornikPollRequest] = None):
     result = await zbiornik_monitor.poll()
     await manager.broadcast({"type": "ZBIORNIK_POLL_COMPLETED", "at": result.get("at"), "counts": result.get("counts"), "ok": result.get("ok")})
     return result
@@ -877,6 +879,29 @@ async def zbiornik_poll_latest():
             except Exception as e:  # noqa: BLE001
                 logger.error("zbiornik poll-latest read failed: %s", e)
     return snap
+
+@app.get("/api/automations/zbiornik/topics")
+async def zbiornik_topics(limit: int = 30):
+    ok, data = await asyncio.to_thread(zbiornik_manager.list_topics, limit=limit)
+    items = ((data.get("data") or {}).get("items")) or []
+    return {"ok": ok, "topics": items, "raw": data}
+
+@app.get("/api/automations/zbiornik/ranking")
+async def zbiornik_ranking(limit: int = 50, acc_type: Optional[str] = None):
+    args = [str(limit)]
+    if acc_type:
+        args.append(str(acc_type))
+    ok, data = await asyncio.to_thread(zbiornik_manager.run_op, op="top-list", args=args)
+    items = ((data.get("data") or {}).get("items")) or []
+    return {"ok": ok, "ranking": items, "raw": data}
+
+class ZbiornikChromeLaunchRequest(BaseModel):
+    port: Optional[int] = 9333
+
+@app.post("/api/automations/zbiornik/chrome/launch")
+async def zbiornik_chrome_launch(req: Optional[ZbiornikChromeLaunchRequest] = None):
+    port = req.port if req and req.port else 9333
+    return launch_chrome_session(port=port)
 
 @app.websocket("/ws/terminal")
 
@@ -1101,4 +1126,6 @@ async def get_social_adapters():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+
 

@@ -288,3 +288,68 @@ class ZbiornikMonitorService:
 
 zbiornik_manager = ZbiornikOpsManager()
 zbiornik_monitor = ZbiornikMonitorService(zbiornik_manager)
+
+
+def launch_chrome_session(
+    port: int = 9333,
+    profile_dir: Optional[str] = None,
+    runner_cwd: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Launch dedicated Chrome instance for Zbiornik with CDP enabled."""
+    import socket
+    target_cwd = runner_cwd or os.environ.get("ZBIORNIK_RUNNER_CWD", RUNNER_DIR_DEFAULT)
+    target_profile = profile_dir or os.path.join(target_cwd, "chrome-profile")
+    os.makedirs(target_profile, exist_ok=True)
+
+    # Check if port is already listening
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(0.5)
+    try:
+        s.connect(("127.0.0.1", port))
+        s.close()
+        return {
+            "ok": True,
+            "port": port,
+            "already_running": True,
+            "message": f"Sesja Chrome CDP już aktywna na porcie {port}.",
+        }
+    except (socket.timeout, ConnectionRefusedError, OSError):
+        pass
+
+    candidates = [
+        os.path.join(os.environ.get("ProgramFiles", r"C:\Program Files"), r"Google\Chrome\Application\chrome.exe"),
+        os.path.join(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"), r"Google\Chrome\Application\chrome.exe"),
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), r"Google\Chrome\Application\chrome.exe"),
+        "chrome",
+        "google-chrome",
+        "chromium",
+    ]
+    binary = None
+    for c in candidates:
+        if os.path.isfile(c) or os.name != "nt":
+            binary = c
+            break
+
+    if not binary:
+        return {"ok": False, "error": "Chrome executable not found on host system.", "port": port}
+
+    cmd = [
+        binary,
+        f"--remote-debugging-port={port}",
+        f"--user-data-dir={target_profile}",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "https://zbiornik.com/",
+    ]
+    try:
+        proc = subprocess.Popen(cmd)
+        return {
+            "ok": True,
+            "port": port,
+            "pid": proc.pid,
+            "profile": target_profile,
+            "message": f"Uruchomiono sesję Chrome CDP na porcie {port} (profil: zbiornik-ops).",
+        }
+    except Exception as e:
+        logger.exception("Failed to spawn Chrome for zbiornik: %s", e)
+        return {"ok": False, "error": str(e), "port": port}

@@ -43,8 +43,35 @@ interface StatusStripProps {
 export default function StatusStrip({ status, onLoad, refreshKey, onPollSuccess }: StatusStripProps) {
   const [busy, setBusy] = useState(false);
   const [polling, setPolling] = useState(false);
+  const [launching, setLaunching] = useState(false);
   // tictac co 10 s, żeby czasy względne nie kasztanowały między pollami
   const [, setTick] = useState(0);
+
+  const handleLaunchChrome = async () => {
+    if (launching) return;
+    cyberAudio.play("click");
+    setLaunching(true);
+    try {
+      const res = await apiJson<{ ok: boolean; message?: string; error?: string }>("/api/zbiornik/chrome/launch", {
+        method: "POST",
+        body: JSON.stringify({ port: 9333 }),
+      });
+      if (res.ok) {
+        cyberAudio.play("chime");
+        toast.success("CHROME CDP URUCHOMIONY", {
+          description: res.message || "Zaloguj się w oknie przeglądarki, sesja zostanie wykryta automatycznie.",
+        });
+        await onLoad();
+      } else {
+        throw new Error(res.error || "Błąd uruchomienia");
+      }
+    } catch (err) {
+      cyberAudio.play("error");
+      toast.error("BŁĄD STARTU CHROME", { description: errMessage(err) });
+    } finally {
+      setLaunching(false);
+    }
+  };
 
   useEffect(() => {
     void onLoad();
@@ -120,6 +147,18 @@ export default function StatusStrip({ status, onLoad, refreshKey, onPollSuccess 
         </div>
 
         <div className="flex items-center gap-2">
+          {(session?.loginCode === "CDP_OFFLINE" || !session?.connected) && (
+            <button
+              type="button"
+              onClick={() => void handleLaunchChrome()}
+              disabled={launching}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FF2A6D]/15 text-[#FF2A6D] border border-[#FF2A6D]/40 text-[10px] font-bold hover:bg-[#FF2A6D]/25 shadow-[0_0_15px_rgba(255,42,109,0.3)] transition-all cursor-pointer animate-pulse disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Uruchom dedykowaną sesję Chrome z profilem zbiornik-ops na porcie 9333"
+            >
+              <Unplug size={12} className={launching ? "animate-spin" : ""} />
+              {launching ? "STARTOWANIE..." : "URUCHOM CHROME CDP :9333"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => void handlePoll()}

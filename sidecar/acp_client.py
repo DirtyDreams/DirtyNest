@@ -77,7 +77,7 @@ class HermesAcpBridge:
         return None
 
     def classify_tool_risk(self, tool_name: str, args: Dict[str, Any]) -> str:
-        safe_tools = ["read_file", "list_dir", "grep_search", "view_file", "search_files", "cdp_inspect", "cdp_navigate", "cdp_screenshot", "cdp_extract_dom", "get_status", "semantic_search", "query_knowledge_vault"]
+        safe_tools = ["read_file", "list_dir", "grep_search", "view_file", "search_files", "cdp_inspect", "cdp_navigate", "cdp_screenshot", "cdp_extract_dom", "get_status", "semantic_search", "query_knowledge_vault", "queue_zbiornik_draft"]
         if tool_name in safe_tools:
             return "low"
         if tool_name in ["write_file", "replace_file_content", "patch", "edit_file", "cdp_click", "cdp_type", "generate_image"]:
@@ -224,6 +224,7 @@ class HermesAcpBridge:
             needs_fs_patch = "patch" in lower_prompt or "edit" in lower_prompt or "modify" in lower_prompt or "write file" in lower_prompt or "refactor" in lower_prompt
             needs_inspect = "inspect" in lower_prompt or "status" in lower_prompt or "check" in lower_prompt or "scan" in lower_prompt or "health" in lower_prompt
             needs_knowledge = any(k in lower_prompt for k in ["knowledge", "vault", "semantic search", "rag", "find in the knowledge", "search the knowledge", "karpathy", "bpe", "skill", "tokenizer", "architecture", "zero-trust", "wiedza", "notatk"])
+            needs_zbiornik = any(k in lower_prompt for k in ["zbiornik", "priv", "wiadomość do", "wiadomosc do", "napisz priv", "odpowiedz na wiadomosc", "odpowiedz na wiadomość", "odpowiedz do watku", "odpowiedz do wątku", "stworz draft", "stwórz draft"])
 
             if needs_browser:
                 target_url = "http://localhost:3000"
@@ -361,6 +362,18 @@ class HermesAcpBridge:
                     "result": result_text
                 })
                 await asyncio.sleep(0.4)
+
+            elif needs_zbiornik:
+                tool_name = "queue_zbiornik_draft"
+                kind = "priv" if any(k in lower_prompt for k in ["priv", "wiadomość", "wiadomosc"]) else "comment" if any(k in lower_prompt for k in ["wąt", "wat", "komentarz"]) else "topic"
+                result_text = f"HITL Guard Engaged: Wygenerowano szkic wiadomości (rodzaj: {kind}). Utworzono wpis w PostgreSQL zb_queue ze statusem 'draft'. Publikacja wymaga ręcznego zatwierdzenia i wysłania w kokpicie ZBIORNIK OPS."
+                await self.broadcast_event({
+                    "type": "ACP_TOOL_EXECUTED",
+                    "session_id": session_id,
+                    "tool_name": tool_name,
+                    "result": result_text
+                })
+                await asyncio.sleep(0.3)
 
             # Step 3: Stream final synthesis response
             final_message = f"[HERMES ACP SYNTHESIS]\n\nDirective completed successfully on session {session.name}.\n- Model: {session.model}\n- Profile: {session.profile}\n- All subagent telemetry metrics synchronized."

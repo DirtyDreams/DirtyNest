@@ -7,7 +7,13 @@ from .engagement import EngagementManager
 from .topics import TopicManager
 from .deduplication import DeduplicationService
 from .verification import VerificationService
-from .zbiornik import ZbiornikOpsManager, ZbiornikMonitorService, zbiornik_manager, zbiornik_monitor
+from .zbiornik import (
+    ZbiornikOpsManager,
+    ZbiornikMonitorService,
+    zbiornik_manager,
+    zbiornik_monitor,
+    launch_chrome_session,
+)
 
 __all__ = [
     "EngagementManager",
@@ -18,4 +24,5 @@ __all__ = [
     "ZbiornikMonitorService",
     "zbiornik_manager",
     "zbiornik_monitor",
+    "launch_chrome_session",
 ]
