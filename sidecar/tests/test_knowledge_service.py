@@ -84,6 +84,10 @@ class FakeQdrant:
             count = len(self.points)
         return C()
 
+    def scroll(self, collection_name, limit=200, with_vectors=True, with_payload=True):
+        pts = list(self.points.values())[:limit]
+        return (pts, None)
+
 
 @pytest.fixture()
 def service(monkeypatch):
@@ -201,3 +205,13 @@ def test_index_obsidian_vault_missing_path():
     ks = KnowledgeService(qdrant_url="http://fake:6333")
     with pytest.raises(FileNotFoundError):
         ks.index_obsidian_vault("/nonexistent/vault/path")
+
+
+def test_compute_semantic_edges(service):
+    service.ingest_document(doc_id="1", title="BPE Tokenizer", content="BPE byte pair encoding vocabulary tokens", category="Karpathy Skills")
+    service.ingest_document(doc_id="2", title="NanoGPT", content="BPE byte pair encoding vocabulary model", category="Karpathy Skills")
+    edges = service.compute_semantic_edges(threshold=0.50)
+    assert isinstance(edges, list)
+    assert len(edges) >= 1
+    assert edges[0]["relation"] == "semantic_similarity"
+

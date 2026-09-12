@@ -117,3 +117,28 @@ export async function indexObsidianVault(vaultPath: string): Promise<ObsidianInd
     return null;
   }
 }
+
+export interface SemanticEdgeResult {
+  source: string;
+  target: string;
+  relation: string;
+  score: number;
+}
+
+/** Compute pairwise semantic similarity edges from Qdrant vectors. */
+export async function getSemanticEdges(threshold = 0.70): Promise<SemanticEdgeResult[]> {
+  try {
+    const res = await fetch(`${getSidecarBaseUrl()}/api/knowledge/semantic-edges`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ threshold }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { status: string; edges?: SemanticEdgeResult[] };
+    return data.status === "success" ? (data.edges ?? []) : [];
+  } catch {
+    return [];
+  }
+}
+

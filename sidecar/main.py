@@ -447,6 +447,16 @@ def knowledge_obsidian_index_endpoint(req: KnowledgeObsidianIndexRequest):
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
+class KnowledgeSemanticEdgesRequest(BaseModel):
+    threshold: float = Field(0.70, ge=0.0, le=1.0)
+    limit_per_node: int = Field(3, ge=1, le=10)
+
+@app.post("/api/knowledge/semantic-edges")
+def knowledge_semantic_edges_endpoint(req: KnowledgeSemanticEdgesRequest = KnowledgeSemanticEdgesRequest()):
+    edges = knowledge_service.compute_semantic_edges(threshold=req.threshold, limit_per_node=req.limit_per_node)
+    return {"status": "success", "edges": edges, "count": len(edges)}
+
+
 class CdpNavigateRequest(BaseModel):
     url: str = Field(..., description="Target URL")
 

@@ -492,10 +492,12 @@ export default function KnowledgeView() {
   const [semanticResults, setSemanticResults] = useState<Record<string, number>>({});
   const [mobileTab, setMobileTab] = useState<"list" | "inspector">("inspector");
   const [editorSplitMode, setEditorSplitMode] = useState<"preview" | "split" | "edit">("preview");
-  const [obsidianVaultPath, setObsidianVaultPath] = useState("C:\\\\Users\\\\coyot\\\\Obsidian\\\\CyberVault");
+  const [obsidianVaultPath, setObsidianVaultPath] = useState("./vault");
   const [obsidianVaultName, setObsidianVaultName] = useState("CyberVault");
   const [isObsidianSyncing, setIsObsidianSyncing] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
   const [obsidianSyncCount, setObsidianSyncCount] = useState(142);
+  const [qdrantStats, setQdrantStats] = useState<{ point_count: number; ready: boolean }>({ point_count: 0, ready: false });
   const [isIngesting, setIsIngesting] = useState(false);
   const [ingestProgress, setIngestProgress] = useState(0);
   const [ingestPhase, setIngestPhase] = useState("");
@@ -517,6 +519,37 @@ export default function KnowledgeView() {
     error: graphError,
     reload: reloadGraph,
   } = useKnowledgeGraph();
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch("/api/knowledge/stats");
+      if (res.ok) {
+        const data = (await res.json()) as { point_count?: number; qdrant_ready?: boolean };
+        setQdrantStats({
+          point_count: data.point_count ?? 0,
+          ready: data.qdrant_ready ?? false,
+        });
+      }
+    } catch {}
+  }, []);
+
+  const handleSeedVault = async () => {
+    cyberAudio.play("click");
+    setIsSeeding(true);
+    try {
+      const res = await fetch("/api/knowledge/seed", { method: "POST" });
+      if (res.ok) {
+        await fetchMemories();
+        await fetchStats();
+        reloadGraph();
+      }
+    } catch {
+      // fallback
+    } finally {
+      setIsSeeding(false);
+      cyberAudio.play("chime");
+    }
+  };
 
   const fetchMemories = useCallback(async () => {
     // Prefer the real Knowledge Vault API (F4). Falls back to the sidecar
@@ -578,7 +611,8 @@ export default function KnowledgeView() {
   // demo set; without this the deck never reads /api/knowledge/docs).
   useEffect(() => {
     void fetchMemories();
-  }, [fetchMemories]);
+    void fetchStats();
+  }, [fetchMemories, fetchStats]);
 
   // Debounced semantic search against the real /api/knowledge/search (F4).
   // Maps Qdrant hits back to doc ids -> similarity. Falls back to the local
@@ -1047,7 +1081,18 @@ export default function KnowledgeView() {
           {/* Action Buttons */}
           <div className="flex items-center gap-2">
             <button
+              onClick={handleSeedVault}
+              disabled={isSeeding}
+              title="Seed canonical Karpathy Skills & System Arch into Postgres & Qdrant"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#00F0FF]/15 border border-[#00F0FF]/40 text-[#00F0FF] hover:bg-[#00F0FF]/25 text-xs font-bold transition-all shadow-[0_0_10px_rgba(0,240,255,0.2)] cursor-pointer disabled:opacity-50"
+            >
+              <Database size={13} className={isSeeding ? "animate-pulse" : ""} />
+              <span>{isSeeding ? "SEEDING..." : "SEED VAULT"}</span>
+            </button>
+
+            <button
               onClick={handleSyncObsidianVault}
+              disabled={isObsidianSyncing}
               title="Sync local Obsidian Vault notes & backlinks"
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#BF40FF]/40 text-[#9499B3] hover:text-[#BF40FF] text-xs transition-all cursor-pointer ${
                 isObsidianSyncing ? "animate-pulse border-[#BF40FF] text-[#BF40FF]" : ""
@@ -1098,12 +1143,16 @@ export default function KnowledgeView() {
 
           <div className="flex flex-col p-2.5 rounded-lg bg-black/30 border border-white/5">
             <span className="text-[10px] text-[#4F536E] uppercase">Vector Embedding DB</span>
-            <span className="text-sm font-bold text-[#00FF41] mt-0.5">SQLite-Vec (1536-D)</span>
+            <span className="text-sm font-bold text-[#00FF41] mt-0.5">
+              Qdrant ({qdrantStats.point_count} pts)
+            </span>
           </div>
 
           <div className="flex flex-col p-2.5 rounded-lg bg-black/30 border border-white/5">
             <span className="text-[10px] text-[#4F536E] uppercase">Backlink Mesh</span>
-            <span className="text-sm font-bold text-[#00F0FF] mt-0.5">548 Connections</span>
+            <span className="text-sm font-bold text-[#00F0FF] mt-0.5">
+              {apiGraphNodes.reduce((acc, n) => acc + (n.links?.length || 0), 0)} Edges
+            </span>
           </div>
 
           <div className="flex flex-col p-2.5 rounded-lg bg-black/30 border border-white/5">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import path from "path";
 import { db, initDb, insertLog } from "@/lib/db";
 import { knowledgeDocs, knowledgeGraphEdges } from "@/lib/schema";
 import { eq } from "drizzle-orm";
@@ -20,13 +21,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid payload", issues: parsed.error.flatten() }, { status: 400 });
   }
 
-  const result = await indexObsidianVault(parsed.data.vault_path);
+  let vaultPath = parsed.data.vault_path;
+  if (!path.isAbsolute(vaultPath)) {
+    vaultPath = path.resolve(process.cwd(), vaultPath);
+  }
+
+  const result = await indexObsidianVault(vaultPath);
   if (!result) {
     return NextResponse.json({ error: "Obsidian scan failed (sidecar unavailable or path invalid)" }, { status: 502 });
   }
 
   const now = new Date().toISOString();
   const created: number[] = [];
+  const updated: number[] = [];
   const titleToId = new Map<string, number>();
 
   // Upsert each vault doc into PG (keyed by obsidian_path) and ingest into Qdrant.
@@ -51,6 +58,7 @@ export async function POST(req: NextRequest) {
           updated_at: now,
         })
         .where(eq(knowledgeDocs.id, docId));
+      updated.push(docId);
     } else {
       const ins = await db
         .insert(knowledgeDocs)
@@ -70,16 +78,27 @@ export async function POST(req: NextRequest) {
       created.push(docId);
     }
     titleToId.set(vdoc.title, docId);
+    titleToId.set(vdoc.title.toLowerCase(), docId);
+    const stem = vdoc.obsidian_path.split("/").pop()?.replace(/\.md$/, "") ?? "";
+    if (stem) titleToId.set(stem.toLowerCase(), docId);
+
     await ingestDocument(String(docId), vdoc.title, vdoc.content, vdoc.category, vdoc.tags);
   }
 
-  // Rebuild graph edges from wiki-links (only for links that resolve to a doc).
-  await db.delete(knowledgeGraphEdges);
+  // Also index pre-existing PG docs for cross-linking
+  const allUserDocs = await db.select().from(knowledgeDocs).where(eq(knowledgeDocs.user_id, userId));
+  for (const d of allUserDocs) {
+    if (!titleToId.has(d.title)) titleToId.set(d.title, d.id);
+    if (!titleToId.has(d.title.toLowerCase())) titleToId.set(d.title.toLowerCase(), d.id);
+  }
+
+  // Rebuild wiki-link edges without deleting semantic edges
+  await db.delete(knowledgeGraphEdges).where(eq(knowledgeGraphEdges.relation, "wiki_link"));
   let edgeCount = 0;
   for (const edge of result.edges) {
-    const sourceId = titleToId.get(edge.source);
-    const targetId = titleToId.get(edge.target);
-    if (sourceId === undefined || targetId === undefined) continue;
+    const sourceId = titleToId.get(edge.source) ?? titleToId.get(edge.source.toLowerCase());
+    const targetId = titleToId.get(edge.target) ?? titleToId.get(edge.target.toLowerCase());
+    if (sourceId === undefined || targetId === undefined || sourceId === targetId) continue;
     await db.insert(knowledgeGraphEdges).values({
       source_doc_id: sourceId,
       target_doc_id: targetId,

@@ -206,6 +206,56 @@ class KnowledgeService:
         """Extract [[Wiki Link]] targets (alias after | ignored) from markdown body."""
         return re.findall(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]", text)
 
+    def compute_semantic_edges(self, threshold: float = 0.70, limit_per_node: int = 3) -> List[Dict[str, Any]]:
+        """Compute pairwise cosine similarities across knowledge_vault docs to generate semantic edges."""
+        if not self.is_ready or not self.client:
+            return []
+        try:
+            scroll_res = self.client.scroll(
+                collection_name=COLLECTION_NAME,
+                limit=200,
+                with_vectors=True,
+                with_payload=True,
+            )
+            points = scroll_res[0] if scroll_res else []
+            if not points or len(points) < 2:
+                return []
+
+            edges: List[Dict[str, Any]] = []
+            seen_pairs = set()
+
+            for p1 in points:
+                doc1_id = p1.payload.get("doc_id") if p1.payload else None
+                vec1 = p1.vector
+                if not doc1_id or not vec1:
+                    continue
+
+                hits = self.client.query_points(
+                    collection_name=COLLECTION_NAME,
+                    query=vec1,
+                    limit=limit_per_node + 1,
+                    score_threshold=threshold,
+                ).points
+
+                for hit in hits:
+                    doc2_id = hit.payload.get("doc_id") if hit.payload else None
+                    if not doc2_id or str(doc2_id) == str(doc1_id):
+                        continue
+                    pair = tuple(sorted([str(doc1_id), str(doc2_id)]))
+                    if pair not in seen_pairs:
+                        seen_pairs.add(pair)
+                        edges.append({
+                            "source": str(doc1_id),
+                            "target": str(doc2_id),
+                            "relation": "semantic_similarity",
+                            "score": round(float(hit.score), 3),
+                        })
+
+            return edges
+        except Exception as e:
+            logger.error(f"Error computing semantic edges: {e}")
+            return []
+
 
 # Global Singleton Instance
 knowledge_service = KnowledgeService()

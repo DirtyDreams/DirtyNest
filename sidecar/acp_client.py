@@ -77,7 +77,7 @@ class HermesAcpBridge:
         return None
 
     def classify_tool_risk(self, tool_name: str, args: Dict[str, Any]) -> str:
-        safe_tools = ["read_file", "list_dir", "grep_search", "view_file", "search_files", "cdp_inspect", "cdp_navigate", "cdp_screenshot", "cdp_extract_dom", "get_status"]
+        safe_tools = ["read_file", "list_dir", "grep_search", "view_file", "search_files", "cdp_inspect", "cdp_navigate", "cdp_screenshot", "cdp_extract_dom", "get_status", "semantic_search", "query_knowledge_vault"]
         if tool_name in safe_tools:
             return "low"
         if tool_name in ["write_file", "replace_file_content", "patch", "edit_file", "cdp_click", "cdp_type", "generate_image"]:
@@ -223,7 +223,7 @@ class HermesAcpBridge:
             needs_image = "image" in lower_prompt or "draw" in lower_prompt or "generate image" in lower_prompt or "comfy" in lower_prompt or "picture" in lower_prompt or "artwork" in lower_prompt
             needs_fs_patch = "patch" in lower_prompt or "edit" in lower_prompt or "modify" in lower_prompt or "write file" in lower_prompt or "refactor" in lower_prompt
             needs_inspect = "inspect" in lower_prompt or "status" in lower_prompt or "check" in lower_prompt or "scan" in lower_prompt or "health" in lower_prompt
-            needs_knowledge = "knowledge" in lower_prompt or "vault" in lower_prompt or "semantic search" in lower_prompt or "rag" in lower_prompt or "find in the knowledge" in lower_prompt or "search the knowledge" in lower_prompt
+            needs_knowledge = any(k in lower_prompt for k in ["knowledge", "vault", "semantic search", "rag", "find in the knowledge", "search the knowledge", "karpathy", "bpe", "skill", "tokenizer", "architecture", "zero-trust", "wiedza", "notatk"])
 
             if needs_browser:
                 target_url = "http://localhost:3000"
@@ -349,15 +349,15 @@ class HermesAcpBridge:
                 from knowledge_service import knowledge_service
                 vault_results = []
                 if knowledge_service.is_ready:
-                    vault_results = knowledge_service.search(prompt, limit=3, score_threshold=0.4)
+                    vault_results = knowledge_service.search(prompt, limit=3, score_threshold=0.35)
                 result_text = "Knowledge Vault semantic search results:\n" + (
-                    "\n".join([f"  * [{r['category']}] {r['title']} ({int(r['score']*100)}% match): {r['text'][:200]}" for r in vault_results])
+                    "\n".join([f"  * [{r['category']}] {r['title']} ({int(r['score']*100)}% match): {r['text'][:240]}..." for r in vault_results])
                     if vault_results else "  * No knowledge vault documents above similarity threshold."
                 )
                 await self.broadcast_event({
                     "type": "ACP_TOOL_EXECUTED",
                     "session_id": session_id,
-                    "tool_name": "semantic_search",
+                    "tool_name": "query_knowledge_vault",
                     "result": result_text
                 })
                 await asyncio.sleep(0.4)

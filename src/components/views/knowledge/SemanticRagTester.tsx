@@ -54,21 +54,25 @@ export default function SemanticRagTester() {
     setIsQuerying(true);
 
     try {
-      const sidecarUrl = process.env.NEXT_PUBLIC_SIDECAR_URL || "http://localhost:8000";
-      const res = await fetch(`${sidecarUrl}/api/hermes/memories/search?q=${encodeURIComponent(query.trim())}&limit=${topK}&threshold=${similarityThreshold}`);
+      const res = await fetch("/api/knowledge/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query.trim(), limit: topK, threshold: similarityThreshold }),
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.results && data.results.length > 0) {
           const mapped: RetrievedChunk[] = data.results.map((r: any, idx: number) => ({
             id: r.id || `chunk-${idx}`,
-            docTitle: r.payload?.title || "Semantic Memory Match",
-            category: r.payload?.category || "Facts",
+            docTitle: r.title || "Knowledge Vault Match",
+            category: r.category || "General",
             similarity: r.score || 0.85,
-            tokens: r.payload?.content ? Math.round(r.payload.content.split(/\s+/).length * 1.3) : 100,
-            snippet: r.payload?.content || "",
+            tokens: r.text ? Math.round(r.text.split(/\s+/).length * 1.3) : 100,
+            snippet: r.text || "",
           }));
           setResults(mapped);
           cyberAudio.play("chime");
+          return;
         } else {
           setResults([]);
         }
