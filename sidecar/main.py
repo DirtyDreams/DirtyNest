@@ -1123,6 +1123,35 @@ async def get_social_adapters():
     return {"adapters": list_adapters()}
 
 
+# --------------------------------------------------------------------------
+# Threat Intel & Security Mesh Radar Endpoints (Step 8)
+# --------------------------------------------------------------------------
+
+@app.get("/api/intel/cve")
+async def get_intel_cves(force: bool = False):
+    cves = await intel_service.fetch_cve_feed(force=force)
+    return {"cves": cves, "count": len(cves)}
+
+
+@app.get("/api/intel/kev")
+async def get_intel_kevs(force: bool = False):
+    kevs = await intel_service.fetch_kev_feed(force=force)
+    return {"vulnerabilities": kevs, "count": len(kevs)}
+
+
+@app.get("/api/intel/ports")
+async def get_intel_ports(host: str = "127.0.0.1"):
+    ports = await intel_service.scan_local_ports(host=host)
+    open_count = sum(1 for p in ports if p.get("open"))
+    return {"target": host, "scan": ports, "open_count": open_count, "total_services": len(ports)}
+
+
+@app.get("/api/intel/summary")
+async def get_intel_summary():
+    return await intel_service.get_threat_radar_summary()
+
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
