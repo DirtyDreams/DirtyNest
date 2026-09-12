@@ -151,3 +151,44 @@ def test_monitor_snapshot_written_and_public(tmp_path, monkeypatch):
     assert (tmp_path / "poll-latest.json").exists()
     disk = json.loads((tmp_path / "poll-latest.json").read_text(encoding="utf-8"))
     assert disk["topics"][0]["id"] == "t1"
+
+
+# -------------------------------------------------- subprocess mock runner
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
+
+
+def test_subprocess_mock_runner_read_ops():
+    m = ZbiornikOpsManager(runner_cwd=str(FIXTURES_DIR))
+    ok, data = m.run_op("me")
+    assert ok is True
+    assert data["op"] == "me"
+    assert data["data"]["nick"] == "operator_test"
+    assert data["data"]["unread"] == 3
+
+    ok, topics = m.run_op("list-topics")
+    assert ok is True
+    assert len(topics["data"]["threads"]) == 2
+    assert topics["data"]["threads"][0]["slug"] == "cyber-wawa"
+
+
+def test_subprocess_mock_runner_write_dry_run():
+    m = ZbiornikOpsManager(runner_cwd=str(FIXTURES_DIR))
+    ok, data = m.run_op("send-priv", ["user1", "hello"], dry=True)
+    assert ok is True
+    assert data["data"]["dry_run"] is True
+    assert data["data"]["validated"] is True
+
+
+def test_subprocess_mock_runner_write_confirmed():
+    m = ZbiornikOpsManager(runner_cwd=str(FIXTURES_DIR))
+    ok, data = m.run_op("post-topic", ["gData123", "Title", "Body"], confirm_run=True)
+    assert ok is True
+    assert data["data"]["published"] is True
+    assert data["data"]["item_id"] == "mock-pub-999"
+
+
+def test_subprocess_mock_runner_write_unconfirmed_rejected():
+    m = ZbiornikOpsManager(runner_cwd=str(FIXTURES_DIR))
+    ok, data = m.run_op("comment", ["itemToken", "nice post"])
+    assert ok is False
+    assert data["code"] == "CONFIRM_REQUIRED"

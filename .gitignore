@@ -49,6 +49,9 @@ sidecar/data/
 # python
 __pycache__/
 *.pyc
+.venv/
+venv/
+sidecar/.venv/
 
 # typescript
 *.tsbuildinfo
