@@ -136,6 +136,120 @@ class CyberSpeechEngine {
   public getIsSpeaking(): boolean {
     return this.isSpeaking;
   }
+
+  // --- SPEECH RECOGNITION (STT / VOICE INPUT) ---
+  private recognitionInstance: any = null;
+  private isListening = false;
+
+  public isRecognitionSupported(): boolean {
+    if (typeof window === "undefined") return false;
+    return !!(
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition
+    );
+  }
+
+  public startListening(options: {
+    onTranscript: (text: string, isFinal: boolean) => void;
+    onError?: (err: string) => void;
+    onEnd?: () => void;
+    continuous?: boolean;
+  }): boolean {
+    if (!this.isRecognitionSupported()) {
+      if (options.onError) {
+        options.onError("SpeechRecognition is not supported in this browser environment.");
+      }
+      return false;
+    }
+
+    try {
+      this.stopListening();
+
+      const SpeechRecognitionClass =
+        (window as any).SpeechRecognition ||
+        (window as any).webkitSpeechRecognition;
+
+      const recognition = new SpeechRecognitionClass();
+      recognition.continuous = options.continuous ?? false;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        this.isListening = true;
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("dirtynest-voice-listening"));
+        }
+      };
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = "";
+        let finalTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcriptPiece = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcriptPiece;
+          } else {
+            interimTranscript += transcriptPiece;
+          }
+        }
+
+        const text = finalTranscript || interimTranscript;
+        const isFinal = Boolean(finalTranscript);
+        options.onTranscript(text, isFinal);
+      };
+
+      recognition.onerror = (event: any) => {
+        this.isListening = false;
+        if (options.onError) {
+          options.onError(event.error || "Speech recognition error");
+        }
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("dirtynest-voice-stop"));
+        }
+      };
+
+      recognition.onend = () => {
+        this.isListening = false;
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("dirtynest-voice-stop"));
+        }
+        if (options.onEnd) {
+          options.onEnd();
+        }
+      };
+
+      this.recognitionInstance = recognition;
+      recognition.start();
+      return true;
+    } catch (e: any) {
+      this.isListening = false;
+      if (options.onError) {
+        options.onError(e.message || String(e));
+      }
+      return false;
+    }
+  }
+
+  public stopListening(): void {
+    if (this.recognitionInstance) {
+      try {
+        this.recognitionInstance.stop();
+      } catch {
+        // ignore if already stopped
+      }
+      this.recognitionInstance = null;
+    }
+    this.isListening = false;
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("dirtynest-voice-stop"));
+    }
+  }
+
+  public getIsListening(): boolean {
+    return this.isListening;
+  }
 }
 
 export const cyberSpeech = new CyberSpeechEngine();
+
